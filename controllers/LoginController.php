@@ -39,13 +39,9 @@ class LoginController
 
             $usuario = Usuario::buscarEmailoNombre($usuario_input);
 
-            if (!$usuario) {
-                echo json_encode(['error' => 'Usuario o Gmail no encontrado']);
-                return;
-            }
-
-            if (!password_verify($clave_input, $usuario->clave_usuario)) {
-                echo json_encode(['error' => 'La contraseña es incorrecta']);
+            // Mensaje genérico en ambos casos: no revelar si el usuario existe o no
+            if (!$usuario || !password_verify($clave_input, $usuario->clave_usuario)) {
+                echo json_encode(['error' => 'Usuario o contraseña incorrectos']);
                 return;
             }
 
@@ -111,50 +107,38 @@ class LoginController
                 return;
             }
 
-            // Buscar usuario por email
+            // Buscar usuario por email. La respuesta es siempre el mismo mensaje
+            // genérico, exista o no la cuenta, para no revelar qué emails están
+            // registrados en el sistema.
             $usuario = Usuario::where('email', $email);
 
-            if (!$usuario) {
-                echo json_encode(['error' => 'Este correo no está registrado']);
-                return;
+            if ($usuario && $usuario->verificado) {
+                // Generar token único y guardarlo, con expiración de 30 minutos
+                $token = bin2hex(random_bytes(20));
+                $usuario->token_recuperacion = $token;
+                $usuario->token_recuperacion_expira = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+
+                $guardado = $usuario->guardar();
+
+                if ($guardado) {
+                    $emailSender = new \Classes\Email(
+                        $usuario->email,
+                        $usuario->nombre_usuario ?? '',
+                        '' // El token de verificación no se usa acá
+                    );
+
+                    if (!$emailSender->enviarRecuperacion($token)) {
+                        error_log("olvide(): no se pudo enviar el email de recuperación a {$usuario->email}");
+                    }
+                } else {
+                    error_log("olvide(): no se pudo guardar el token de recuperación para {$usuario->email}");
+                }
             }
 
-            if (!$usuario->verificado) {
-                echo json_encode(['error' => 'Este correo aún no fue verificado. Revisa tu bandeja.']);
-                return;
-            }
-
-            // Generar token único y guardarlo, con expiración de 30 minutos
-            $token = bin2hex(random_bytes(20));
-            $usuario->token_recuperacion = $token;
-            $usuario->token_recuperacion_expira = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-
-            $guardado = $usuario->guardar();
-            if (!$guardado) {
-                echo json_encode(['error' => 'No se pudo guardar el token de recuperación']);
-                return;
-            }
-
-            // ✅ Enviar email de recuperación
-            $emailSender = new \Classes\Email(
-                $usuario->email,
-                $usuario->nombre_usuario ?? '',
-                '' // El token de verificación no se usa acá
-            );
-
-            $enviado = $emailSender->enviarRecuperacion($token);
-
-            if ($enviado) {
-                echo json_encode([
-                    'ok' => true,
-                    'mensaje' => 'Te enviamos un correo con instrucciones para restablecer tu contraseña'
-                ]);
-            } else {
-                echo json_encode([
-                    'error' => 'No se pudo enviar el correo de recuperación'
-                ]);
-            }
-
+            echo json_encode([
+                'ok' => true,
+                'mensaje' => 'Si el correo está registrado y verificado, vas a recibir instrucciones para restablecer tu contraseña'
+            ]);
             return;
         }
 

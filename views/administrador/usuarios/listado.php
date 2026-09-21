@@ -48,25 +48,25 @@
             <tbody id="tabla-usuarios">
             <?php foreach ($usuarios as $fila) { ?>
             <tr>
-                <td><?php echo $fila['id_usuario']; ?></td>
-                <td><?php echo $fila['nombre_usuario']; ?></td>
-                <td><?php echo $fila['nombre_persona']; ?></td>
-                <td><?php echo $fila['apellido_persona']; ?></td>
-                <td><?php echo $fila['email']; ?></td>
-                <td><?php echo $fila['nombre_sexo']; ?></td>
-                <td><?php echo $fila['nombre_perfil']; ?></td>
+                <td><?php echo s($fila['id_usuario']); ?></td>
+                <td><?php echo s($fila['nombre_usuario']); ?></td>
+                <td><?php echo s($fila['nombre_persona']); ?></td>
+                <td><?php echo s($fila['apellido_persona']); ?></td>
+                <td><?php echo s($fila['email']); ?></td>
+                <td><?php echo s($fila['nombre_sexo']); ?></td>
+                <td><?php echo s($fila['nombre_perfil']); ?></td>
                 <td>
-                    <?php echo $fila['estado'] == 1 
-                          ? '<span class="estado-con-icono activo">ACTIVO</span>' 
+                    <?php echo $fila['estado'] == 1
+                          ? '<span class="estado-con-icono activo">ACTIVO</span>'
                           : '<span class="estado-con-icono inactivo">INACTIVO</span>'; ?>
                 </td>
                 <td class="acciones">
                     <button class="boton eliminar-usuario"
-                            data-id="<?php echo $fila['id_usuario']; ?>"
-                            data-nombre="<?php echo $fila['nombre_usuario']; ?>">
+                            data-id="<?php echo s($fila['id_usuario']); ?>"
+                            data-nombre="<?php echo s($fila['nombre_usuario']); ?>">
                         Eliminar
                     </button>
-                    <a class="boton" href="/administrador/usuarios/editar?id=<?php echo $fila['id_usuario']; ?>">Editar</a>
+                    <a class="boton" href="/administrador/usuarios/editar?id=<?php echo s($fila['id_usuario']); ?>">Editar</a>
                 </td>
             </tr>
             <?php } ?>

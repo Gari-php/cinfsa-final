@@ -6,25 +6,25 @@
         data-fetch="true" data-alerta=".contenedor-alertas" data-redirigir="/administrador/usuarios/listado">
 
         <!-- Campos ocultos -->
-        <input type="hidden" name="id_usuario" value="<?php echo $usuario->id_usuario; ?>">
-        <input type="hidden" name="id_persona" value="<?php echo $persona->id_persona; ?>">
+        <input type="hidden" name="id_usuario" value="<?php echo s($usuario->id_usuario); ?>">
+        <input type="hidden" name="id_persona" value="<?php echo s($persona->id_persona); ?>">
 
         <div class="campo">
             <label for="nombre_persona">Nombre</label>
             <input type="text" name="nombre_persona" id="nombre_persona" placeholder="Nombre"
-                value="<?php echo $persona->nombre_persona; ?>">
+                value="<?php echo s($persona->nombre_persona); ?>">
         </div>
 
         <div class="campo">
             <label for="apellido_persona">Apellido</label>
             <input type="text" name="apellido_persona" id="apellido_persona" placeholder="Apellido"
-                value="<?php echo $persona->apellido_persona; ?>">
+                value="<?php echo s($persona->apellido_persona); ?>">
         </div>
 
         <div class="campo">
             <label for="fecha_nacimiento">Fecha de Nacimiento</label>
             <input type="date" name="fecha_nacimiento" id="fecha_nacimiento"
-                value="<?php echo $persona->fecha_nacimiento; ?>">
+                value="<?php echo s($persona->fecha_nacimiento); ?>">
         </div>
 
         <div class="campo">
@@ -43,13 +43,13 @@
         <div class="campo">
             <label for="email">Email</label>
             <input type="text" name="email" id="email" placeholder="Email"
-                value="<?php echo $usuario->email; ?>">
+                value="<?php echo s($usuario->email); ?>">
         </div>
 
         <div class="campo">
             <label for="nombre_usuario">Nombre de Usuario</label>
             <input type="text" name="nombre_usuario" id="nombre_usuario" placeholder="Nombre de Usuario"
-                value="<?php echo $usuario->nombre_usuario; ?>">
+                value="<?php echo s($usuario->nombre_usuario); ?>">
         </div>
 
         <div class="campo">

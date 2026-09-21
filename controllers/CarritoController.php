@@ -59,6 +59,14 @@ class CarritoController
             return;
         }
 
+        if ($tipo === 'butacas') {
+            // Las butacas se reservan por /api/butacas/reservar, que valida
+            // disponibilidad y fija el precio real de la función. Este
+            // endpoint genérico no debe aceptarlas directamente.
+            echo json_encode(['ok' => false, 'mensaje' => 'Tipo de producto inválido']);
+            return;
+        }
+
         try {
             $precio = null;
 
@@ -449,46 +457,6 @@ class CarritoController
         }
     }
 
-    public static function confirmarPago()
-    {
-        $datos = json_decode(file_get_contents('php://input'), true);
-        $idOrden = $datos['id_orden'] ?? null;
-        $paymentId = $datos['payment_id'] ?? null;
-
-        if (!$idOrden) {
-            echo json_encode(['ok' => false, 'mensaje' => 'ID de orden requerido']);
-            return;
-        }
-
-        try {
-            // Obtener la orden
-            $query = "SELECT * FROM ordenes WHERE id = ? AND estado = 'pendiente'";
-            $stmt = \Models\ActiveRecord::getDB()->prepare($query);
-            $stmt->execute([$idOrden]);
-            $orden = $stmt->fetch();
-
-            if (!$orden) {
-                echo json_encode(['ok' => false, 'mensaje' => 'Orden no encontrada']);
-                return;
-            }
-
-            // Procesar la venta usando TUS modelos
-            $resultado = Carrito::procesarVentaCarrito($orden['id_usuario']);
-
-            if ($resultado['resultado']) {
-                // Actualizar estado de la orden
-                $query = "UPDATE ordenes SET estado = 'pagado', payment_id = ?, fecha_actualizacion = NOW() WHERE id = ?";
-                $stmt = \Models\ActiveRecord::getDB()->prepare($query);
-                $stmt->execute([$paymentId, $idOrden]);
-
-                echo json_encode(['ok' => true, 'mensaje' => 'Pago confirmado y stock actualizado']);
-            } else {
-                echo json_encode(['ok' => false, 'mensaje' => 'Error al procesar la venta', 'errores' => $resultado['errores']]);
-            }
-        } catch (\Exception $e) {
-            echo json_encode(['ok' => false, 'mensaje' => $e->getMessage()]);
-        }
-    }
 
     public static function retorno()
     {
