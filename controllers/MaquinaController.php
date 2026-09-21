@@ -71,12 +71,23 @@ class MaquinaController
             // Procesar imagen
             $nombreImagenFinal = '';
             if (!empty($_FILES['imagen_maquina']['name'])) {
+                $extension = \Classes\SubidaSegura::validarYObtenerExtension($_FILES['imagen_maquina'], [
+                    'image/jpeg' => 'jpg',
+                    'image/png'  => 'png',
+                    'image/gif'  => 'gif',
+                    'image/webp' => 'webp',
+                ]);
+
+                if (!$extension) {
+                    echo json_encode(['ok' => false, 'mensaje' => 'El archivo debe ser una imagen válida (JPG, PNG, GIF o WEBP)']);
+                    return;
+                }
+
                 $carpeta = __DIR__ . '/../public/assets/img/cantina/';
                 if (!is_dir($carpeta)) {
                     mkdir($carpeta, 0777, true);
                 }
 
-                $extension = pathinfo($_FILES['imagen_maquina']['name'], PATHINFO_EXTENSION);
                 $nombreImagenFinal = 'maquina_' . time() . '.' . $extension;
 
                 if (!move_uploaded_file($_FILES['imagen_maquina']['tmp_name'], $carpeta . $nombreImagenFinal)) {

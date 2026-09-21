@@ -164,11 +164,14 @@ class ActiveRecord {
     }
 
    public static function find($id) {
-        $id = self::$db->escape_string($id);
+        $id = (int) $id;
         $columnaID = static::$columnasDB[0];
 
-        $query = "SELECT * FROM " . static::$tabla . " WHERE $columnaID = {$id} LIMIT 1";
-        $resultado = self::$db->query($query);
+        $query = "SELECT * FROM " . static::$tabla . " WHERE $columnaID = ? LIMIT 1";
+        $stmt = self::$db->prepare($query);
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
 
         if ($resultado && $resultado->num_rows) {
             $datos = $resultado->fetch_assoc();

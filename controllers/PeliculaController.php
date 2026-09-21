@@ -142,16 +142,26 @@ class PeliculaController
         // Procesar imagen
         $nombreImagenFinal = '';
         if (!empty($_FILES['imagen_pelicula']['name'])) {
-            $carpeta = __DIR__ . '/../public/assets/img/peliculas/';
-            if (!is_dir($carpeta)) {
-                mkdir($carpeta, 0777, true);
-            }
+            $extension = \Classes\SubidaSegura::validarYObtenerExtension($_FILES['imagen_pelicula'], [
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+                'image/gif'  => 'gif',
+                'image/webp' => 'webp',
+            ]);
 
-            $extension = pathinfo($_FILES['imagen_pelicula']['name'], PATHINFO_EXTENSION);
-            $nombreImagenFinal = 'poster_' . time() . '.' . $extension;
+            if (!$extension) {
+                $errores[] = 'El archivo debe ser una imagen válida (JPG, PNG, GIF o WEBP)';
+            } else {
+                $carpeta = __DIR__ . '/../public/assets/img/peliculas/';
+                if (!is_dir($carpeta)) {
+                    mkdir($carpeta, 0777, true);
+                }
 
-            if (!move_uploaded_file($_FILES['imagen_pelicula']['tmp_name'], $carpeta . $nombreImagenFinal)) {
-                $errores[] = 'Error al subir la imagen';
+                $nombreImagenFinal = 'poster_' . time() . '.' . $extension;
+
+                if (!move_uploaded_file($_FILES['imagen_pelicula']['tmp_name'], $carpeta . $nombreImagenFinal)) {
+                    $errores[] = 'Error al subir la imagen';
+                }
             }
         }
 
@@ -611,6 +621,8 @@ class PeliculaController
         $db = \Models\ActiveRecord::getDB();
 
         $whereFechas = "";
+        $fechaDesde = $db->escape_string($fechaDesde);
+        $fechaHasta = $db->escape_string($fechaHasta);
 
         if (!empty($fechaDesde) && !empty($fechaHasta)) {
             $whereFechas = " WHERE DATE(p.creado) BETWEEN '{$fechaDesde}' AND '{$fechaHasta}'";

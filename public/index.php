@@ -6,7 +6,6 @@ require_once __DIR__ . '/../includes/app.php';
 
 
 
-use Controllers\APIController;
 use Controllers\LoginController;
 use Controllers\SexoController;
 use Controllers\UsuarioController;
@@ -543,8 +542,6 @@ $router->post('/administrador/servicios/buscar', [ServicioController::class, 'bu
 $router->get('/soporte', [SoporteController::class, 'formulario']);
 $router->post('/soporte/enviar', [SoporteController::class, 'enviar']);
 
-$router->get('/personas',[APIController::class,'index']);
-//API de Citas
 
 
 

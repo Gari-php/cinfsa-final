@@ -26,3 +26,8 @@ cinfsa1.sql
 
 # Dump local de estructura de carpetas (Windows tree)
 estructura.txt
+
+# Skills locales de agentes de IA (herramientas de desarrollo, no código de la app)
+/.agents/
+/.claude/
+skills-lock.json

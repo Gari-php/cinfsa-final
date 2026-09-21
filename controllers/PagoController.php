@@ -164,6 +164,51 @@ class PagoController
         }
     }
 
+    /**
+     * Confirma contra la API de MercadoPago (server-to-server) que un pago
+     * existe, está aprobado y corresponde a la orden indicada. Nunca hay que
+     * confiar en el estado que manda el navegador por la URL de retorno.
+     */
+    private static function verificarPagoAprobado($paymentId, $numeroOrden, $montoEsperado)
+    {
+        if (!$paymentId || !ctype_digit((string)$paymentId)) {
+            return false;
+        }
+
+        $mpConfig = require __DIR__ . '/../includes/config/mercadopago.php';
+
+        $ch = curl_init("https://api.mercadopago.com/v1/payments/{$paymentId}");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $mpConfig['access_token']
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            return false;
+        }
+
+        $pago = json_decode($response, true);
+
+        if (!$pago || ($pago['status'] ?? null) !== 'approved') {
+            return false;
+        }
+
+        if (($pago['external_reference'] ?? null) !== $numeroOrden) {
+            return false;
+        }
+
+        // Tolerancia de 1 peso por redondeo
+        if (abs((float)($pago['transaction_amount'] ?? 0) - (float)$montoEsperado) > 1) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static function exitoso(Router $router)
     {
         if (!self::verificarUsuario()) {
@@ -176,22 +221,33 @@ class PagoController
 
         if ($numeroOrden && $paymentId) {
             $db = \Models\ActiveRecord::getDB();
-
-            // PASO 1: Actualizar orden
-            $query = "UPDATE ordenes SET estado = 'pagado', payment_id = ?, fecha_pago = NOW(), fecha_actualizacion = NOW() 
-                WHERE numero_orden = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$paymentId, $numeroOrden]);
-
             $idUsuario = $_SESSION['id_usuario'];
 
-            // PASO 2: Obtener ID de la orden
-            $queryOrden = "SELECT id_orden FROM ordenes WHERE numero_orden = ?";
+            // La orden debe existir, pertenecer al usuario en sesión y seguir pendiente
+            $queryOrden = "SELECT id_orden, total FROM ordenes WHERE numero_orden = ? AND id_usuario = ? AND estado = 'pendiente'";
             $stmtOrden = $db->prepare($queryOrden);
-            $stmtOrden->execute([$numeroOrden]);
+            $stmtOrden->execute([$numeroOrden, $idUsuario]);
             $resultOrden = $stmtOrden->get_result();
             $orden = $resultOrden->fetch_assoc();
             $idOrden = $orden['id_orden'] ?? null;
+
+            // Verificación real del pago contra la API de MercadoPago antes de acreditar nada
+            $pagoValido = $idOrden && self::verificarPagoAprobado($paymentId, $numeroOrden, $orden['total']);
+
+            if (!$pagoValido) {
+                $router->render('cliente/pago-exitoso', [
+                    'numero_orden' => $numeroOrden,
+                    'payment_id' => $paymentId,
+                    'error_verificacion' => true
+                ]);
+                return;
+            }
+
+            // PASO 1: Actualizar orden
+            $query = "UPDATE ordenes SET estado = 'pagado', payment_id = ?, fecha_pago = NOW(), fecha_actualizacion = NOW()
+                WHERE numero_orden = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$paymentId, $numeroOrden]);
 
             // ⭐ PASO 3: MARCAR BUTACAS VENDIDAS Y CREAR LA ENTRADA
             if ($idOrden) {

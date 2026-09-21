@@ -123,9 +123,13 @@ class Productos extends ActiveRecord
             return $errores;
         }
 
-        // Validar tipo de archivo
-        $tiposPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-        if (!in_array($archivo['type'], $tiposPermitidos)) {
+        // Validar tipo de archivo por contenido real (no por el Content-Type del navegador)
+        $extension = \Classes\SubidaSegura::validarYObtenerExtension($archivo, [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+        ]);
+        if (!$extension) {
             $errores[] = 'Solo se permiten imágenes JPG, JPEG, PNG o WEBP';
         }
 
@@ -140,6 +144,16 @@ class Productos extends ActiveRecord
 
     public function subirImagen($archivo)
     {
+        // Extensión validada contra el contenido real del archivo, nunca contra el nombre original
+        $extension = \Classes\SubidaSegura::validarYObtenerExtension($archivo, [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+        ]);
+        if (!$extension) {
+            return false;
+        }
+
         // Crear directorio si no existe
         $carpeta = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/productos/';
         if (!is_dir($carpeta)) {
@@ -147,7 +161,6 @@ class Productos extends ActiveRecord
         }
 
         // Generar nombre único
-        $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
         $nombreArchivo = uniqid() . '_' . time() . '.' . $extension;
 
         // Ruta completa

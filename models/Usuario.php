@@ -214,7 +214,6 @@ class Usuario extends ActiveRecord
     public function crear()
     {
         $this->clave_usuario = password_hash($this->clave_usuario, PASSWORD_BCRYPT);
-        $this->token_verificacion = uniqid();
         $this->verificado = 0;
 
         $atributos = $this->sanitizarAtributos();

@@ -54,9 +54,15 @@ class SoporteController
 
         if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
             $archivo = $_FILES['comprobante'];
-            $tipoPermitido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf'];
 
-            if (!in_array($archivo['type'], $tipoPermitido)) {
+            $extension = \Classes\SubidaSegura::validarYObtenerExtension($archivo, [
+                'image/jpeg'      => 'jpg',
+                'image/png'       => 'png',
+                'image/webp'      => 'webp',
+                'application/pdf' => 'pdf',
+            ]);
+
+            if (!$extension) {
                 $errores[] = 'Solo se permiten imágenes (JPG, PNG, WEBP) o archivos PDF';
             }
 
@@ -81,7 +87,6 @@ class SoporteController
                     mkdir($directorioDestino, 0755, true);
                 }
 
-                $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
                 $nombreArchivo = 'reclamo_' . time() . '_' . uniqid() . '.' . $extension;
                 $rutaDestino = $directorioDestino . $nombreArchivo;
 

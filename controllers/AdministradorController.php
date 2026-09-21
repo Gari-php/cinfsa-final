@@ -57,10 +57,16 @@ class AdministradorController
         }
 
         $file = $_FILES['foto'];
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         $maxSize = 5 * 1024 * 1024; // 5MB
 
-        if (!in_array($file['type'], $allowedTypes)) {
+        $extension = \Classes\SubidaSegura::validarYObtenerExtension($file, [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ]);
+
+        if (!$extension) {
             echo json_encode(['ok' => false, 'mensaje' => 'Formato no permitido. Usá JPG, PNG, WEBP o GIF']);
             return;
         }
@@ -79,8 +85,7 @@ class AdministradorController
             mkdir($uploadDir, 0755, true);
         }
 
-        // Nombre único para el archivo
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        // Nombre único para el archivo (extensión ya validada arriba contra el contenido real)
         $nombreArchivo = 'admin_' . $idUsuario . '_' . time() . '.' . $extension;
         $rutaCompleta = $uploadDir . $nombreArchivo;
         $rutaPublica = '/assets/img/perfiles/' . $nombreArchivo;

@@ -69,26 +69,26 @@ $tieneDatosFacturacion = !empty($venta['id_dato_facturacion']);
                         <table class="info-compact">
                             <tr>
                                 <td colspan="2" class="receptor-nombre">
-                                    <strong><?php echo strtoupper($venta['razon_social']); ?></strong>
+                                    <strong><?php echo s(strtoupper($venta['razon_social'])); ?></strong>
                                 </td>
                             </tr>
                             <tr>
-                                <td><?php echo strtoupper($venta['tipo_documento']); ?>:</td>
+                                <td><?php echo s(strtoupper($venta['tipo_documento'])); ?>:</td>
                                 <td class="right">
                                     <?php
                                     $doc = $venta['numero_documento'];
                                     // Formatear CUIT/CUIL si tiene 11 dígitos
                                     if (strlen($doc) === 11 && in_array(strtoupper($venta['tipo_documento']), ['CUIT', 'CUIL'])) {
-                                        echo substr($doc, 0, 2) . '-' . substr($doc, 2, 8) . '-' . substr($doc, 10, 1);
+                                        echo s(substr($doc, 0, 2) . '-' . substr($doc, 2, 8) . '-' . substr($doc, 10, 1));
                                     } else {
-                                        echo $doc;
+                                        echo s($doc);
                                     }
                                     ?>
                                 </td>
                             </tr>
                             <?php if (!empty($venta['domicilio'])): ?>
                                 <tr>
-                                    <td colspan="2" class="domicilio"><?php echo ucwords(strtolower($venta['domicilio'])); ?></td>
+                                    <td colspan="2" class="domicilio"><?php echo s(ucwords(strtolower($venta['domicilio']))); ?></td>
                                 </tr>
                             <?php endif; ?>
                             <?php if (!empty($venta['localidad']) || !empty($venta['provincia'])): ?>
@@ -99,7 +99,7 @@ $tieneDatosFacturacion = !empty($venta['id_dato_facturacion']);
                                         if (!empty($venta['localidad'])) $ubicacion[] = ucwords(strtolower($venta['localidad']));
                                         if (!empty($venta['provincia'])) $ubicacion[] = ucwords(strtolower($venta['provincia']));
                                         if (!empty($venta['codigo_postal'])) $ubicacion[] = '(CP: ' . $venta['codigo_postal'] . ')';
-                                        echo implode(', ', $ubicacion);
+                                        echo s(implode(', ', $ubicacion));
                                         ?>
                                     </td>
                                 </tr>
@@ -107,13 +107,13 @@ $tieneDatosFacturacion = !empty($venta['id_dato_facturacion']);
                             <?php if (!empty($venta['email_facturacion'])): ?>
                                 <tr>
                                     <td>Email:</td>
-                                    <td class="right"><?php echo strtolower($venta['email_facturacion']); ?></td>
+                                    <td class="right"><?php echo s(strtolower($venta['email_facturacion'])); ?></td>
                                 </tr>
                             <?php endif; ?>
                             <?php if (!empty($venta['telefono_facturacion'])): ?>
                                 <tr>
                                     <td>Tel:</td>
-                                    <td class="right"><?php echo $venta['telefono_facturacion']; ?></td>
+                                    <td class="right"><?php echo s($venta['telefono_facturacion']); ?></td>
                                 </tr>
                             <?php endif; ?>
                         </table>

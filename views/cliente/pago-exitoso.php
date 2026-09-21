@@ -1,14 +1,37 @@
+<?php if (!empty($error_verificacion)): ?>
+<div class="resultado-pago">
+    <div class="contenido-resultado fallido">
+        <div class="icono-resultado">
+            <i class="fas fa-times-circle"></i>
+        </div>
+
+        <h1>No pudimos confirmar tu pago</h1>
+
+        <div class="info-orden">
+            <p>Tu orden</p>
+            <p class="numero-orden"><?php echo s($numero_orden ?? 'N/A'); ?></p>
+            <p>todavía no figura como pagada. Si ya pagaste, contactanos con este número de orden.</p>
+        </div>
+
+        <div class="acciones-resultado">
+            <a href="/menu" class="btn-volver-menu">
+                <i class="fas fa-home"></i> Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+<?php else: ?>
 <div class="resultado-pago">
     <div class="contenido-resultado exitoso">
         <div class="icono-resultado">
             <i class="fas fa-check-circle"></i>
         </div>
-        
+
         <h1>¡Pago exitoso!</h1>
-        
+
         <div class="info-orden">
             <p>Tu orden</p>
-            <p class="numero-orden"><?php echo $numero_orden ?? 'N/A'; ?></p>
+            <p class="numero-orden"><?php echo s($numero_orden ?? 'N/A'); ?></p>
             <p>ha sido procesada correctamente</p>
         </div>
 
@@ -24,6 +47,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <style>
 .resultado-pago {

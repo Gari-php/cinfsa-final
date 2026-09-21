@@ -586,6 +586,8 @@ class MovimientosWebController
         $db = ActiveRecord::getDB();
 
         $whereFechas = "";
+        $fechaDesde = $db->escape_string($fechaDesde);
+        $fechaHasta = $db->escape_string($fechaHasta);
 
         if (!empty($fechaDesde) && !empty($fechaHasta)) {
             $whereFechas = " WHERE DATE(o.fecha_creacion) BETWEEN '{$fechaDesde}' AND '{$fechaHasta}'";

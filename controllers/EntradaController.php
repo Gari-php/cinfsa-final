@@ -802,6 +802,8 @@ class EntradaController
         $db = \Models\ActiveRecord::getDB();
 
         $whereFechas = "";
+        $fechaDesde = $db->escape_string($fechaDesde);
+        $fechaHasta = $db->escape_string($fechaHasta);
 
         if (!empty($fechaDesde) && !empty($fechaHasta)) {
             $whereFechas = " WHERE DATE(cf.pago_fecha_hora) BETWEEN '{$fechaDesde}' AND '{$fechaHasta}'";
