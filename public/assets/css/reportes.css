@@ -1,0 +1,227 @@
+.reportes-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-reportes {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header-reportes .form-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
+
+.header-reportes h1 {
+    color: #ed850f;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.nav-reportes {
+    background-color: #ed850f;
+    display: inline-block;
+    padding: 15px 25px; /* Aumenté el padding para hacer el nav más largo y ancho */
+    border-radius: 8px; /* Aumenté un poco el border-radius */
+    margin: 0 auto 20px auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Agregué una sombra sutil */
+}
+
+.nav-reportes a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px; /* Agregué padding a los enlaces para más separación */
+    margin: 0 10px; /* Agregué margen horizontal para separar los enlaces */
+    border-radius: 6px; /* Agregué border-radius a los enlaces */
+    transition: all 0.3s ease; /* Agregué transición suave */
+    display: inline-block; /* Para que el padding funcione correctamente */
+}
+
+.nav-reportes a:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Fondo semi-transparente en hover */
+    text-decoration: none; /* Quité el underline del hover */
+    transform: translateY(-1px); /* Efecto de elevación sutil */
+}
+
+.nav-reportes a:first-child {
+    margin-left: 0; /* Elimino margen izquierdo del primer enlace */
+}
+
+.nav-reportes a:last-child {
+    margin-right: 0; /* Elimino margen derecho del último enlace */
+}
+
+.nav-reportes span {
+    color: #333;
+    font-weight: 500;
+    padding: 8px 12px;
+    margin: 0 5px;
+}
+
+.reportes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.reporte-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e1e5e9;
+}
+
+.reporte-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #ed850f, #f39c12);
+    color: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.card-header i {
+    font-size: 1.8rem;
+}
+
+.card-header h3 {
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.card-description {
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.card-description p {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.card-description small {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.card-actions {
+    padding: 20px;
+    background: white;
+}
+
+.grupo-exportacion {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-reporte {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-reporte:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-reporte.excel {
+    background-color: #217346;
+    color: white;
+}
+
+.btn-reporte.excel:hover:not(:disabled) {
+    background-color: #1a5c37;
+}
+
+.btn-reporte.pdf {
+    background-color: #d63031;
+    color: white;
+}
+
+.btn-reporte.pdf:hover:not(:disabled) {
+    background-color: #b71c1c;
+}
+
+.btn-reporte:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #95a5a6 !important;
+}
+
+.loading-export {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading-export::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reportes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .grupo-exportacion {
+        flex-direction: column;
+    }
+    
+    .btn-reporte {
+        width: 100%;
+    }
+    
+    .nav-reportes {
+        padding: 12px 20px; /* Ajuste para móviles */
+    }
+    
+    .nav-reportes a {
+        padding: 6px 12px; /* Menor padding en móviles */
+        margin: 0 5px; /* Menor margen en móviles */
+        font-size: 0.9rem; /* Texto un poco más pequeño en móviles */
+    }
+}

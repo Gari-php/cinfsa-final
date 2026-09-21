@@ -1,0 +1,28 @@
+# Dependencias
+/vendor/
+/node_modules/
+
+# Variables de entorno y secretos
+.env
+/api_keys/
+
+# Dump completo de la base (contiene datos reales de usuarios/contraseñas).
+# Se versiona cinfsa1_schema.sql (solo estructura) en su lugar.
+cinfsa1.sql
+
+# Contenido subido en tiempo de ejecución (posters, fotos de perfil, productos, máquinas, reclamos)
+/public/uploads/
+/public/assets/img/peliculas/
+/public/assets/img/perfiles/
+/public/assets/img/productos/
+/public/assets/img/cantina/
+
+# Logs y archivos locales de este equipo
+*.log
+/Expirar Entradas CINFSA.xml
+
+# Zips/backups sueltos
+*.zip
+
+# Dump local de estructura de carpetas (Windows tree)
+estructura.txt

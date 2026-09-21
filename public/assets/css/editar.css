@@ -1,0 +1,328 @@
+/* ==============================================
+   CSS UNIVERSAL PARA FORMULARIOS DE CREAR/EDITAR
+   Estilo base: views/administrador/peliculas/crear.php
+   ============================================== */
+
+.form-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #e2e8f0;
+    border: 2px solid #ed850f;
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 820px;
+    margin: 40px auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Logo específico del formulario */
+.form-container .form-logo {
+    width: 90px;
+    display: block;
+    margin: 0 auto 15px;
+}
+
+/* Título del formulario */
+.form-container h2 {
+    color: #ed850f;
+    text-align: center;
+    font-size: 1.6rem !important;
+    margin-bottom: 1.5rem;
+    background: none;
+}
+
+/* Formulario en una sola columna */
+.form-container form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+
+/* Campos del formulario */
+.form-container .campo {
+    margin-bottom: 1.2rem;
+    text-align: left;
+}
+
+.form-container .campo.full-ancho {
+    grid-column: 1 / -1;
+}
+
+.form-container .campo label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #a0aec0;
+    font-size: 14px !important;
+}
+
+/* Indicador de campo requerido */
+.form-container .campo label.requerido::after {
+    content: ' *';
+    color: #ed850f;
+}
+
+/* Inputs, selects y textareas */
+.form-container .campo input,
+.form-container .campo select,
+.form-container .campo textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #4a5568;
+    border-radius: 10px;
+    background: #2d3748;
+    color: #e2e8f0;
+    font-size: 14px !important;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.form-container .campo textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-container .campo input::placeholder,
+.form-container .campo textarea::placeholder {
+    color: #6b7280;
+}
+
+.form-container .campo input:focus,
+.form-container .campo select:focus,
+.form-container .campo textarea:focus {
+    outline: none;
+    border-color: #ed850f;
+    background: #363130;
+    box-shadow: 0 0 0 3px rgba(237, 133, 15, 0.2);
+}
+
+/* Select */
+.form-container .campo select option {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+.form-container .campo select[multiple] {
+    padding: 8px;
+}
+
+.form-container .campo select[multiple] option {
+    padding: 8px 10px;
+    border-radius: 4px;
+}
+
+/* Input file */
+.form-container .campo input[type="file"] {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-style: dashed;
+}
+
+.form-container .campo input[type="file"]:hover {
+    border-color: #ed850f;
+}
+
+/* Checkbox y Radio */
+.form-container .campo input[type="checkbox"],
+.form-container .campo input[type="radio"] {
+    width: auto;
+    margin-right: 8px;
+    transform: scale(1.2);
+    accent-color: #ed850f;
+}
+
+.form-container .campo-checkbox,
+.form-container .campo-radio {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.form-container .campo-checkbox label,
+.form-container .campo-radio label {
+    margin-bottom: 0;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+/* Campo con ícono (ej: mostrar/ocultar contraseña) */
+.form-container .input-con-icono {
+    position: relative;
+}
+
+.form-container .input-con-icono input {
+    width: 100%;
+    padding: 12px 44px 12px 14px;
+    border: 2px solid #4a5568;
+    border-radius: 10px;
+    background: #2d3748;
+    color: #e2e8f0;
+    font-size: 14px !important;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.form-container .input-con-icono input:focus {
+    outline: none;
+    border-color: #ed850f;
+    background: #363130;
+    box-shadow: 0 0 0 3px rgba(237, 133, 15, 0.2);
+}
+
+.form-container .input-con-icono .icono {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 16px !important;
+    color: #a0aec0;
+    transition: color 0.2s ease;
+}
+
+.form-container .input-con-icono .icono:hover {
+    color: #ed850f;
+}
+
+/* Estado de error de campo (aplicado por formularios.js) */
+.form-container .campo input.input-error,
+.form-container .campo select.input-error,
+.form-container .campo textarea.input-error {
+    background-color: #2c2c2c;
+    color: white;
+    border-color: #ab3f4a;
+}
+
+.form-container .campo input.input-error:hover,
+.form-container .campo input.input-error:focus,
+.form-container .campo select.input-error:hover,
+.form-container .campo select.input-error:focus,
+.form-container .campo textarea.input-error:hover,
+.form-container .campo textarea.input-error:focus {
+    background-color: #2c2c2c;
+    color: white;
+    border-color: #ab3f4a;
+}
+
+/* Mensaje de ayuda */
+.form-container .campo .ayuda {
+    font-size: 0.8rem !important;
+    color: #a0aec0;
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+.form-container .campo .ayuda strong {
+    color: #ed850f;
+}
+
+/* Previsualización del tráiler */
+.form-container .preview-trailer {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 10px;
+}
+
+.form-container .preview-trailer p {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 0.9rem !important;
+}
+
+.form-container .preview-trailer iframe {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    max-width: 100%;
+}
+
+/* Previsualización de imagen */
+.form-container .preview-imagen {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.form-container .preview-imagen img {
+    max-width: 200px;
+    max-height: 300px;
+    border-radius: 8px;
+    border: 1px solid #4a5568;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Botón principal */
+.form-container .boton,
+.form-container input[type="submit"] {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 13px 15px;
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 18px rgba(237, 133, 15, 0.35);
+    margin-top: 10px;
+}
+
+.form-container .boton:hover,
+.form-container input[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(237, 133, 15, 0.5);
+}
+
+.form-container .contenedor-alertas {
+    grid-column: 1 / -1;
+}
+
+/* Acciones (enlaces / botones secundarios al final) */
+.form-container .acciones {
+    grid-column: 1 / -1;
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.form-container .acciones a,
+.form-container .acciones .boton-secundario {
+    display: inline-block;
+    color: #a0aec0;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px !important;
+    padding: 10px 20px;
+    border: 2px solid #4a5568;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.form-container .acciones a:hover,
+.form-container .acciones .boton-secundario:hover {
+    border-color: #ed850f;
+    color: #ed850f;
+    background: rgba(237, 133, 15, 0.08);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .form-container {
+        padding: 1.5rem;
+        margin: 20px auto;
+        border-radius: 16px;
+    }
+
+    .form-container h2 {
+        font-size: 1.3rem !important;
+    }
+}

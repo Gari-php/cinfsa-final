@@ -1,0 +1,869 @@
+body.perfil-abierto .header,
+body.perfil-abierto .urls {
+    display: none;
+}
+
+body.perfil-abierto .main-content {
+    margin-top: 0;
+}
+
+body.perfil-abierto .footer {
+    display: none;
+}
+
+body.perfil-abierto {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.perfil-abierto .main-content {
+    height: 100vh;
+    overflow: hidden;
+}
+
+
+/* Contenedor centrado */
+.contenedor {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 100px);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Estilo del header */
+.page-header {
+    max-width: 600px;
+    background: #1c1c1c;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilo del usuario */
+.user {
+    font-size: 2rem;
+    color: darkorange;
+    margin-bottom: 10px;
+}
+
+/* Estilo del párrafo */
+.parrafo {
+    font-size: 1rem;
+    color: rgb(207, 115, 3);
+    line-height: 1.6;
+}
+
+/* ESTA ES LA PARTE DEL FORMULARIO DE LOS DATOS DEL CLIENTE, PARA ACTUALIZAR/////// FALTA AGREGAR UN SPINNER////////// */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(44, 41, 41, 0.5);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background-color: #211e1e;
+    margin: 5vh auto;
+    padding: 35px;
+    border: none;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 0 30px rgba(237, 133, 15, 0.25);
+}
+
+.close {
+    color: #ed850f;
+    font-size: 30px !important;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    z-index: 10;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+}
+
+.perfil-container {
+    padding: 20px;
+}
+
+.perfil-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.foto-perfil {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 4px solid #007bff;
+}
+
+.foto-perfil-container {
+    position: relative;
+    display: inline-block;
+}
+
+.cambiar-foto {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: darkorange;
+}
+
+.nombre {
+    color: darkorange !important;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid darkorange;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.form-group input:disabled {
+    background-color: #f8f9fa;
+    color: #666;
+}
+
+.tabs-compras {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    border-bottom: 2px solid #4a5568;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #a0aec0;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    color: #ed850f;
+    border-bottom-color: #ed850f;
+}
+
+.tab-btn:hover {
+    color: #ffa733;
+}
+
+.tarjeta-compra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+}
+
+.tarjeta-compra-info h4 {
+    color: #e2e8f0;
+    margin: 0 0 5px;
+    font-size: 15px;
+}
+
+.tarjeta-compra-info p {
+    color: #a0aec0;
+    margin: 2px 0;
+    font-size: 13px;
+}
+
+.badge-compra {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-vigente {
+    background: #22c55e;
+    color: white;
+}
+
+.badge-vencida {
+    background: #6b7280;
+    color: white;
+}
+
+.badge-usada {
+    background: #3498db;
+    color: white;
+}
+
+.badge-cancelada {
+    background: #ef4444;
+    color: white;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 8px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #ca1807ff;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #1e7e34;
+    transform: translateY(-2px);
+}
+
+.alert {
+    padding: 15px;
+    margin: 20px 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.estado-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.estado-activo {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.estado-inactivo {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.parrafo {
+    color: darkorange;
+}
+
+.char-count {
+    color: darkorange;
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 5% auto;
+        width: 95%;
+        padding: 15px;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-row .form-group {
+        min-width: auto;
+    }
+}
+
+/* ACA VA LA PARTE DE "CONTACTANOS O AYUDA" PARA QUE EL CLIENTE PUEDA HACER SUS CONSULTAS O SUGERENCIAS A ALGUIEN DEL CINE*/
+
+.contacto-container {
+    padding: 20px;
+    background-color: #1c1c1c;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#pagina-perfil-cliente .contenedor {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+#pagina-perfil-cliente .page-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid #ed850f;
+    border-radius: 20px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+#pagina-perfil-cliente .page-header .user {
+    color: #ed850f;
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+}
+
+#pagina-perfil-cliente .page-header .parrafo {
+    color: #a0aec0;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ===== MODAL ===== */
+#pagina-perfil-cliente .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 40px 20px;
+}
+
+#pagina-perfil-cliente .modal-content {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid #ed850f;
+    border-radius: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#pagina-perfil-cliente .close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    color: #a0aec0;
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+#pagina-perfil-cliente .close:hover {
+    color: #ed850f;
+}
+
+/* ===== LOADING ===== */
+#pagina-perfil-cliente .loading {
+    text-align: center;
+    padding: 3rem 0;
+    color: #a0aec0;
+}
+
+#pagina-perfil-cliente .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #4a5568;
+    border-top-color: #ed850f;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: girar-spinner 0.8s linear infinite;
+}
+
+@keyframes girar-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== PERFIL (foto + nombre) ===== */
+#pagina-perfil-cliente .perfil-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #4a5568;
+}
+
+#pagina-perfil-cliente .foto-perfil-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 1rem;
+}
+
+#pagina-perfil-cliente .foto-perfil {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ed850f;
+}
+
+#pagina-perfil-cliente .cambiar-foto {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    color: #fff;
+    border: 2px solid #1a1a1a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+#pagina-perfil-cliente .cambiar-foto:hover {
+    transform: scale(1.1);
+}
+
+#pagina-perfil-cliente .nombre {
+    color: #fff;
+    font-size: 1.4rem;
+    margin: 0;
+}
+
+/* ===== FORMULARIO ===== */
+#pagina-perfil-cliente .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 18px;
+}
+
+#pagina-perfil-cliente .form-group {
+    margin-bottom: 1.1rem;
+    text-align: left;
+}
+
+#pagina-perfil-cliente .dato-user,
+#pagina-perfil-cliente .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #a0aec0;
+    font-size: 13px;
+}
+
+#pagina-perfil-cliente .form-group label .required {
+    color: #ed850f;
+}
+
+#pagina-perfil-cliente .form-group input,
+#pagina-perfil-cliente .form-group select,
+#pagina-perfil-cliente .form-group textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #4a5568;
+    border-radius: 10px;
+    background: #2d3748;
+    color: #e2e8f0;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+#pagina-perfil-cliente .form-group textarea {
+    resize: vertical;
+}
+
+#pagina-perfil-cliente .form-group input:focus,
+#pagina-perfil-cliente .form-group select:focus,
+#pagina-perfil-cliente .form-group textarea:focus {
+    outline: none;
+    border-color: #ed850f;
+    background: #363130;
+    box-shadow: 0 0 0 3px rgba(237, 133, 15, 0.2);
+}
+
+#pagina-perfil-cliente .form-group input:disabled,
+#pagina-perfil-cliente .form-group select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#pagina-perfil-cliente .form-group select option {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+#pagina-perfil-cliente .char-count {
+    display: block;
+    text-align: right;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* ===== BOTONES ===== */
+#pagina-perfil-cliente .btn {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 5px;
+}
+
+#pagina-perfil-cliente .btn-primary {
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    color: #fff;
+}
+
+#pagina-perfil-cliente .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(237, 133, 15, 0.4);
+}
+
+#pagina-perfil-cliente .btn-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+}
+
+#pagina-perfil-cliente .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
+}
+
+#pagina-perfil-cliente .btn-secondary {
+    background: transparent;
+    color: #e2e8f0;
+    border: 2px solid #4a5568;
+}
+
+#pagina-perfil-cliente .btn-secondary:hover {
+    border-color: #ed850f;
+    color: #ed850f;
+    background: rgba(237, 133, 15, 0.08);
+}
+
+/* ===== ALERTAS ===== */
+#pagina-perfil-cliente .alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 14px;
+}
+
+#pagina-perfil-cliente .alert-success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid #22c55e;
+    color: #86efac;
+}
+
+#pagina-perfil-cliente .alert-danger {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid #ef4444;
+    color: #fca5a5;
+}
+
+#pagina-perfil-cliente .alert-info {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid #3b82f6;
+    color: #93c5fd;
+}
+
+/* ===== CONTACTO ===== */
+#pagina-perfil-cliente .contacto-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+#pagina-perfil-cliente .contacto-container h2 {
+    color: #ed850f;
+    margin: 0;
+}
+
+/* ===== MIS COMPRAS: TABS ===== */
+#pagina-perfil-cliente .tabs-compras {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #4a5568;
+    padding-bottom: 12px;
+}
+
+#pagina-perfil-cliente .tab-btn {
+    background: transparent;
+    border: 2px solid #4a5568;
+    color: #a0aec0;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+#pagina-perfil-cliente .tab-btn:hover {
+    border-color: #ed850f;
+    color: #ed850f;
+}
+
+#pagina-perfil-cliente .tab-btn.active {
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    border-color: #ed850f;
+    color: #fff;
+}
+
+/* ===== TARJETAS DE COMPRA ===== */
+#pagina-perfil-cliente .tarjeta-compra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 12px;
+}
+
+#pagina-perfil-cliente .tarjeta-compra-info h4 {
+    color: #fff;
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+}
+
+#pagina-perfil-cliente .tarjeta-compra-info p {
+    color: #a0aec0;
+    margin: 2px 0;
+    font-size: 13px;
+}
+
+#pagina-perfil-cliente .tarjeta-compra-estado {
+    flex-shrink: 0;
+    text-align: right;
+}
+
+/* ===== BADGES DE ESTADO ===== */
+#pagina-perfil-cliente .badge-compra {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+#pagina-perfil-cliente .badge-vigente {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+}
+
+#pagina-perfil-cliente .badge-vencida {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid #f59e0b;
+}
+
+#pagina-perfil-cliente .badge-usada {
+    background: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
+    border: 1px solid #6b7280;
+}
+
+#pagina-perfil-cliente .badge-cancelada {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 700px) {
+    #pagina-perfil-cliente .contenedor {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+
+    #pagina-perfil-cliente .page-header {
+        padding: 1.5rem;
+    }
+
+    #pagina-perfil-cliente .page-header .user {
+        font-size: 1.4rem;
+    }
+
+    #pagina-perfil-cliente .modal {
+        padding: 20px 12px;
+    }
+
+    #pagina-perfil-cliente .modal-content {
+        padding: 1.5rem;
+    }
+
+    #pagina-perfil-cliente .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    #pagina-perfil-cliente .tarjeta-compra {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #pagina-perfil-cliente .tarjeta-compra-estado {
+        text-align: left;
+    }
+
+    #pagina-perfil-cliente .tabs-compras {
+        flex-wrap: wrap;
+    }
+
+    #pagina-perfil-cliente .btn {
+        width: 100%;
+        margin: 5px 0;
+    }
+}

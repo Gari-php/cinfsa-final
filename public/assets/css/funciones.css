@@ -1,0 +1,325 @@
+
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.funciones-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* ===== ENCABEZADO DE SECCIÓN ===== */
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); /* Gradiente naranja */
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+}
+
+.section-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.section-header p {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.btn-volver {
+    background: white;
+    color: #ff6b35; /* Color naranja */
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-volver:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== GRID DE FUNCIONES ===== */
+.funciones-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 992px) {
+    .funciones-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .funciones-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== TARJETA DE FUNCIÓN ===== */
+.funcion-card {
+    background: #2d3748; /* Fondo oscuro */
+    border: 1px solid #4a5568;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+}
+
+.funcion-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(255, 107, 53, 0.2);
+    border-color: #ff6b35; /* Borde naranja en hover */
+}
+
+/* ===== SECCIÓN SUPERIOR CON POSTER E INFO ===== */
+.card-header {
+    display: flex;
+    height: 200px;
+}
+
+.poster-container {
+    width: 60%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: #4a5568; /* Fondo gris oscuro */
+}
+
+.poster-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Imagen completa */
+    object-position: center;
+    transition: transform 0.3s ease;
+    background: #4a5568;
+}
+
+.funcion-card:hover .poster-container img {
+    transform: scale(1.05);
+}
+
+.poster-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    font-size: 2rem;
+}
+
+.info-badges {
+    width: 40%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #ff6b35, #f7931e); /* Gradiente naranja */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.badge {
+    background: rgba(45, 55, 72, 0.9); /* Fondo oscuro */
+    color: #e2e8f0; /* Texto claro */
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge.clasificacion {
+    background: rgba(252, 129, 129, 0.9); /* Rojo suave */
+    color: white;
+}
+
+.badge.tipo-entrada {
+    background: rgba(104, 211, 145, 0.9); /* Verde suave */
+    color: white;
+}
+
+.badge.tipo-entrada.tipo-3d {
+    background: rgba(159, 122, 234, 0.9); /* Púrpura suave */
+}
+
+.badge.tipo-entrada.tipo-4d {
+    background: rgba(245, 101, 101, 0.9); /* Rosa suave */
+}
+
+.badge.tipo-entrada.tipo-imax {
+    background: rgba(251, 191, 36, 0.9); /* Amarillo naranja */
+}
+
+.badge.precio {
+    background: rgba(56, 178, 172, 0.95); /* Verde azulado */
+    color: white;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+/* ===== INFORMACIÓN PRINCIPAL ===== */
+.card-body {
+    padding: 1.2rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: #2d3748; /* Fondo consistente */
+}
+
+.titulo-pelicula {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #e2e8f0; /* Texto claro */
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.detalles-funcion {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.detalle-item {
+    background: #4a5568; /* Fondo gris oscuro */
+    padding: 0.6rem;
+    border-radius: 6px;
+    border-left: 3px solid #ff6b35; /* Borde naranja */
+}
+
+.detalle-label {
+    font-size: 0.7rem;
+    color: #a0aec0; /* Texto secundario */
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.detalle-valor {
+    font-size: 0.85rem;
+    color: #e2e8f0; /* Texto claro */
+    font-weight: 500;
+}
+
+.info-adicional {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 0.8rem;
+    border-top: 1px solid #4a5568; /* Borde gris oscuro */
+    margin-top: auto;
+}
+
+.capacidad, .duracion {
+    font-size: 0.8rem;
+    color: #a0aec0; /* Texto secundario */
+}
+
+.capacidad i, .duracion i {
+    color: #ff6b35; /* Iconos naranjas */
+    margin-right: 0.3rem;
+}
+
+/* ===== MENSAJE SIN FUNCIONES ===== */
+.no-funciones {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #2d3748; /* Fondo oscuro */
+    border: 1px solid #4a5568;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.no-funciones h2 {
+    color: #e2e8f0; /* Texto claro */
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.no-funciones p {
+    color: #a0aec0; /* Texto secundario */
+    font-size: 1.1rem;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .funciones-container {
+        padding: 0 0.5rem;
+        margin: 1rem auto;
+    }
+
+    .section-header {
+        padding: 1.5rem;
+    }
+
+    .section-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .funciones-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .funcion-card {
+        height: auto;
+    }
+
+    .card-header {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .poster-container, .info-badges {
+        width: 100%;
+    }
+
+    .poster-container {
+        height: 160px;
+    }
+
+    .detalles-funcion {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .info-adicional {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}

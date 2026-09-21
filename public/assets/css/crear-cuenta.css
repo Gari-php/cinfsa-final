@@ -1,0 +1,267 @@
+/* Reset y base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #363130;
+    padding: 20px;
+    color: #e2e8f0;
+    font-family: 'Montserrat', 'Poppins', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Contenedor principal */
+.form-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid #ed850f;
+    padding: 26px 34px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 620px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(237, 133, 15, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.form-logo {
+    width: 90px;
+    display: block;
+    margin: 0 auto 10px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 12px rgba(237, 133, 15, 0.3));
+}
+
+.form-container h2 {
+    font-size: 22px !important;
+    font-weight: bold;
+    color: #ed850f;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Formulario en grid de 2 columnas */
+.form-container form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Campos */
+.form-container .campo {
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.form-container .campo label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #a0aec0;
+    font-size: 13px !important;
+}
+
+.form-container .campo input[type="text"],
+.form-container .campo input[type="email"],
+.form-container .campo input[type="password"],
+.form-container .campo input[type="date"],
+.form-container .campo select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #4a5568;
+    border-radius: 8px;
+    background: #2d3748;
+    color: #e2e8f0;
+    font-size: 14px !important;
+    transition: all 0.3s ease;
+}
+
+.form-container .campo input::placeholder {
+    color: #6b7280;
+}
+
+.form-container .campo input:focus,
+.form-container .campo select:focus {
+    outline: none;
+    border-color: #ed850f;
+    background: #363130;
+    box-shadow: 0 0 0 3px rgba(237, 133, 15, 0.2);
+}
+
+.form-container .campo select {
+    cursor: pointer;
+}
+
+.form-container .campo select option {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+/* El selector nativo de fecha se adapta a fondo oscuro (icono claro) */
+.form-container .campo input[type="date"] {
+    color-scheme: dark;
+}
+
+/* Campo con icono (contraseñas) */
+.input-con-icono {
+    position: relative;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.input-con-icono input {
+    width: 100%;
+    padding: 10px 44px 10px 12px;
+    border: 2px solid #4a5568;
+    border-radius: 8px;
+    background: #2d3748;
+    color: #e2e8f0;
+    font-size: 14px !important;
+    transition: all 0.3s ease;
+}
+
+.input-con-icono input::placeholder {
+    color: #6b7280;
+}
+
+.input-con-icono input:focus {
+    outline: none;
+    border-color: #ed850f;
+    background: #363130;
+    box-shadow: 0 0 0 3px rgba(237, 133, 15, 0.2);
+}
+
+.input-con-icono .icono {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 16px !important;
+    color: #a0aec0;
+    transition: color 0.2s ease;
+}
+
+.input-con-icono .icono:hover {
+    color: #ed850f;
+}
+
+/* Botón: ocupa las dos columnas */
+.form-container .boton {
+    grid-column: 1 / -1;
+    margin-top: 6px;
+    padding: 12px 15px;
+    width: 100%;
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px !important;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 18px rgba(237, 133, 15, 0.35);
+}
+
+.form-container .boton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(237, 133, 15, 0.5);
+}
+
+.form-container .boton:active {
+    transform: translateY(0);
+}
+
+/* Enlaces: ocupan las dos columnas */
+.form-container .acciones {
+    grid-column: 1 / -1;
+    margin-top: 12px;
+}
+
+.form-container .acciones a {
+    display: block;
+    padding: 10px 15px;
+    width: 100%;
+    background: transparent;
+    color: #e2e8f0;
+    text-align: center;
+    border: 2px solid #4a5568;
+    border-radius: 10px;
+    font-size: 14px !important;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-container .acciones a:hover {
+    border-color: #ed850f;
+    color: #ed850f;
+    background: rgba(237, 133, 15, 0.08);
+}
+
+/* Contenedor de alertas: ocupa las dos columnas */
+.contenedor-alertas {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 12px;
+}
+
+/* Anular el fondo claro que impone el autocompletado del navegador */
+.form-container .campo input:-webkit-autofill,
+.form-container .campo input:-webkit-autofill:hover,
+.form-container .campo input:-webkit-autofill:focus,
+.form-container .campo input:-webkit-autofill:active,
+.input-con-icono input:-webkit-autofill,
+.input-con-icono input:-webkit-autofill:hover,
+.input-con-icono input:-webkit-autofill:focus,
+.input-con-icono input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #2d3748 inset !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    caret-color: #e2e8f0;
+    border: 2px solid #4a5568 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.form-container .campo input:-webkit-autofill:focus,
+.input-con-icono input:-webkit-autofill:focus {
+    border-color: #ed850f !important;
+    -webkit-box-shadow: 0 0 0 1000px #363130 inset, 0 0 0 3px rgba(237, 133, 15, 0.2) !important;
+}
+
+/* En pantallas chicas, volver a una sola columna */
+@media (max-width: 600px) {
+    .form-container form {
+        grid-template-columns: 1fr;
+    }
+
+    .form-container {
+        padding: 24px 22px;
+        border-radius: 16px;
+    }
+}

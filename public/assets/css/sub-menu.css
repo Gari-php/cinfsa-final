@@ -1,0 +1,283 @@
+@import url("https://fonts.googleapis.com/css?family=Montserrat|Montserrat+Alternates|Poppins&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Montserrat Alternates", sans-serif;
+}
+body {
+ background-color: rgb(47, 45, 45);
+ margin-left: 17%;
+}
+.capa {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: -1;
+  top: 0;
+  left: 0;
+}
+/*Estilos para el encabezado*/
+.header {
+  width: 100%;
+  height: 100px;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: auto;
+}
+
+figure{
+    top: 50px;
+}
+
+
+
+/* Estilos para los cuadros */
+.tile-container{
+  margin-top: 10%;
+  text-align: center;
+  padding: 20px 25px;
+
+  display: flex;              
+  flex-wrap: wrap;            /* Permite que los tiles bajen a otra fila */
+  justify-content: center;    /* Centra horizontalmente */
+  align-items: flex-start;    
+}
+
+.tile{
+  box-shadow: 7px 5px 10px black;
+  height: 200px;
+  width: calc(90% / 3);
+  margin: 10px;
+
+  display: inline-flex;
+  flex-direction: column;     
+  justify-content: space-between;
+
+  text-decoration: none;
+  color: var(--accent-color); /* Color de texto por defecto */
+  border: 1px solid var(--border-color); /* Color del borde */
+  border-radius: 3px;
+  user-select: none;
+  transition: all .2s ease-in-out;
+  background-color: #ed850f;
+  vertical-align: top;
+  cursor: pointer;
+  
+}
+
+.tile:hover{
+	text-decoration: none;
+	border-color: var(--color-three);
+}
+.tile:focus,
+.tile:active{
+	outline: none;
+}
+.tile-tittle{
+	margin: 0;
+	width: 100%;
+	padding: 0;
+	height: 40px;
+	line-height: 40px;
+	box-sizing: border-box;
+	text-transform: uppercase;
+	border-bottom: 1px solid var(--border-color);
+	transition: all .2s ease-in-out;
+	font-family: 'roboto_medium_regular';
+}
+.tile:hover .tile-tittle{
+	color: #FFF;
+	border-color: var(--color-three);
+	background-color: var(--color-three);
+}
+
+.icono{
+  font-size: 80px !important;
+}
+
+.icono:hover{
+  color: var(--color-three);
+  transform: scale(1.1);
+  transition: all .2s ease-in-out;
+}
+
+.tile-icon{
+	width: 100%;
+	height: 160px;
+	box-sizing: border-box;
+	padding-top: 22px;
+}
+.tile-icon > i{
+	font-size: 80px !important;
+}
+.tile-icon > p{
+	font-family: 'roboto_medium_regular';
+	height: 35px;
+	line-height: 35px;
+}
+.tile:hover .tile-icon > i,
+.tile:hover .tile-icon > p{
+	color: var(--color-three);
+}
+
+
+/* Avatar del usuario */
+.nav-lateral-avatar {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.nav-lateral-avatar img {
+    width: 90px;
+    border-radius: 50%;
+    border: 3px solid #3498db;
+    margin-bottom: 10px;
+}
+
+.nav-lateral-avatar i {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #bbb;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Nombre de usuario */
+.nav-lateral-avatar figcaption {
+    font-weight: bold;
+    font-size: 16px;
+    color: #ecf0f1;
+}
+.container .btn-menu,
+.logo {
+  float: left;
+  line-height: 100px;
+}
+.logo img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-top: 8%;
+}
+.container .btn-menu label {
+  color: #ed850f;
+  font-size: 25px;
+  cursor: pointer;
+}
+.logo h1 {
+  color: #fff;
+  font-weight: 400;
+  font-size: 22px;
+  margin-left: 10px;
+}
+.container .menu {
+  float: right;
+  line-height: 100px;
+}
+.container .menu a {
+  display: inline-block;
+  padding: 15px;
+  line-height: normal;
+  text-decoration: none;
+  color: #ed850f;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+  font-size: 15px;
+  margin-right: 5px;
+}
+.container .menu a:hover {
+  border-bottom: 2px solid #ed850f;
+  padding-bottom: 5px;
+}
+/*Fin de Estilos para el encabezado*/
+
+/*Menù lateral*/
+#btn-menu {
+  display: none;
+}
+.container-menu {
+  position: absolute;
+  /* background: rgba(0, 0, 0, 0.5); */
+  width: 17% !important;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  transition: all 500ms ease;
+  opacity: 0;
+  visibility: hidden;
+}
+#btn-menu:checked ~ .container-menu {
+  opacity: 1;
+  visibility: visible;
+}
+.cont-menu {
+  width: 100%;
+  /* max-width: 250px; */
+  background: #1c1c1c;
+  height: 100vh;
+  position: relative;
+  transition: all 500ms ease;
+  transform: translateX(-100%);
+  z-index: 999;
+}
+#btn-menu:checked ~ .container-menu .cont-menu {
+  transform: translateX(0%);
+}
+.cont-menu nav {
+  transform: translateY(15%);
+}
+.cont-menu nav a {
+  display: block;
+  text-decoration: none;
+  padding: 20px;
+  color: #c7c7c7;
+  border-left: 5px solid transparent;
+  transition: all 400ms ease;
+}
+.cont-menu nav a:hover {
+  border-left: 5px solid#ed850f;
+  background: #1f1f1f;
+}
+.cont-menu label {
+  position: absolute;
+  right: 5px;
+  top: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+}
+/*Fin de Menù lateral*/
+
+/* ===== Submenús desplegables ===== */
+.cont-menu nav .submenu {
+  max-height: 0;               /* Oculto por defecto */
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  background: #2a2a2a;         /* Un poco más claro que el fondo */
+}
+
+.cont-menu nav .submenu a {
+  padding: 15px 40px;          /* Indentado para diferenciar */
+  font-size: 14px;
+  color: #b5b5b5;
+}
+
+.cont-menu nav .submenu a:hover {
+  background: #333;
+  border-left: 5px solid #ed850f;
+  color: #fff;
+}
+
+/* Cuando el submenu está activo */
+.cont-menu nav .submenu.active {
+  max-height: 500px;           /* Grande para que entre todo */
+}

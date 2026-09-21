@@ -1,0 +1,841 @@
+<?php
+$session_user   = $_SESSION['nombre_usuario'] ?? null;
+$session_perfil = $_SESSION['perfil'] ?? null;
+$session_id     = $_SESSION['id_usuario'] ?? null;
+
+$esPerfil = (strpos($_SERVER['REQUEST_URI'], '/perfil') === 0);
+
+// Buscar el perfil SOLO del usuario en sesión
+$usuarioActual = null;
+
+foreach ($perfil as $perfiles) {
+    if ($perfiles['id_usuario'] == $session_id) {
+        $usuarioActual = $perfiles;
+        break;
+    }
+}
+?>
+
+<body id="pagina-perfil-cliente" class="<?php echo $esPerfil ? 'perfil-abierto' : ''; ?>">
+
+    <div class="contenedor">
+        <div class="page-header">
+            <h1 class='user'><?php echo $session_user ?></h1>
+            <p class="parrafo">Bienvenido a tu perfil de cliente. Aquí puedes gestionar tu información personal, ver tus entradas, beneficios y pedidos de cantina.
+                Para continuar, selecciona una opción del menú lateral.
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar/editar datos -->
+    <div id="modalPerfil" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModalPerfil()">&times;</span>
+            <div id="contenidoModal">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando datos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnMenu = document.getElementById('btn-menu');
+            if (btnMenu) {
+                btnMenu.checked = true;
+            }
+        });
+
+        // Variables globales
+        let modoEdicion = false;
+        let datosOriginales = {};
+
+        // Datos del usuario actual desde PHP
+        const usuarioActualData = <?php echo json_encode($usuarioActual); ?>;
+
+        // Función principal para mostrar datos
+        function mostrarDatos() {
+            document.getElementById('modalPerfil').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del fondo
+
+            // Como ya tenemos los datos del usuario, los mostramos directamente
+            if (usuarioActualData) {
+                datosOriginales = usuarioActualData;
+                mostrarFormularioPerfil(usuarioActualData);
+            } else {
+                mostrarError('No se pudieron cargar los datos del usuario');
+            }
+        }
+
+        // Función para cerrar modal
+        function cerrarModalPerfil() {
+            document.getElementById('modalPerfil').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restaurar scroll
+            modoEdicion = false;
+        }
+
+        // Cerrar modal al hacer clic fuera 
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('modalPerfil');
+            if (event.target == modal) {
+                cerrarModalPerfil();
+            }
+        });
+
+        // Cerrar modal con ESC 
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                cerrarModalPerfil();
+            }
+        });
+
+
+        // Mostrar formulario con datos del perfil
+        function mostrarFormularioPerfil(usuario) {
+            // Manejar la foto de perfil
+            let fotoSrc = '';
+            if (usuario.foto_perfil) {
+                // Si la foto viene como base64 desde PHP
+                fotoSrc = `data:image/png;base64,${usuario.foto_perfil}`;
+            } else {
+                fotoSrc = '../../../assets/img/default-avatar.png';
+            }
+
+            const html = `
+        <div class="perfil-container">
+            <div class="perfil-header">
+                <div class="foto-perfil-container">
+                    <img src="${fotoSrc}" alt="Foto de perfil" class="foto-perfil" id="fotoPerfil">
+                    <button type="button" class="cambiar-foto" onclick="cambiarFoto()" 
+                            ${!modoEdicion ? 'style="display:none"' : ''}><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <h2 class="nombre">${usuario.nombre_persona} ${usuario.apellido_persona}</h2>
+            </div>
+
+            <div id="mensajeRespuesta"></div>
+
+            <form id="formPerfil">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="dato-user" >Nombre de Usuario:</label>
+                        <input type="text" id="nombre_usuario" name="nombre_usuario" 
+                               value="${usuario.nombre_usuario || ''}" ${!modoEdicion ? 'disabled' : ''}>
+                    </div>
+                    <div class="form-group">
+                        <label class="dato-user">Email:</label>
+                        <input type="email" id="email" name="email" 
+                               value="${usuario.email || ''}" ${!modoEdicion ? 'disabled' : ''}>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="dato-user">Nombre:</label>
+                        <input type="text" id="nombre_persona" name="nombre_persona" 
+                               value="${usuario.nombre_persona || ''}" ${!modoEdicion ? 'disabled' : ''}>
+                    </div>
+                    <div class="form-group">
+                        <label class="dato-user">Apellido:</label>
+                        <input type="text" id="apellido_persona" name="apellido_persona" 
+                               value="${usuario.apellido_persona || ''}" ${!modoEdicion ? 'disabled' : ''}>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="dato-user">Sexo:</label>
+                        <select id="sexo" name="sexo" ${!modoEdicion ? 'disabled' : ''}>
+                            <option value="">Seleccionar...</option>
+                            <option value="1" ${usuario.nombre_sexo === 'MASCULINO' ? 'selected' : ''}>Masculino</option>
+                            <option value="2" ${usuario.nombre_sexo === 'FEMENINO' ? 'selected' : ''}>Femenino</option>
+                            <option value="3" ${usuario.nombre_sexo === 'NO BINARIO' ? 'selected' : ''}>No Binario</option>
+                            <option value="4" ${usuario.nombre_sexo === 'PREFIERO NO DECIR' ? 'selected' : ''}>Prefiero No Decir</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="dato-user">Perfil:</label>
+                        <input type="text" value="${usuario.nombre_perfil || ''}" disabled>
+                    </div>
+                </div>
+
+                <input type="hidden" id="id_usuario" value="${usuario.id_usuario}">
+            </form>
+
+            <div style="text-align: center; margin-top: 30px;">
+                ${!modoEdicion ? 
+                    '<button type="button" class="btn btn-primary" onclick="habilitarEdicion()"> Editar Datos</button>' :
+                    `<button type="button" class="btn btn-success" onclick="guardarCambios()"> Guardar Cambios</button>
+                     <button type="button" class="btn btn-secondary" onclick="cancelarEdicion()"> Cancelar</button>`
+                }
+            </div>
+        </div>
+    `;
+
+            document.getElementById('contenidoModal').innerHTML = html;
+        }
+
+        // Habilitar modo edición
+        function habilitarEdicion() {
+            modoEdicion = true;
+            mostrarFormularioPerfil(datosOriginales);
+        }
+
+        // Cancelar edición
+        function cancelarEdicion() {
+            modoEdicion = false;
+            mostrarFormularioPerfil(datosOriginales);
+        }
+
+        // Guardar cambios
+        function guardarCambios() {
+            // Validaciones básicas
+            const nombre_usuario = document.getElementById('nombre_usuario').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const nombre_persona = document.getElementById('nombre_persona').value.trim();
+            const apellido_persona = document.getElementById('apellido_persona').value.trim();
+            const sexo = document.getElementById('sexo').value;
+
+            if (!nombre_usuario || !email || !nombre_persona || !apellido_persona || !sexo) {
+                mostrarError('Todos los campos son obligatorios');
+                return;
+            }
+
+            if (!validarEmail(email)) {
+                mostrarError('Por favor ingresa un email válido');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('id_usuario', document.getElementById('id_usuario').value);
+            formData.append('nombre_usuario', nombre_usuario);
+            formData.append('nombre_persona', nombre_persona);
+            formData.append('apellido_persona', apellido_persona);
+            formData.append('email', email);
+            formData.append('sexo', sexo);
+
+            // Si hay una nueva foto, agregarla
+            const inputFoto = document.getElementById('inputFoto');
+            if (inputFoto && inputFoto.files.length > 0) {
+                formData.append('foto_perfil', inputFoto.files[0]);
+            }
+
+            // Mostrar mensaje de carga
+            document.getElementById('mensajeRespuesta').innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner" style="width: 20px; height: 20px; margin-right: 10px; display: inline-block;"></div>
+            Guardando cambios...
+        </div>
+    `;
+
+            console.log('Enviando datos:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+
+            fetch('/perfil/actualizar', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+
+                    // NUEVO: Obtener el texto completo de la respuesta para ver qué está devolviendo
+                    return response.text();
+                })
+                .then(responseText => {
+                    console.log('=== RESPUESTA COMPLETA DEL SERVIDOR ===');
+                    console.log(responseText);
+                    console.log('=== FIN RESPUESTA ===');
+
+                    // Intentar parsear como JSON
+                    try {
+                        const data = JSON.parse(responseText);
+                        console.log('JSON parseado correctamente:', data);
+
+                        if (data.success) {
+                            mostrarExito('✅ Datos actualizados correctamente');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1200);
+                        } else {
+                            mostrarError('❌ Error al actualizar: ' + (data.message || 'Error desconocido'));
+                        }
+                    } catch (error) {
+                        console.error('Error al parsear JSON:', error);
+                        mostrarError('❌ Error del servidor. Revisa la consola para más detalles.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red:', error);
+                    mostrarError('❌ Error de conexión: ' + error.message);
+                });
+        }
+
+        // Función para cambiar foto
+        function cambiarFoto() {
+            let inputFoto = document.getElementById('inputFoto');
+            if (!inputFoto) {
+                inputFoto = document.createElement('input');
+                inputFoto.type = 'file';
+                inputFoto.id = 'inputFoto';
+                inputFoto.accept = 'image/*';
+                inputFoto.style.display = 'none';
+                document.body.appendChild(inputFoto);
+
+                inputFoto.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validar tamaño (máximo 2MB)
+                        if (file.size > 2 * 1024 * 1024) {
+                            mostrarError('La imagen es demasiado grande. Máximo 2MB');
+                            return;
+                        }
+
+                        // Validar tipo
+                        if (!file.type.startsWith('image/')) {
+                            mostrarError('Por favor selecciona una imagen válida');
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('fotoPerfil').src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            inputFoto.click();
+        }
+
+        // Validar email
+        function validarEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Mostrar mensaje de éxito
+        function mostrarExito(mensaje) {
+            document.getElementById('mensajeRespuesta').innerHTML = `
+        <div class="alert alert-success">${mensaje}</div>
+    `;
+            setTimeout(() => {
+                document.getElementById('mensajeRespuesta').innerHTML = '';
+            }, 4000);
+        }
+
+        // Mostrar mensaje de error
+        function mostrarError(mensaje) {
+            document.getElementById('mensajeRespuesta').innerHTML = `
+        <div class="alert alert-danger">${mensaje}</div>
+    `;
+            setTimeout(() => {
+                document.getElementById('mensajeRespuesta').innerHTML = '';
+            }, 5000);
+        }
+
+
+        // Función para mostrar formulario de contacto
+        function mostrarFormulariodeContactanos() {
+            document.getElementById('modalPerfil').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del fondo
+
+            // Mostrar el formulario de contacto
+            mostrarFormularioContacto();
+        }
+
+        // Función para mostrar el formulario de contacto///////////////////////////////////////////////////////////////////////////////////
+        function mostrarFormularioContacto() {
+            const html = `
+        <div class="contacto-container">
+            <div class="contacto-header">
+                <h2 class="nombre">Contáctanos</h2>
+                <p class="parrafo">¿Tienes alguna pregunta o sugerencia? Escríbenos y te responderemos lo antes posible.</p>
+                <br>
+            </div>
+
+            <div id="mensajeRespuestaContacto"></div>
+
+            <form id="formContacto">
+                <div class="form-group">
+                    <label for="asunto">Asunto: <span class="required">*</span></label>
+                    <select id="tipo" name="tipo" required>
+                        <option value="">Selecciona un asunto...</option>
+                        <option value="problema_tecnico">Problema técnico</option>
+                        <option value="consulta_entradas">Consulta sobre entradas</option>
+                        <option value="problema_cantina">Problema con pedido de cantina</option>
+                        <option value="sugerencia">Sugerencia</option>
+                        <option value="queja">Queja</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="mensaje">Mensaje: <span class="required">*</span></label>
+                    <textarea id="mensaje" name="mensaje" placeholder="Escribe aquí tu mensaje..." 
+                              rows="6" required maxlength="600"></textarea>
+                    <small class="char-count">0/600 caracteres</small>
+                </div>
+
+                <input type="hidden" id="id_usuario_contacto" value="${usuarioActualData ? usuarioActualData.id_usuario : ''}">
+                <input type="hidden" id="nombre_usuario_contacto" value="${usuarioActualData ? usuarioActualData.nombre_usuario : ''}">
+            </form>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="button" class="btn btn-primary" onclick="enviarContacto()">
+                    <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalPerfil()">
+                    <i class="fa-solid fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+
+            document.getElementById('contenidoModal').innerHTML = html;
+
+            // Agregar evento para contar caracteres
+            document.getElementById('mensaje').addEventListener('input', function() {
+                const mensaje = this.value;
+                const charCount = mensaje.length;
+                const charCountElement = document.querySelector('.char-count');
+
+                charCountElement.textContent = `${charCount}/600 caracteres`;
+
+                if (charCount > 550) {
+                    charCountElement.style.color = '#dc3545'; // Rojo cuando se acerca al límite
+                } else {
+                    charCountElement.style.color = '#d05f19ff'; // Color normal
+                }
+            });
+        }
+
+        // Función para enviar el mensaje de contacto (CORREGIDA)
+        function enviarContacto() {
+            const tipo = document.getElementById('tipo').value.trim(); // CORREGIDO: era 'asunto'
+            const mensaje = document.getElementById('mensaje').value.trim();
+            const idUsuario = document.getElementById('id_usuario_contacto').value;
+            const nombreUsuario = document.getElementById('nombre_usuario_contacto').value;
+
+            // Validaciones
+            if (!tipo) {
+                mostrarErrorContacto('Por favor selecciona un asunto');
+                return;
+            }
+
+            if (!mensaje) {
+                mostrarErrorContacto('Por favor escribe tu mensaje');
+                return;
+            }
+
+            if (mensaje.length < 10) {
+                mostrarErrorContacto('El mensaje debe tener al menos 10 caracteres');
+                return;
+            }
+
+            if (mensaje.length > 600) {
+                mostrarErrorContacto('El mensaje no puede exceder los 600 caracteres');
+                return;
+            }
+
+            // Crear FormData para enviar
+            const formData = new FormData();
+            formData.append('tipo', tipo);
+            formData.append('mensaje', mensaje);
+            formData.append('id_usuario', idUsuario);
+            formData.append('nombre_usuario', nombreUsuario);
+
+            // Mostrar mensaje de carga
+            document.getElementById('mensajeRespuestaContacto').innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner" style="width: 20px; height: 20px; margin-right: 10px; display: inline-block;"></div>
+            Enviando mensaje...
+        </div>
+    `;
+
+            // Deshabilitar el botón para evitar envíos múltiples
+            const btnEnviar = document.querySelector('button[onclick="enviarContacto()"]');
+            const textoOriginal = btnEnviar.innerHTML;
+            btnEnviar.disabled = true;
+            btnEnviar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+            console.log('Enviando datos de contacto:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+
+            // Realizar petición AJAX
+            fetch('/perfil/enviarConsulta', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.text();
+                })
+                .then(responseText => {
+                    console.log('=== RESPUESTA CONTACTO ===');
+                    console.log(responseText);
+                    console.log('=== FIN RESPUESTA ===');
+
+                    try {
+                        const data = JSON.parse(responseText);
+                        console.log('JSON parseado correctamente:', data);
+
+                        if (data.success) {
+                            mostrarExitoContacto('✅ Mensaje enviado correctamente. Te responderemos pronto.');
+
+                            // Limpiar formulario después de 2 segundos
+                            setTimeout(() => {
+                                document.getElementById('tipo').value = '';
+                                document.getElementById('mensaje').value = '';
+                                const charCount = document.querySelector('.char-count');
+                                if (charCount) {
+                                    charCount.textContent = '0/600 caracteres';
+                                    charCount.style.color = '#6c757d';
+                                }
+                            }, 2000);
+
+                        } else {
+                            mostrarErrorContacto('❌ Error al enviar mensaje: ' + (data.message || 'Error desconocido'));
+                        }
+                    } catch (error) {
+                        console.error('Error al parsear JSON:', error);
+                        mostrarErrorContacto('❌ Error del servidor. Revisa la consola para más detalles.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red:', error);
+                    mostrarErrorContacto('❌ Error de conexión: ' + error.message);
+                })
+                .finally(() => {
+                    // Rehabilitar el botón
+                    btnEnviar.disabled = false;
+                    btnEnviar.innerHTML = textoOriginal;
+                });
+        }
+
+        // Mostrar mensaje de éxito para contacto
+        function mostrarExitoContacto(mensaje) {
+            document.getElementById('mensajeRespuestaContacto').innerHTML = `
+        <div class="alert alert-success">${mensaje}</div>
+    `;
+            setTimeout(() => {
+                document.getElementById('mensajeRespuestaContacto').innerHTML = '';
+            }, 5000);
+        }
+
+        // Mostrar mensaje de error para contacto
+        function mostrarErrorContacto(mensaje) {
+            document.getElementById('mensajeRespuestaContacto').innerHTML = `
+        <div class="alert alert-danger">${mensaje}</div>
+    `;
+            setTimeout(() => {
+                document.getElementById('mensajeRespuestaContacto').innerHTML = '';
+            }, 5000);
+        }
+
+        function mostrarCambioPassword() {
+            document.getElementById('modalPerfil').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            mostrarFormularioPassword();
+        }
+
+        function mostrarFormularioPassword() {
+            const html = `
+        <div class="perfil-container">
+            <div class="perfil-header">
+                <h2 class="nombre">Cambiar Contraseña</h2>
+            </div>
+
+            <div id="mensajeRespuestaPassword"></div>
+
+            <form id="formPassword">
+                <div class="form-group">
+                    <label class="dato-user">Contraseña Actual:</label>
+                    <input type="password" id="password_actual" autocomplete="current-password">
+                </div>
+
+                <div class="form-group">
+                    <label class="dato-user">Nueva Contraseña:</label>
+                    <input type="password" id="password_nueva" autocomplete="new-password">
+                    <small style="display:block; margin-top:8px; color:#a0aec0; font-size:12px;">
+                        Mínimo 6 caracteres, al menos una letra y un número.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="dato-user">Repetir Nueva Contraseña:</label>
+                    <input type="password" id="password_confirmar" autocomplete="new-password">
+                    <small id="matchPassword" style="display:block; margin-top:8px; font-size:12px;"></small>
+                </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="button" class="btn btn-success" onclick="guardarPassword()">Actualizar Contraseña</button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalPerfil()">Cancelar</button>
+            </div>
+        </div>
+    `;
+
+            document.getElementById('contenidoModal').innerHTML = html;
+
+            const nueva = document.getElementById('password_nueva');
+            const confirmar = document.getElementById('password_confirmar');
+
+            function validarCoincidencia() {
+                const matchEl = document.getElementById('matchPassword');
+                if (!confirmar.value) {
+                    matchEl.textContent = '';
+                    return;
+                }
+                if (nueva.value === confirmar.value) {
+                    matchEl.textContent = '✔ Las contraseñas coinciden';
+                    matchEl.style.color = '#22c55e';
+                } else {
+                    matchEl.textContent = '✘ Las contraseñas no coinciden';
+                    matchEl.style.color = '#ef4444';
+                }
+            }
+
+            nueva.addEventListener('input', validarCoincidencia);
+            confirmar.addEventListener('input', validarCoincidencia);
+        }
+
+        function validarFortalezaPasswordFrontend(password) {
+            const errores = [];
+            if (password.length < 6) errores.push('al menos 6 caracteres');
+            if (!/[a-zA-Z]/.test(password)) errores.push('al menos una letra');
+            if (!/[0-9]/.test(password)) errores.push('al menos un número');
+            return errores;
+        }
+
+        function guardarPassword() {
+            const passwordActual = document.getElementById('password_actual').value;
+            const passwordNueva = document.getElementById('password_nueva').value;
+            const passwordConfirmar = document.getElementById('password_confirmar').value;
+
+            if (!passwordActual || !passwordNueva || !passwordConfirmar) {
+                mostrarErrorPassword('Todos los campos son obligatorios');
+                return;
+            }
+
+            const erroresFortaleza = validarFortalezaPasswordFrontend(passwordNueva);
+            if (erroresFortaleza.length > 0) {
+                mostrarErrorPassword('La contraseña debe tener: ' + erroresFortaleza.join(', '));
+                return;
+            }
+
+            if (passwordNueva !== passwordConfirmar) {
+                mostrarErrorPassword('Las contraseñas nuevas no coinciden');
+                return;
+            }
+
+            document.getElementById('mensajeRespuestaPassword').innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner" style="width: 20px; height: 20px; margin-right: 10px; display: inline-block;"></div>
+            Actualizando contraseña...
+        </div>
+    `;
+
+            fetch('/perfil/cambiar-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password_actual: passwordActual,
+                        password_nueva: passwordNueva,
+                        password_confirmar: passwordConfirmar
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        document.getElementById('mensajeRespuestaPassword').innerHTML = `
+                <div class="alert alert-success">✅ ${data.mensaje}. Te enviamos un email de confirmación.</div>
+            `;
+                        setTimeout(() => cerrarModalPerfil(), 2500);
+                    } else {
+                        mostrarErrorPassword('❌ ' + (data.mensaje || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarErrorPassword('❌ Error de conexión: ' + error.message);
+                });
+        }
+
+        function mostrarErrorPassword(mensaje) {
+            document.getElementById('mensajeRespuestaPassword').innerHTML = `
+        <div class="alert alert-danger">${mensaje}</div>
+    `;
+        }
+
+        function mostrarMisCompras() {
+            document.getElementById('modalPerfil').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('contenidoModal').innerHTML = `
+        <div class="perfil-container">
+            <div class="perfil-header"><h2 class="nombre">Mis Compras</h2></div>
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Cargando tus compras...</p>
+            </div>
+        </div>
+    `;
+
+            fetch('/perfil/mis-compras')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        renderizarMisCompras(data.entradas, data.cantina, data.fichas);
+                    } else {
+                        mostrarErrorMisCompras(data.mensaje || 'Error al cargar tus compras');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarErrorMisCompras('Error de conexión: ' + error.message);
+                });
+        }
+
+        function mostrarErrorMisCompras(mensaje) {
+            document.getElementById('contenidoModal').innerHTML = `
+        <div class="perfil-container">
+            <div class="perfil-header"><h2 class="nombre">Mis Compras</h2></div>
+            <div class="alert alert-danger">${mensaje}</div>
+        </div>
+    `;
+        }
+
+        function renderizarMisCompras(entradas, cantina, fichas) {
+            const html = `
+        <div class="perfil-container">
+            <div class="perfil-header"><h2 class="nombre">Mis Compras</h2></div>
+
+            <div class="tabs-compras">
+                <button type="button" class="tab-btn active" id="tabBtnEntradas" onclick="cambiarTabCompras('entradas')">
+                    <i class="fa-solid fa-ticket"></i> Entradas
+                </button>
+                <button type="button" class="tab-btn" id="tabBtnCantina" onclick="cambiarTabCompras('cantina')">
+                    <i class="fa-solid fa-cookie-bite"></i> Cantina
+                </button>
+                <button type="button" class="tab-btn" id="tabBtnFichas" onclick="cambiarTabCompras('fichas')">
+                    <i class="fa-solid fa-dice"></i> Fichas
+                </button>
+            </div>
+
+            <div id="tabEntradas" class="tab-content-compras">
+                ${renderizarEntradas(entradas)}
+            </div>
+
+            <div id="tabCantina" class="tab-content-compras" style="display:none;">
+                ${renderizarCantina(cantina)}
+            </div>
+
+            <div id="tabFichas" class="tab-content-compras" style="display:none;">
+                ${renderizarFichas(fichas)}
+            </div>
+        </div>
+    `;
+
+            document.getElementById('contenidoModal').innerHTML = html;
+        }
+
+        document.getElementById('contenidoModal').innerHTML = html;
+
+        function cambiarTabCompras(tab) {
+            document.getElementById('tabEntradas').style.display = tab === 'entradas' ? 'block' : 'none';
+            document.getElementById('tabCantina').style.display = tab === 'cantina' ? 'block' : 'none';
+            document.getElementById('tabFichas').style.display = tab === 'fichas' ? 'block' : 'none';
+
+            document.getElementById('tabBtnEntradas').classList.toggle('active', tab === 'entradas');
+            document.getElementById('tabBtnCantina').classList.toggle('active', tab === 'cantina');
+            document.getElementById('tabBtnFichas').classList.toggle('active', tab === 'fichas');
+        }
+
+        function renderizarEntradas(entradas) {
+            if (!entradas || entradas.length === 0) {
+                return '<p style="text-align:center; color:#a0aec0; padding: 30px 0;">Todavía no compraste entradas.</p>';
+            }
+
+            const vigentes = entradas.filter(e => e.estado_vigencia === 'vigente')
+                .sort((a, b) => a.fecha_hora.localeCompare(b.fecha_hora)); // más próxima primero
+
+            const historial = entradas.filter(e => e.estado_vigencia !== 'vigente')
+                .sort((a, b) => b.fecha_hora.localeCompare(a.fecha_hora)); // más reciente primero
+
+            let html = '';
+            if (vigentes.length > 0) {
+                html += '<h4 style="color:#ed850f; margin: 15px 0 10px;">Vigentes</h4>';
+                html += vigentes.map(tarjetaEntrada).join('');
+            }
+            if (historial.length > 0) {
+                html += '<h4 style="color:#a0aec0; margin: 25px 0 10px;">Historial</h4>';
+                html += historial.map(tarjetaEntrada).join('');
+            }
+            return html;
+        }
+
+        function tarjetaEntrada(e) {
+            const badges = {
+                'vigente': '<span class="badge-compra badge-vigente">Vigente</span>',
+                'vencida': '<span class="badge-compra badge-vencida">Vencida</span>',
+                'usada': '<span class="badge-compra badge-usada">Usada</span>',
+                'cancelada': '<span class="badge-compra badge-cancelada">Cancelada</span>'
+            };
+            const fecha = new Date(e.fecha_hora).toLocaleString('es-AR', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            });
+
+            return `
+        <div class="tarjeta-compra">
+            <div class="tarjeta-compra-info">
+                <h4>${e.titulo_pelicula}</h4>
+                <p>Sala ${e.id_sala} — ${fecha}</p>
+                <p>Ticket #${e.numero_ticket_entrada} · ${e.tipo_entrada_desc}</p>
+            </div>
+            <div class="tarjeta-compra-estado">${badges[e.estado_vigencia] || ''}</div>
+        </div>
+    `;
+        }
+
+        function renderizarFichas(fichas) {
+            return renderizarCantina(fichas);
+        }
+
+        function renderizarCantina(ordenes) {
+            if (!ordenes || ordenes.length === 0) {
+                return '<p style="text-align:center; color:#a0aec0; padding: 30px 0;">Todavía no compraste nada en cantina.</p>';
+            }
+
+            return ordenes.map(orden => {
+                const fecha = new Date(orden.fecha).toLocaleString('es-AR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short'
+                });
+                const items = orden.productos.map(p => `<li>${p.cantidad}x ${p.nombre}</li>`).join('');
+
+                return `
+            <div class="tarjeta-compra">
+                <div class="tarjeta-compra-info">
+                    <h4>Pedido #${orden.numero_orden || orden.id_orden || 'N/A'}</h4>
+                    <p>${fecha}</p>
+                    <ul style="margin: 8px 0 0; padding-left: 18px; color:#e2e8f0; font-size:13px;">${items}</ul>
+                </div>
+                <div class="tarjeta-compra-estado">
+                    <strong style="color:#ed850f;">$${orden.total.toLocaleString('es-AR')}</strong>
+                </div>
+            </div>
+        `;
+            }).join('');
+        }
+    </script>
+
+    <script src="../../../assets/js/submenu-adm.js"></script>
+</body>

@@ -1,0 +1,758 @@
+/* Contenedor principal del listado */
+.listado {
+    background-color: #363130;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Logo específico del listado */
+.listado .form-logo {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+/* Título del listado */
+.listado h1 {
+    color: #ed850f;
+    font-size: 2.0rem !important;
+    margin: 20px 0;
+}
+
+/* Navegación específica del listado */
+.listado .nav-listado {
+    display: block;
+    width: 100%;
+    max-width: 1400px;
+    box-sizing: border-box;
+    background-color: #232323;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #3a3a3a;
+    box-shadow: 0 0 20px rgba(237, 133, 15, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin: 0 auto 20px auto;
+}
+
+.listado .nav-listado ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    row-gap: 12px;
+}
+
+.listado .nav-listado ul li {
+    display: flex;
+    align-items: center;
+}
+
+.listado .nav-listado ul li:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.listado .nav-listado ul li a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 14px !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 15px 15px;
+    background: #2d3748;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+    transition: all 0.2s ease;
+}
+
+.listado .nav-listado ul li a i {
+    color: #ed850f;
+}
+
+.listado .nav-listado ul li a:hover {
+    border-color: #ed850f;
+    background: #364154;
+    box-shadow: 0 0 8px rgba(237, 133, 15, 0.3);
+}
+
+/* Buscador específico */
+.listado .buscador {
+    width: auto !important;
+    flex: 0 1 320px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #2d3748;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+}
+
+.listado .barra_buscador {
+    width: 100% !important;
+    height: 30px !important;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background: #1a202c;
+    color: #fff;
+}
+
+.listado .buscador button {
+    color: #ed850f;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+}
+
+.listado .buscador button:hover {
+    color: #ffa733;
+}
+
+.listado .nav-listado button {
+    border: none;
+    background-color: transparent;
+    padding: 5px 8px;
+    cursor: pointer;
+    color: #fff;
+    border-radius: 3px;
+}
+
+.listado .nav-listado button:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Tabla del listado */
+.listado .tabla-listado {
+    width: 80%;
+    margin: auto;
+    border-collapse: collapse;
+    background-color: transparent;
+}
+
+.listado .tabla-listado th,
+.listado .tabla-listado td {
+    border: 1px solid #555;
+    padding: 10px;
+    text-align: center;
+}
+
+.listado .tabla-listado th {
+    background-color: #000;
+    color: #ed850f;
+    font-weight: bold;
+}
+
+.listado .tabla-listado td {
+    background-color: #444;
+}
+
+.listado .tabla-listado td {
+    background-color: #444;
+    border: 1px solid #555;
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+    /* ← AGREGA ESTA LÍNEA */
+}
+
+/* Botones de acción en la tabla */
+.listado .boton {
+    background-color: #ed850f;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin: 2px;
+    display: inline-block;
+    font-size: 14px !important;
+    transition: background-color 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.listado .boton:hover {
+    background-color: #d67309;
+}
+
+/* Botones de eliminar específicos */
+.listado .boton.eliminar-usuario,
+.listado .boton.eliminar-pelicula,
+.listado .boton.eliminar-maquina,
+.listado .boton.eliminar-producto,
+.listado .boton.eliminar-stock,
+.listado .boton.eliminar-funcion,
+.listado .boton.eliminar-sala,
+.listado .boton.eliminar-tipoentrada,
+.listado .boton.eliminar-sexo,
+.listado .boton.eliminar-turno {
+    background-color: #c82333;
+}
+
+.listado .boton.eliminar-usuario:hover,
+.listado .boton.eliminar-pelicula:hover,
+.listado .boton.eliminar-maquina:hover,
+.listado .boton.eliminar-producto:hover,
+.listado .boton.eliminar-stock:hover,
+.listado .boton.eliminar-funcion,
+.listado .boton.eliminar-sala,
+.listado .boton.eliminar-tipoentrada,
+.listado .boton.eliminar-sexo:hover,
+.listado .boton.eliminar-turno:hover {
+    background-color: #941926;
+}
+
+/* ==============================================
+   ESTADOS BOOLEANOS PARA LISTADOS
+   ============================================== */
+
+/* Estados basados en valores booleanos (1/0, true/false) */
+.listado .estado {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+}
+
+/* Estado ACTIVO (valor = 1 o true) */
+.listado .estado.activo {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Estado INACTIVO/BAJA (valor = 0 o false) */
+.listado .estado.inactivo {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Alternativa con nombres más específicos */
+.listado .estado-booleano {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+}
+
+.listado .estado-booleano.verdadero {
+    background-color: #28a745;
+    color: white;
+}
+
+.listado .estado-booleano.falso {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Estados específicos por contexto */
+.listado .estado-usuario {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 70px;
+}
+
+.listado .estado-usuario.activo {
+    background-color: #28a745;
+    color: white;
+}
+
+.listado .estado-usuario.baja {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Estados de máquina */
+.listado .estado-maquina {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 70px;
+}
+
+.listado .estado-maquina.activa {
+    background-color: #28a745;
+    color: white;
+}
+
+.listado .estado-maquina.inactiva {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Estados de turno */
+.listado .estado-turno {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 70px;
+}
+
+.listado .estado-turno.activo {
+    background-color: #28a745;
+    color: white;
+}
+
+.listado .estado-turno.inactivo {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Estados con efectos adicionales */
+.listado .estado-con-efecto {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 70px;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.listado .estado-con-efecto.activo {
+    background-color: #28a745;
+    color: white;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+}
+
+.listado .estado-con-efecto.inactivo {
+    background-color: #6c757d;
+    color: white;
+    opacity: 0.8;
+}
+
+.listado .estado-con-efecto:hover {
+    transform: scale(1.05);
+}
+
+/* Estados con iconos */
+.listado .estado-con-icono {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    min-width: 70px;
+}
+
+.listado .estado-con-icono.activo {
+    background-color: #28a745;
+    color: white;
+}
+
+.listado .estado-con-icono.activo::before {
+    content: "✓";
+    font-weight: bold;
+}
+
+.listado .estado-con-icono.inactivo {
+    background-color: #6c757d;
+    color: white;
+}
+
+.listado .estado-con-icono.neutral {
+    background-color: #ed850f;
+    color: white;
+}
+
+.listado .estado-con-icono.neutral::before {
+    content: "-";
+    font-weight: bold;
+}
+
+.listado .estado-con-icono.inactivo::before {
+    content: "✗";
+    font-weight: bold;
+}
+
+/* Variantes de color para diferentes contextos */
+.listado .estado-verde {
+    background-color: #28a745;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+}
+
+.listado .estado-gris {
+    background-color: #6c757d;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+}
+
+/* Estados con bordes */
+.listado .estado-bordeado {
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+    border: 2px solid;
+}
+
+.listado .estado-bordeado.activo {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-color: #28a745;
+}
+
+.listado .estado-bordeado.inactivo {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Estados minimalistas */
+.listado .estado-minimal {
+    font-size: 12px !important;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+}
+
+.listado .estado-minimal.activo {
+    color: #28a745;
+}
+
+.listado .estado-minimal.inactivo {
+    color: #6c757d;
+}
+
+/* Estados con punto indicador */
+.listado .estado-punto {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px !important;
+    font-weight: bold;
+}
+
+.listado .estado-punto::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.listado .estado-punto.activo::before {
+    background-color: #28a745;
+}
+
+.listado .estado-punto.inactivo::before {
+    background-color: #6c757d;
+}
+
+.listado .estado-punto.activo {
+    color: #28a745;
+}
+
+.listado .estado-punto.inactivo {
+    color: #6c757d;
+}
+
+/* Acciones */
+.listado .acciones {
+
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* Imágenes genéricas en listados */
+.listado .imagen-item {
+    width: 70px !important;
+    height: auto !important;
+    max-height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+}
+
+/*
+.listado .imagen-pelicula {
+    width: 80px !important;
+    height: auto !important;
+    max-height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 4px !important;
+}
+.listado .imagen-producto {
+    width: 80px !important;
+    height: auto !important;
+    max-height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 4px !important;
+}
+*/
+
+/* Imagen específica de máquina */
+.listado .imagen-maquina,
+.listado .imagen-producto,
+.listado .imagen-pelicula {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: cover !important;
+    border-radius: 4px !important;
+}
+
+/* Celdas con texto largo */
+.listado .celda-texto-largo {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.listado .sinopsis-celda,
+.listado .descripcion-celda {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Celdas de precio */
+.listado .precio-celda {
+    font-weight: bold;
+    color: #28a745;
+}
+
+/* Celdas de stock */
+.listado .stock-celda {
+    font-weight: bold;
+}
+
+/* Filtros de estado */
+.listado .filtros-estado {
+    margin: 7px 0;
+    padding: 7px;
+}
+
+.listado .filtros-estado h3 {
+    margin: 0 0 10px 0;
+    color: white;
+}
+
+.listado .filtros-estado p {
+    color: white;
+}
+
+.listado .filtros-estado button {
+    margin: 5px;
+    padding: 8px 15px;
+    background: #ed850f;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s;
+    border: 1px solid #ed850f;
+    color: white;
+}
+
+.listado .filtros-estado button.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.listado .filtros-estado button:hover {
+    background-color: #d67309;
+}
+
+.grupo-exportacion {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.grupo-exportacion span {
+    font-size: 0.9em;
+    margin-right: 5px;
+}
+
+.btn-exportar {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-exportar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-exportar.excel {
+    background-color: #217346 !important;
+    color: white;
+}
+
+.btn-exportar.excel:hover {
+    background-color: #1a5c37 !important;
+}
+
+.btn-exportar.pdf {
+    background-color: #d63031 !important;
+    ;
+    color: white;
+}
+
+.btn-exportar.pdf:hover {
+    background-color: #b71c1c !important;
+}
+
+.btn-exportar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.exportacion {
+    margin: 0 10px;
+}
+
+/* Loader para exportación */
+.loading-export {
+    position: relative;
+}
+
+.loading-export::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .listado .tabla-listado {
+        width: 95%;
+        font-size: 12px !important;
+    }
+
+    .listado .nav-listado ul {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .listado .buscador {
+        width: 100% !important;
+    }
+
+    .listado .barra_buscador {
+        width: 200px !important;
+    }
+
+    .listado .tabla-listado th,
+    .listado .tabla-listado td {
+        padding: 5px;
+        font-size: 11px !important;
+    }
+
+    .listado .boton {
+        padding: 6px 8px;
+        font-size: 12px !important;
+    }
+}
+
+/* Ajustes para tablas muy anchas */
+@media (max-width: 1024px) {
+    .listado .tabla-listado {
+        width: 95%;
+    }
+
+    .listado .sinopsis-celda,
+    .listado .descripcion-celda {
+        max-width: 100px;
+    }
+}
+
+.filtros-exportacion {
+    display: flex;
+    align-items: center;
+}
+
+.grupo-filtros-fecha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 15px;
+    background: #2d3748;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+}
+
+.grupo-filtros-fecha span:first-child {
+    color: #ed850f;
+    font-weight: 600;
+    font-size: 13px !important;
+    white-space: nowrap;
+}
+
+.grupo-filtros-fecha input[type="date"] {
+    font-size: 12px !important;
+    cursor: pointer;
+}
+
+.grupo-filtros-fecha input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}

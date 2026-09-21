@@ -1,0 +1,17 @@
+{
+  "admin": {
+    "username": "admin1",
+    "password": "admin1",
+    "profile": "administrador"
+  },
+  "testAdmin": {
+    "username": "admin1",
+    "password": "admin1",
+    "profile": "administrador"
+  },
+  "regularUser": {
+    "username": "usuario",
+    "password": "user123",
+    "profile": "cliente"
+  }
+}

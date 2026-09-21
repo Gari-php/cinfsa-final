@@ -1,0 +1,81 @@
+body {
+    
+    background-color: #363130;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+
+
+
+h1 { color:  #ed850f; }
+.boton {
+    background-color:  #ed850f;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin: 10px;
+}
+.boton:hover { background-color: gray; }
+table {
+    width: 80%;
+    margin: auto;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #555;
+    padding: 10px;
+}
+th { background-color: black; }
+td { background-color: #444; }
+
+.form-logo {
+width: 150px;
+margin-bottom: 20px;
+}
+
+/* NAV */
+button {
+    border: none;
+    background-color: transparent;
+    padding: 0;
+    cursor: pointer; /* Indica que es interactivo */
+  }
+
+
+
+
+nav {
+    background-color: #ed850f;
+    text-align: center;
+
+}
+
+
+nav ul{
+    list-style: none; 
+    padding-left: 0px; /* Elimina el padding izquierdo de la lista */
+}
+
+
+
+nav ul li{
+    display: inline-block; /* Muestra los elementos de la lista en línea */
+    color: #fff;
+    text-align: left;
+    padding-left: 15px;
+    line-height: 50px; /* Centra verticalmente el texto dentro del nav */
+    width: 200px; /* Ancho de cada elemento de la lista */
+
+}
+nav ul li:hover{
+    background-color: gray; /* Color de fondo al pasar el mouse por encima */
+}
+nav ul li a{
+    text-decoration: none;
+    color: #fff;
+    display: block; /* Hace que el enlace ocupe todo el espacio del elemento de la lista */
+    font-size: 16px !important;
+}
