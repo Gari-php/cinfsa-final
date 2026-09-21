@@ -39,7 +39,9 @@
             id: <?= $_SESSION['id_usuario'] ?? 'null' ?>,
             perfil: <?= $_SESSION['perfil'] ?? 'null' ?>
         };
+        window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";
     </script>
+    <script src="/assets/js/csrf.js"></script>
 
     <!-- Estilo para fuente -->
     <style>

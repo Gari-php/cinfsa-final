@@ -427,7 +427,10 @@ class VendedorProductosController
 
         $db = \Models\ActiveRecord::getDB();
 
-        $queryArqueo = "SELECT 
+        // El admin puede ver cualquier arqueo; un vendedor solo el propio
+        $esAdmin = (int)($_SESSION['perfil'] ?? 0) === 3;
+
+        $queryArqueo = "SELECT
                             ac.*,
                             u.nombre_usuario,
                             c.nombre_caja,
@@ -435,10 +438,15 @@ class VendedorProductosController
                         FROM arqueo_cajas ac
                         INNER JOIN usuarios u ON ac.rela_usuario = u.id_usuario
                         INNER JOIN cajas c ON ac.rela_caja = c.id_caja
-                        WHERE ac.id_arqueo_caja = ?";
+                        WHERE ac.id_arqueo_caja = ?" . ($esAdmin ? "" : " AND ac.rela_usuario = ?");
 
         $stmt = $db->prepare($queryArqueo);
-        $stmt->bind_param("i", $idArqueo);
+        if ($esAdmin) {
+            $stmt->bind_param("i", $idArqueo);
+        } else {
+            $idUsuarioSesion = $_SESSION['id_usuario'];
+            $stmt->bind_param("ii", $idArqueo, $idUsuarioSesion);
+        }
         $stmt->execute();
         $arqueo = $stmt->get_result()->fetch_assoc();
 

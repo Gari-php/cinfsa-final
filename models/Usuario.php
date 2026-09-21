@@ -17,6 +17,7 @@ class Usuario extends ActiveRecord
         'token_verificacion',
         'verificado',
         'token_recuperacion',
+        'token_recuperacion_expira',
         'estado',
         'foto_perfil'
     ];
@@ -30,6 +31,7 @@ class Usuario extends ActiveRecord
     public $token_verificacion;
     public $verificado;
     public $token_recuperacion;
+    public $token_recuperacion_expira;
     public $estado;
     public $foto_perfil;
 
@@ -44,6 +46,7 @@ class Usuario extends ActiveRecord
         $this->token_verificacion = $args['token_verificacion'] ?? '';
         $this->verificado = $args['verificado'] ?? null;
         $this->token_recuperacion = $args['token_recuperacion'] ?? '';
+        $this->token_recuperacion_expira = $args['token_recuperacion_expira'] ?? null;
         $this->estado = $args['estado'] ?? 1;
         $this->foto_perfil = $args['foto_perfil'] ?? null;
     }

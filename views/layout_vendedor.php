@@ -12,7 +12,9 @@
     <link href="https://fonts.googleapis.com/css?family=Montserrat|Montserrat+Alternates|Poppins&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="/assets/css/alertas.css">
-    <script type="module" src="/assets/js/formularios.js"></script> 
+    <script>window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";</script>
+    <script src="/assets/js/csrf.js"></script>
+    <script type="module" src="/assets/js/formularios.js"></script>
     <style>
         * {
             margin: 0;

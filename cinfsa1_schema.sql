@@ -1619,6 +1619,7 @@ CREATE TABLE `usuarios` (
   `verificado` tinyint(1) DEFAULT 0,
   `email` varchar(45) DEFAULT NULL,
   `token_recuperacion` varchar(60) DEFAULT NULL,
+  `token_recuperacion_expira` datetime DEFAULT NULL,
   `estado` tinyint(1) DEFAULT 1,
   `foto_perfil` longtext DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),

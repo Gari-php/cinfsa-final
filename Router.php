@@ -33,6 +33,16 @@ class Router {
         $currentUrl = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
 
+        if ($method !== 'GET' && !$this->validarCSRF()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'ok' => false,
+                'mensaje' => 'Token de seguridad inválido o expirado. Recargá la página e intentá de nuevo.'
+            ]);
+            exit;
+        }
+
         if (!$this->validarAccesoConModulos($currentUrl)) {
             // Si es AJAX, devolver JSON
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
@@ -62,6 +72,19 @@ class Router {
         } else {
             $this->mostrar404();
         }
+    }
+
+    /**
+     * Compara el token CSRF que manda el cliente (header X-CSRF-Token,
+     * agregado automáticamente por assets/js/csrf.js) contra el guardado
+     * en la sesión del propio usuario.
+     */
+    private function validarCSRF()
+    {
+        $tokenRecibido = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        $tokenSesion = $_SESSION['csrf_token'] ?? '';
+
+        return $tokenSesion !== '' && $tokenRecibido !== '' && hash_equals($tokenSesion, $tokenRecibido);
     }
 
     private function validarAccesoConModulos($ruta)

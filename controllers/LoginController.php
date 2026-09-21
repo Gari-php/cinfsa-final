@@ -58,6 +58,9 @@ class LoginController
                 session_start();
             }
 
+            // Emitir un ID de sesión nuevo tras autenticar, para que un ID
+            // fijado antes del login (session fixation) deje de servir
+            session_regenerate_id(true);
 
             $_SESSION['id'] = $usuario->id_usuario;
             $_SESSION['id_usuario'] = $usuario->id_usuario;
@@ -121,9 +124,10 @@ class LoginController
                 return;
             }
 
-            // Generar token único y guardarlo
+            // Generar token único y guardarlo, con expiración de 30 minutos
             $token = bin2hex(random_bytes(20));
             $usuario->token_recuperacion = $token;
+            $usuario->token_recuperacion_expira = date('Y-m-d H:i:s', strtotime('+30 minutes'));
 
             $guardado = $usuario->guardar();
             if (!$guardado) {
@@ -229,9 +233,18 @@ class LoginController
                 return;
             }
 
+            if (!$usuario->token_recuperacion_expira || strtotime($usuario->token_recuperacion_expira) < time()) {
+                $usuario->token_recuperacion = null;
+                $usuario->token_recuperacion_expira = null;
+                $usuario->guardar();
+                echo json_encode(['error' => 'El token es inválido o ha expirado']);
+                return;
+            }
+
             // Actualizar la contraseña
             $usuario->clave_usuario = password_hash($password, PASSWORD_BCRYPT);
             $usuario->token_recuperacion = null;
+            $usuario->token_recuperacion_expira = null;
             $usuario->guardar();
 
             echo json_encode([
