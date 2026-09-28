@@ -559,117 +559,152 @@ async function agregarButacasAlCarrito() {
 
 .butacas-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .butacas-header h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
     color: #ed850f;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    text-shadow: 0 2px 12px rgba(237, 133, 15, 0.25);
 }
 
 /* ===== INFORMACIÓN DE LA FUNCIÓN ===== */
 .funcion-info {
-    background: #2d3748;
-    border-radius: 12px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+    border: 1px solid #4a5568;
+    border-radius: 16px;
     padding: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .pelicula-info {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.75rem;
 }
 
 .pelicula-poster {
     width: 100px;
     height: 150px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(237, 133, 15, 0.3);
+    flex-shrink: 0;
 }
 
 .detalles h2 {
-    color: #ed850f;
-    margin-bottom: 1rem;
+    color: #fff;
+    margin: 0 0 0.9rem;
+    font-size: 1.4rem;
 }
 
 .detalles p {
-    margin: 0.5rem 0;
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+    color: #cbd5e0;
+    font-size: 0.9rem;
+}
+
+.detalles p + p {
+    margin-top: 0.55rem;
 }
 
 .detalles i {
     color: #ed850f;
-    width: 20px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
-/* ===== LEYENDA - COLORES ESPECÍFICOS ===== */
+/* ===== LEYENDA - CHIPS ===== */
 .leyenda {
     display: flex;
     justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    background-color: #2d3748;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 2px solid #ed850f;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
     flex-wrap: wrap;
 }
 
 .leyenda-item {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    font-weight: 500;
-    color: white;
+    gap: 0.6rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #cbd5e0;
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
 }
 
-/* COLORES ESPECÍFICOS DE LA LEYENDA */
+/* COLORES ESPECÍFICOS DE LA LEYENDA (coinciden con los que aplica el JS a las butacas) */
 .disponible-icon {
     color: #28a745 !important;
-    font-size: 25px !important;
+    font-size: 16px !important;
 }
 
 .seleccionada-icon {
     color: #2563eb !important;
-    font-size: 25px !important;
+    font-size: 16px !important;
 }
 
 .bloqueada-icon {
     color: #dc3545 !important;
-    font-size: 25px !important;
+    font-size: 16px !important;
 }
 
 .ocupada-icon {
     color: #ff8c00 !important;
-    font-size: 25px !important;
+    font-size: 16px !important;
 }
 
 /* ===== PANTALLA ===== */
 .pantalla {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
+    padding-top: 0.5rem;
 }
 
 .pantalla-texto {
-    background: linear-gradient(135deg, #4a5568, #2d3748);
-    color: #fff;
-    padding: 1rem 3rem;
-    border-radius: 50px;
-    display: inline-block;
-    font-weight: bold;
-    font-size: 1.2rem;
-    border: 2px solid #ed850f;
-    box-shadow: 0 4px 15px rgba(237, 133, 15, 0.3);
+    position: relative;
+    width: min(560px, 85%);
+    margin: 0 auto;
+    padding: 0.7rem 0;
+    background: linear-gradient(180deg, rgba(237, 133, 15, 0.9), rgba(237, 133, 15, 0.15));
+    clip-path: polygon(6% 0%, 94% 0%, 100% 100%, 0% 100%);
+    color: transparent;
+    font-size: 0;
+}
+
+.pantalla-texto::after {
+    content: 'PANTALLA';
+    display: block;
+    position: absolute;
+    top: -1.6rem;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #718096;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+}
+
+.pantalla-texto {
+    box-shadow: 0 25px 40px -15px rgba(237, 133, 15, 0.45);
 }
 
 /* ===== MAPA DE BUTACAS ===== */
 .mapa-butacas {
-    margin-bottom: 2rem;
+    margin-bottom: 1.75rem;
     min-height: 400px;
     display: flex;
     justify-content: center;
@@ -679,126 +714,147 @@ async function agregarButacasAlCarrito() {
 .sala-grid {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.65rem;
     align-items: center;
     width: 100%;
     max-width: 800px;
+    background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.04), transparent 70%);
+    padding: 2rem 1.5rem 1.5rem;
 }
 
 .fila-butacas {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #ed850f;
+    gap: 0.45rem;
     justify-content: center;
 }
 
 .fila-numero {
-    font-weight: bold;
-    color: #ed850f;
-    min-width: 80px;
+    font-weight: 700;
+    color: #718096;
+    min-width: 34px;
     text-align: center;
-    font-size: 0.9rem;
-    margin-right: 10px;
+    font-size: 0.75rem;
+    margin-right: 6px;
 }
 
 /* ===== BUTACAS - ESTILOS BASE ===== */
 .butaca {
-    width: 45px;
-    height: 45px;
-    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 9px 9px 5px 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    background: #1a202c;
+    border: 1px solid #2d3748;
     position: relative;
 }
 
 .butaca-icon {
-    font-size: 20px !important;
-    transition: all 0.3s ease;
-    font-weight: 900 !important;
+    font-size: 18px !important;
+    transition: all 0.15s ease;
 }
 
 .numero-butaca {
-    font-size: 9px !important;
-    font-weight: bold;
-    margin-top: 2px;
-    color: white !important;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    font-size: 8px !important;
+    font-weight: 700;
+    margin-top: 1px;
+    color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* ===== ESTADOS DE BUTACAS - MÁXIMA ESPECIFICIDAD ===== */
+/* ===== ESTADOS DE BUTACAS ===== */
 
 /* DISPONIBLES - VERDE */
-.butaca.disponible .butaca-icon {
-    color: #28a745 !important;
+.butaca.disponible {
+    border-color: rgba(40, 167, 69, 0.35);
 }
 
-.butaca.disponible:hover .butaca-icon {
-    color: #22c55e !important;
-    transform: scale(1.2);
+.butaca.disponible:hover {
+    background: rgba(40, 167, 69, 0.12);
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+    transform: translateY(-2px);
 }
 
-/* SELECCIONADAS - AZUL OSCURO */
-.butaca.seleccionada .butaca-icon {
-    color: #2563eb !important;
-    transform: scale(1.1) !important;
+/* SELECCIONADAS - AZUL */
+.butaca.seleccionada {
+    background: rgba(37, 99, 235, 0.18);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3), 0 6px 14px rgba(37, 99, 235, 0.35);
+    transform: translateY(-2px);
+}
+
+.butaca.seleccionada .numero-butaca {
+    color: #fff !important;
 }
 
 /* BLOQUEADAS - ROJO */
-.butaca.bloqueada .butaca-icon {
-    color: #dc3545 !important;
-    opacity: 0.8;
-}
-
 .butaca.bloqueada {
+    background: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.25);
     cursor: not-allowed !important;
 }
 
-/* OCUPADAS/RESERVADAS - NARANJA */
-.butaca.ocupada .butaca-icon {
-    color: #ff8c00 !important;
-    opacity: 0.8;
+.butaca.bloqueada .butaca-icon {
+    opacity: 0.6;
 }
 
+/* OCUPADAS/RESERVADAS - ÁMBAR */
 .butaca.ocupada {
+    background: rgba(255, 140, 0, 0.08);
+    border-color: rgba(255, 140, 0, 0.25);
     cursor: not-allowed !important;
+}
+
+.butaca.ocupada .butaca-icon {
+    opacity: 0.6;
 }
 
 /* ESPACIOS VACÍOS */
 .butaca-vacia {
-    width: 45px;
-    height: 45px;
+    width: 42px;
+    height: 42px;
 }
 
 /* ===== RESUMEN DE SELECCIÓN ===== */
 .resumen-seleccion {
-    background: #2d3748;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-top: 2rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+    border: 1px solid #4a5568;
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .resumen-info h3 {
-    color: #ed850f;
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
+    color: #fff;
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #4a5568;
+}
+
+#butacas-seleccionadas > p {
+    color: #718096;
+    font-size: 0.9rem;
+    font-style: italic;
 }
 
 .lista-seleccionadas {
-    margin-bottom: 1rem;
+    margin-bottom: 0.25rem;
 }
 
 .butaca-seleccionada {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #4a5568;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(74, 85, 104, 0.5);
     color: #e2e8f0;
+    font-size: 0.9rem;
 }
 
 .butaca-seleccionada:last-child {
@@ -807,19 +863,23 @@ async function agregarButacasAlCarrito() {
 
 .total-precio {
     text-align: center;
-    font-size: 1.5rem;
-    color: #ed850f;
-    margin: 1.5rem 0;
+    font-size: 1.4rem;
+    color: #fff;
+    margin: 1.25rem 0;
     padding: 1rem;
-    background: rgba(237, 133, 15, 0.1);
-    border-radius: 8px;
-    border: 2px solid rgba(237, 133, 15, 0.3);
+    background: rgba(237, 133, 15, 0.12);
+    border-radius: 10px;
+    border: 1px solid rgba(237, 133, 15, 0.35);
+}
+
+.total-precio strong {
+    color: #ed850f;
 }
 
 /* ===== ACCIONES ===== */
 .acciones-butacas {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: center;
     flex-wrap: wrap;
 }
@@ -827,53 +887,57 @@ async function agregarButacasAlCarrito() {
 .btn-limpiar,
 .btn-agregar-carrito,
 .btn-volver {
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-weight: bold;
+    padding: 0.8rem 1.6rem;
+    border-radius: 10px;
+    font-weight: 700;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     border: none;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .btn-limpiar {
-    background: #6b7280;
-    color: #fff;
+    background: transparent;
+    color: #cbd5e0;
+    border: 1px solid #4a5568;
 }
 
 .btn-limpiar:hover {
-    background: #4b5563;
-    transform: translateY(-2px);
+    border-color: #ef4444;
+    color: #fca5a5;
 }
 
 .btn-agregar-carrito {
-    background: #22c55e;
+    background: linear-gradient(135deg, #ed850f, #f7931e);
     color: #fff;
+    box-shadow: 0 4px 15px rgba(237, 133, 15, 0.35);
 }
 
 .btn-agregar-carrito:hover:not(:disabled) {
-    background: #16a34a;
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(237, 133, 15, 0.5);
 }
 
 .btn-agregar-carrito:disabled {
-    background: #6b7280;
+    background: #4a5568;
+    color: rgba(255, 255, 255, 0.5);
     cursor: not-allowed;
-    opacity: 0.6;
+    box-shadow: none;
 }
 
 .btn-volver {
-    background: #ed850f;
-    color: #fff;
+    background: transparent;
+    color: #a0aec0;
+    border: 1px solid #4a5568;
 }
 
 .btn-volver:hover {
-    background: #d67607;
-    transform: translateY(-2px);
+    border-color: #ed850f;
+    color: #ed850f;
 }
 
 /* ===== LOADING Y ERROR ===== */
@@ -884,7 +948,7 @@ async function agregarButacasAlCarrito() {
 }
 
 .loading i {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 1rem;
 }
 
@@ -895,7 +959,7 @@ async function agregarButacasAlCarrito() {
 }
 
 .error-butacas i {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 1rem;
 }
 
@@ -903,10 +967,11 @@ async function agregarButacasAlCarrito() {
     background: #ef4444;
     color: #fff;
     border: none;
-    padding: 0.8rem 1.5rem;
+    padding: 0.7rem 1.5rem;
     border-radius: 8px;
     cursor: pointer;
     margin-top: 1rem;
+    font-weight: 600;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -914,53 +979,56 @@ async function agregarButacasAlCarrito() {
     .butacas-container {
         padding: 1rem;
     }
-    
+
     .butacas-header h1 {
-        font-size: 2rem;
+        font-size: 1.7rem;
     }
-    
+
     .pelicula-info {
         flex-direction: column;
         text-align: center;
     }
-    
+
+    .detalles p {
+        justify-content: center;
+    }
+
     .leyenda {
-        gap: 1rem;
+        gap: 0.5rem;
     }
-    
+
     .leyenda-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.3rem;
+        font-size: 0.75rem;
+        padding: 0.45rem 0.8rem;
     }
-    
+
     .fila-butacas {
         gap: 0.3rem;
     }
-    
+
     .fila-numero {
-        min-width: 50px;
-        font-size: 0.8rem;
+        min-width: 26px;
+        font-size: 0.65rem;
     }
-    
+
     .butaca,
     .butaca-vacia {
-        width: 35px;
-        height: 35px;
+        width: 34px;
+        height: 34px;
     }
-    
+
     .butaca-icon {
-        font-size: 16px !important;
+        font-size: 15px !important;
     }
-    
+
     .numero-butaca {
-        font-size: 8px !important;
+        font-size: 7px !important;
     }
-    
+
     .acciones-butacas {
         flex-direction: column;
     }
-    
+
     .btn-limpiar,
     .btn-agregar-carrito,
     .btn-volver {
@@ -972,25 +1040,26 @@ async function agregarButacasAlCarrito() {
 @media (max-width: 480px) {
     .butaca,
     .butaca-vacia {
-        width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
     }
-    
+
     .butaca-icon {
-        font-size: 14px !important;
+        font-size: 13px !important;
     }
-    
+
     .numero-butaca {
-        font-size: 7px !important;
+        font-size: 6px !important;
     }
-    
+
     .fila-numero {
-        min-width: 40px;
-        font-size: 0.7rem;
+        min-width: 20px;
+        font-size: 0.6rem;
     }
-    
+
     .sala-grid {
-        gap: 0.5rem;
+        gap: 0.4rem;
+        padding: 1.5rem 0.75rem 1rem;
     }
 }
 </style>

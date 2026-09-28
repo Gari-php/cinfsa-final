@@ -82,8 +82,14 @@
                                     <i class="fa-solid fa-ticket"></i> <?php echo count($pelicula['funciones']); ?> función(es)
                                 </span>
                             </div>
-                            <?php if ($pelicula['sinopsis_pelicula']): ?>
-                                <p class="sinopsis"><?php echo htmlspecialchars(substr($pelicula['sinopsis_pelicula'], 0, 120)) . '...'; ?></p>
+                            <?php if ($pelicula['sinopsis_pelicula']):
+                                $sinopsisCompleta = trim($pelicula['sinopsis_pelicula']);
+                                $esLarga = mb_strlen($sinopsisCompleta) > 140;
+                            ?>
+                                <p class="sinopsis"><?php echo s($sinopsisCompleta); ?></p>
+                                <?php if ($esLarga): ?>
+                                    <button type="button" class="btn-ver-sinopsis" onclick="toggleSinopsisTexto(event, this)">Ver más</button>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
 
@@ -353,6 +359,29 @@
         margin: 0;
     }
 
+    .sinopsis.clamped {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .btn-ver-sinopsis {
+        display: none;
+        background: none;
+        border: none;
+        color: #ed850f;
+        font-size: 11px !important;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        margin-top: 2px;
+    }
+
+    .btn-ver-sinopsis:hover {
+        text-decoration: underline;
+    }
+
     /* ===== FUNCIONES DESPLEGABLES ===== */
     .funciones-desplegables {
         border-top: 1px solid #4a5568;
@@ -583,10 +612,31 @@
         const card = posterEl.closest('.pelicula-cartelera-card');
         const desplegable = card.querySelector('.funciones-desplegables');
         const toggleIcon = card.querySelector('.toggle-icon-cliente');
+        const sinopsis = card.querySelector('.sinopsis');
+        const btnVerSinopsis = card.querySelector('.btn-ver-sinopsis');
 
         const estaAbierto = desplegable.style.display !== 'none';
         desplegable.style.display = estaAbierto ? 'none' : 'block';
         toggleIcon.classList.toggle('abierto', !estaAbierto);
+
+        // Al mostrar los horarios se prioriza el espacio para la lista: se acorta la sinopsis.
+        // Al ocultarlos, la sinopsis vuelve a verse completa.
+        if (sinopsis) {
+            sinopsis.classList.toggle('clamped', !estaAbierto);
+
+            if (btnVerSinopsis) {
+                btnVerSinopsis.style.display = estaAbierto ? 'none' : 'inline-block';
+                btnVerSinopsis.textContent = 'Ver más';
+            }
+        }
+    }
+
+    // ===== VER MÁS / VER MENOS (SINOPSIS) =====
+    function toggleSinopsisTexto(event, btn) {
+        event.stopPropagation();
+        const p = btn.previousElementSibling;
+        const clamped = p.classList.toggle('clamped');
+        btn.textContent = clamped ? 'Ver más' : 'Ver menos';
     }
 
     // ===== FILTRAR POR DÍA =====
