@@ -137,16 +137,58 @@ class ButacaController {
         
         // Obtener layout de butacas
         $layout = Butaca::obtenerLayoutSala($idSala);
-        
+
         if (isset($layout['error'])) {
             header('Location: /administrador/butacas/gestion');
             exit;
         }
-        
+
+        $funciones = Butaca::obtenerFuncionesPorSala($idSala);
+
         $router->render('administrador/butacas/mapa-sala', [
             'sala' => $sala,
-            'layout' => $layout
+            'layout' => $layout,
+            'funciones' => $funciones
         ]);
+    }
+
+    // Método para obtener el layout de butacas de una sala para una función específica (AJAX)
+    public static function layoutPorFuncion() {
+        if (!self::verificarAdmin()) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
+            return;
+        }
+
+        header('Content-Type: application/json');
+
+        $idFuncion = $_GET['id_funcion'] ?? null;
+
+        if (!$idFuncion || !is_numeric($idFuncion)) {
+            echo json_encode(['ok' => false, 'mensaje' => 'ID de función inválido']);
+            return;
+        }
+
+        $db = \Models\ActiveRecord::getDB();
+        $query = "SELECT rela_salas FROM funciones WHERE id_funcion = ? AND estado = 1";
+        $stmt = $db->prepare($query);
+        $stmt->bind_param("i", $idFuncion);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+
+        if ($resultado->num_rows === 0) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Función no encontrada']);
+            return;
+        }
+
+        $idSala = $resultado->fetch_assoc()['rela_salas'];
+        $layout = Butaca::obtenerLayoutSalaPorFuncion($idSala, $idFuncion);
+
+        if (isset($layout['error'])) {
+            echo json_encode(['ok' => false, 'mensaje' => $layout['error']]);
+            return;
+        }
+
+        echo json_encode(['ok' => true, 'layout' => $layout]);
     }
 
     public static function cambiarEstadoButaca() {

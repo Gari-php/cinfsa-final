@@ -391,6 +391,7 @@ $router->get('/administrador/butacas/gestion', [ButacaController::class, 'gestio
 $router->get('/administrador/butacas/sala', [ButacaController::class, 'verMapaSala']);
 $router->post('/administrador/butacas/cambiar-estado', [ButacaController::class, 'cambiarEstadoButaca']);
 $router->post('/administrador/butacas/generar', [ButacaController::class, 'generarButacas']);
+$router->get('/administrador/butacas/layout-funcion', [ButacaController::class, 'layoutPorFuncion']);
 
 
 // Gestión de módulos

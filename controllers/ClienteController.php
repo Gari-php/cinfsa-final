@@ -600,6 +600,18 @@ class ClienteController
                 return;
             }
 
+            // ⭐ VERIFICAR QUE NINGUNA BUTACA ESTÉ BLOQUEADA POR EL ADMINISTRADOR
+            $queryBloqueadas = "SELECT id_butaca FROM butacas WHERE id_butaca IN ($idsButacas) AND rela_estado_butaca = 2";
+            $bloqueadas = $db->query($queryBloqueadas);
+
+            if ($bloqueadas && $bloqueadas->num_rows > 0) {
+                echo json_encode([
+                    'ok' => false,
+                    'mensaje' => 'Una o más butacas seleccionadas no están disponibles. Recarga la página.'
+                ]);
+                return;
+            }
+
             // Obtener precio de la función
             $queryFuncion = "SELECT te.precio_entrada 
                         FROM funciones f

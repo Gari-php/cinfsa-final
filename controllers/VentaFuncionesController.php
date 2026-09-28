@@ -14,6 +14,19 @@ use Middlewares\ValidarModulo;
 class VentaFuncionesController
 {
 
+    private static function verificarPermisos()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['login'])) {
+            return false;
+        }
+
+        return ValidarModulo::tiene('VENTA_FUNCIONES');
+    }
+
     private static function verificarPermisoDevolucion()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -339,8 +352,8 @@ class VentaFuncionesController
                 // 4. PROCESAR CADA BUTACA
                 foreach ($butacasIds as $idButaca) {
                     // 4.1 Verificar que la butaca existe
-                    $queryButaca = "SELECT id_butaca, fila_butaca, numero_butaca, rela_salas 
-                               FROM butacas 
+                    $queryButaca = "SELECT id_butaca, fila_butaca, numero_butaca, rela_salas, rela_estado_butaca
+                               FROM butacas
                                WHERE id_butaca = ? AND rela_salas = ?";
                     $stmtB = $db->prepare($queryButaca);
                     $stmtB->bind_param("ii", $idButaca, $idSala);
@@ -354,6 +367,11 @@ class VentaFuncionesController
                     $butaca = $resultadoB->fetch_assoc();
                     $numeroButaca = $butaca['numero_butaca'];
                     $filaButaca = $butaca['fila_butaca'];
+
+                    // 4.1.1 Verificar que la butaca no esté bloqueada por el administrador
+                    if ((int)$butaca['rela_estado_butaca'] === 2) {
+                        throw new \Exception("La butaca Fila $filaButaca-$numeroButaca no está disponible (bloqueada)");
+                    }
 
                     // 4.2 Verificar disponibilidad
                     $queryVerif = "SELECT id_venta_butaca 

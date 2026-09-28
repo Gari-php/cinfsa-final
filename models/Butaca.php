@@ -321,53 +321,75 @@ class Butaca extends ActiveRecord {
 
     public static function obtenerLayoutSala($idSala) {
         $db = self::getDB();
-        
+
         // Obtener datos de la sala
-        $querySala = "SELECT * FROM salas WHERE id_sala = '$idSala' AND estado = 1";
-        $resultadoSala = $db->query($querySala);
-        
-        if (!$resultadoSala || $resultadoSala->num_rows === 0) {
+        $querySala = "SELECT * FROM salas WHERE id_sala = ? AND estado = 1";
+        $stmtSala = $db->prepare($querySala);
+        $stmtSala->bind_param("i", $idSala);
+        $stmtSala->execute();
+        $resultadoSala = $stmtSala->get_result();
+
+        if ($resultadoSala->num_rows === 0) {
             return ['error' => 'Sala no encontrada'];
         }
-        
+
         $sala = $resultadoSala->fetch_assoc();
-        
-        // Obtener todas las butacas de la sala
-        $queryButacas = "SELECT 
-                            b.*,
-                            eb.nombre_estado_butaca
+
+        // Obtener todas las butacas de la sala.
+        // "Vendida" (3) tiene prioridad sobre "bloqueada" (2): una butaca queda marcada
+        // rela_estado_butaca = 2 tanto si el admin la bloqueó como si se vendió por web
+        // (ver PagoController::confirmarPago), así que acá se distingue consultando si
+        // tiene una venta real vigente antes de asumir que es un bloqueo de mantenimiento.
+        $queryButacas = "SELECT
+                            b.id_butaca,
+                            b.fila_butaca,
+                            b.numero_butaca,
+                            CASE
+                                WHEN EXISTS (
+                                    SELECT 1 FROM butacas_vendidas bv
+                                    INNER JOIN funciones f ON f.id_funcion = bv.id_funcion
+                                    INNER JOIN turnos t ON t.id_turnos = f.rela_turnos
+                                    WHERE bv.id_butaca = b.id_butaca
+                                        AND f.estado = 1
+                                        AND TIMESTAMP(f.fecha_hora, t.turno_horario) >= NOW()
+                                ) THEN 3
+                                WHEN b.rela_estado_butaca = 2 THEN 2
+                                ELSE 1
+                            END as estado
                         FROM butacas b
-                        INNER JOIN estados_butacas eb ON b.rela_estado_butaca = eb.id_estado_butaca
-                        WHERE b.rela_salas = '$idSala'
+                        WHERE b.rela_salas = ?
                         ORDER BY b.fila_butaca ASC, b.numero_butaca ASC";
-        
-        $resultadoButacas = $db->query($queryButacas);
-        
+
+        $stmtButacas = $db->prepare($queryButacas);
+        $stmtButacas->bind_param("i", $idSala);
+        $stmtButacas->execute();
+        $resultadoButacas = $stmtButacas->get_result();
+
         // Crear matriz de butacas
         $matriz = [];
         $butacasData = [];
-        
+
         while($row = $resultadoButacas->fetch_assoc()) {
-            $fila = $row['fila_butaca'];
-            $numero = $row['numero_butaca'];
-            $estado = $row['rela_estado_butaca'];
-            
+            $fila = (int)$row['fila_butaca'];
+            $numero = (int)$row['numero_butaca'];
+            $estado = (int)$row['estado'];
+
             if (!isset($matriz[$fila])) {
                 $matriz[$fila] = [];
             }
-            
-           
+
+
             $matriz[$fila][$numero] = [
-                'id' => $row['id_butaca'],
+                'id' => (int)$row['id_butaca'],
                 'fila' => $fila,
                 'numero' => $numero,
-                'estado' => (int)$row['rela_estado_butaca'], // <-- Importante: convertir a int
-                'disponible' => $estado == 1,
-                'reservada' => $estado == 3,
-                'bloqueada' => $estado == 2,
+                'estado' => $estado,
+                'disponible' => $estado === 1,
+                'reservada' => $estado === 3,
+                'bloqueada' => $estado === 2,
                 'label' => $fila . '-' . $numero
             ];
-            
+
             $butacasData[] = $matriz[$fila][$numero];
         }
         
@@ -383,6 +405,106 @@ class Butaca extends ActiveRecord {
         ];
     }
 
+
+    public static function obtenerFuncionesPorSala($idSala) {
+        $db = self::getDB();
+
+        $query = "SELECT f.id_funcion, f.fecha_hora, t.turno_horario, p.titulo_pelicula
+                  FROM funciones f
+                  INNER JOIN turnos t ON f.rela_turnos = t.id_turnos
+                  INNER JOIN peliculas p ON f.rela_peliculas = p.id_pelicula
+                  WHERE f.rela_salas = ? AND f.estado = 1
+                    AND TIMESTAMP(f.fecha_hora, t.turno_horario) >= NOW()
+                  ORDER BY f.fecha_hora ASC, t.turno_horario ASC";
+
+        $stmt = $db->prepare($query);
+        $stmt->bind_param("i", $idSala);
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public static function obtenerLayoutSalaPorFuncion($idSala, $idFuncion) {
+        $db = self::getDB();
+
+        $querySala = "SELECT * FROM salas WHERE id_sala = ? AND estado = 1";
+        $stmtSala = $db->prepare($querySala);
+        $stmtSala->bind_param("i", $idSala);
+        $stmtSala->execute();
+        $resultadoSala = $stmtSala->get_result();
+
+        if ($resultadoSala->num_rows === 0) {
+            return ['error' => 'Sala no encontrada'];
+        }
+
+        $sala = $resultadoSala->fetch_assoc();
+
+        // Estado por función:
+        // 3 = vendida (venta confirmada, por vendedor interno o por pago web)
+        // 4 = en carrito de un cliente (todavía no pagada)
+        // 2 = bloqueada por el administrador (mantenimiento, aplica a toda función)
+        // 1 = disponible
+        $queryButacas = "SELECT
+                            b.id_butaca,
+                            b.fila_butaca,
+                            b.numero_butaca,
+                            CASE
+                                WHEN bv.id_venta_butaca IS NOT NULL THEN 3
+                                WHEN EXISTS (
+                                    SELECT 1 FROM carrito_temporal ct
+                                    WHERE ct.id_butaca = b.id_butaca
+                                        AND ct.id_funcion = ?
+                                        AND ct.tipo_producto = 'butacas'
+                                ) THEN 4
+                                WHEN b.rela_estado_butaca = 2 THEN 2
+                                ELSE 1
+                            END as estado
+                        FROM butacas b
+                        LEFT JOIN butacas_vendidas bv ON bv.id_butaca = b.id_butaca
+                            AND bv.id_funcion = ?
+                        WHERE b.rela_salas = ?
+                        ORDER BY b.fila_butaca ASC, b.numero_butaca ASC";
+
+        $stmtButacas = $db->prepare($queryButacas);
+        $stmtButacas->bind_param("iii", $idFuncion, $idFuncion, $idSala);
+        $stmtButacas->execute();
+        $resultadoButacas = $stmtButacas->get_result();
+
+        $matriz = [];
+        $butacasData = [];
+
+        while ($row = $resultadoButacas->fetch_assoc()) {
+            $fila = (int)$row['fila_butaca'];
+            $numero = (int)$row['numero_butaca'];
+            $estado = (int)$row['estado'];
+
+            $item = [
+                'id' => (int)$row['id_butaca'],
+                'fila' => $fila,
+                'numero' => $numero,
+                'estado' => $estado,
+                'disponible' => $estado === 1,
+                'bloqueada' => $estado === 2,
+                'reservada' => $estado === 3,
+                'en_carrito' => $estado === 4,
+                'label' => $fila . '-' . $numero
+            ];
+
+            $matriz[$fila][$numero] = $item;
+            $butacasData[] = $item;
+        }
+
+        return [
+            'sala' => [
+                'id' => $sala['id_sala'],
+                'filas' => $sala['filas_sala'],
+                'columnas' => $sala['columnas_sala'],
+                'capacidad' => $sala['capacidad_sala']
+            ],
+            'butacas' => $butacasData,
+            'matriz' => $matriz
+        ];
+    }
 
     public static function reservarButacas($butacasIds, $idFuncion = null) {
         $db = self::getDB();

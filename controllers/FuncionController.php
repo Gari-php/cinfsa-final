@@ -745,6 +745,17 @@ class FuncionController
             $fechaFin->modify('+1 day'); // inclusive
 
             $funcionesCreadas = 0;
+            $conflictos = [];
+
+            $queryConflicto = "SELECT COUNT(*) as total FROM funciones
+                                WHERE rela_salas = ? AND rela_turnos = ? AND fecha_hora = ? AND estado = 1";
+            $stmtConflicto = $db->prepare($queryConflicto);
+
+            $queryInsert = "INSERT INTO funciones
+                          (fecha_hora, fecha_finalizacion, rela_salas, rela_peliculas,
+                           rela_turnos, rela_tipo_entrada, rela_idioma, estado)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmtInsert = $db->prepare($queryInsert);
 
             while ($fechaActual < $fechaFin) {
                 $diaSemana = (int) $fechaActual->format('N'); // 1=lunes...7=domingo
@@ -760,13 +771,17 @@ class FuncionController
 
                         $fechaStr = $fechaActual->format('Y-m-d');
 
-                        $query = "INSERT INTO funciones 
-                              (fecha_hora, fecha_finalizacion, rela_salas, rela_peliculas, 
-                               rela_turnos, rela_tipo_entrada, rela_idioma, estado)
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        // Evitar dos funciones en la misma sala y turno el mismo día
+                        $stmtConflicto->bind_param("iis", $idSala, $idTurno, $fechaStr);
+                        $stmtConflicto->execute();
+                        $existe = $stmtConflicto->get_result()->fetch_assoc()['total'] > 0;
 
-                        $stmt = $db->prepare($query);
-                        $stmt->bind_param(
+                        if ($existe) {
+                            $conflictos[] = "Sala {$idSala} - {$fechaStr}";
+                            continue;
+                        }
+
+                        $stmtInsert->bind_param(
                             "ssiiiiii",
                             $fechaStr,
                             $datos['fecha_hasta'],
@@ -777,7 +792,7 @@ class FuncionController
                             $idIdioma,
                             $estado
                         );
-                        $stmt->execute();
+                        $stmtInsert->execute();
                         $funcionesCreadas++;
                     }
                 }
@@ -785,11 +800,25 @@ class FuncionController
                 $fechaActual->modify('+1 day');
             }
 
+            if ($funcionesCreadas === 0 && !empty($conflictos)) {
+                $db->rollback();
+                echo json_encode([
+                    'ok' => false,
+                    'mensaje' => 'No se creó ninguna función: todos los horarios elegidos ya están ocupados (' . implode(', ', array_slice($conflictos, 0, 5)) . (count($conflictos) > 5 ? '...' : '') . ')'
+                ]);
+                return;
+            }
+
             $db->commit();
+
+            $mensaje = "Se crearon {$funcionesCreadas} función(es) correctamente";
+            if (!empty($conflictos)) {
+                $mensaje .= ". Se omitieron " . count($conflictos) . " por conflicto de sala/turno ya ocupado (" . implode(', ', array_slice($conflictos, 0, 5)) . (count($conflictos) > 5 ? '...' : '') . ")";
+            }
 
             echo json_encode([
                 'ok'      => true,
-                'mensaje' => "Se crearon {$funcionesCreadas} función(es) correctamente",
+                'mensaje' => $mensaje,
                 'redirigir' => '/administrador/funciones/listado'
             ]);
         } catch (\Exception $e) {

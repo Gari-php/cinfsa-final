@@ -18,6 +18,23 @@
             </a>
         </nav>
 
+        <!-- SELECTOR DE FUNCIÓN (solo si hay funciones activas para esta sala) -->
+        <?php if (!empty($funciones)): ?>
+            <div class="selector-funcion-admin">
+                <label for="selectFuncion"><i class="fas fa-clock"></i> Ver ocupación por función:</label>
+                <select id="selectFuncion" onchange="cambiarFuncion(this.value)">
+                    <option value="">Vista general (mantenimiento de butacas)</option>
+                    <?php foreach ($funciones as $funcion): ?>
+                        <option value="<?php echo (int) $funcion['id_funcion']; ?>">
+                            <?php echo s(date('d/m/Y', strtotime($funcion['fecha_hora']))); ?> -
+                            <?php echo s(substr($funcion['turno_horario'], 0, 5)); ?> hs -
+                            <?php echo s($funcion['titulo_pelicula']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        <?php endif; ?>
+
         <!-- LEYENDA -->
         <div class="leyenda-admin">
             <div class="leyenda-item">
@@ -30,7 +47,11 @@
             </div>
             <div class="leyenda-item">
                 <i class="fa-solid fa-chair reservada-icon"></i>
-                <span>Reservada (no modificable)</span>
+                <span>Vendida (no modificable)</span>
+            </div>
+            <div class="leyenda-item">
+                <i class="fa-solid fa-chair en-carrito-icon"></i>
+                <span>En carrito de un cliente (no modificable)</span>
             </div>
         </div>
 
@@ -107,7 +128,11 @@
             </div>
             <div class="stat-item">
                 <div class="stat-numero" id="reservadas">0</div>
-                <div class="stat-label">Reservadas</div>
+                <div class="stat-label">Vendidas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-numero" id="enCarrito">0</div>
+                <div class="stat-label">En carrito</div>
             </div>
         </div>
     </div>
@@ -177,6 +202,44 @@
             transform: translateY(-2px);
         }
 
+        .selector-funcion-admin {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background-color: #363130;
+            padding: 1.2rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid #ed850f;
+        }
+
+        .selector-funcion-admin label {
+            color: #ed850f;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .selector-funcion-admin select {
+            background: #1a202c;
+            color: #fff;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+            min-width: 280px;
+            max-width: 100%;
+        }
+
+        .selector-funcion-admin select:focus {
+            outline: none;
+            border-color: #ed850f;
+        }
+
         .leyenda-admin {
             display: flex;
             justify-content: center;
@@ -209,6 +272,11 @@
 
         .reservada-icon {
             color: #ffc107 !important;
+            font-size: 25px;
+        }
+
+        .en-carrito-icon {
+            color: #3b82f6 !important;
             font-size: 25px;
         }
 
@@ -314,6 +382,15 @@
             cursor: not-allowed;
         }
 
+        .butaca-admin.en-carrito i {
+            color: #3b82f6;
+            opacity: 0.8;
+        }
+
+        .butaca-admin.en-carrito {
+            cursor: not-allowed;
+        }
+
         .butaca-vacia-admin {
             width: 50px;
             height: 50px;
@@ -322,7 +399,7 @@
         /* Estadísticas */
         .estadisticas-admin {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1.5rem;
             background-color: #363130;
             padding: 2rem;
@@ -355,6 +432,10 @@
 
         .stat-item:nth-child(3) .stat-numero {
             color: #ffc107;
+        }
+
+        .stat-item:nth-child(4) .stat-numero {
+            color: #3b82f6;
         }
 
         .stat-label {
@@ -468,6 +549,15 @@
                 gap: 1rem;
             }
 
+            .selector-funcion-admin {
+                flex-direction: column;
+            }
+
+            .selector-funcion-admin select {
+                width: 100%;
+                min-width: 0;
+            }
+
             .nav-admin {
                 flex-direction: column;
                 align-items: center;
@@ -538,6 +628,89 @@
 
 <script type="module" src="/assets/js/formularios.js"></script>
 <script>
+    window.LAYOUT_GENERAL = <?php echo json_encode($layout, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+
+    // Cambia el mapa entre la vista general (mantenimiento) y la ocupación de una función puntual
+    async function cambiarFuncion(idFuncion) {
+        const select = document.getElementById('selectFuncion');
+        select.disabled = true;
+
+        try {
+            if (!idFuncion) {
+                renderizarMapaAdmin(window.LAYOUT_GENERAL);
+                return;
+            }
+
+            const response = await fetch(`/administrador/butacas/layout-funcion?id_funcion=${idFuncion}`);
+            const data = await response.json();
+
+            if (data.ok) {
+                renderizarMapaAdmin(data.layout);
+            } else {
+                mostrarAlerta(data.mensaje, 'error');
+            }
+        } catch (error) {
+            mostrarAlerta('Error al cargar la ocupación de la función', 'error');
+        } finally {
+            select.disabled = false;
+        }
+    }
+
+    // Reconstruye la grilla de butacas a partir de un layout (general o de una función)
+    function renderizarMapaAdmin(layout) {
+        const filas = layout.sala.filas;
+        const columnas = layout.sala.columnas;
+
+        const matriz = {};
+        layout.butacas.forEach(butaca => {
+            if (!matriz[butaca.fila]) matriz[butaca.fila] = {};
+            matriz[butaca.fila][butaca.numero] = butaca;
+        });
+
+        let html = '';
+        for (let fila = 1; fila <= filas; fila++) {
+            html += `<div class="fila-admin" data-fila="${fila}"><div class="fila-numero-admin">Fila ${fila}</div>`;
+
+            for (let numero = 1; numero <= columnas; numero++) {
+                const butaca = matriz[fila] && matriz[fila][numero];
+
+                if (butaca) {
+                    let claseEstado = '';
+                    let clickeable = true;
+
+                    if (butaca.estado === 1) {
+                        claseEstado = 'disponible';
+                    } else if (butaca.estado === 2) {
+                        claseEstado = 'bloqueada';
+                    } else if (butaca.estado === 3) {
+                        claseEstado = 'reservada';
+                        clickeable = false;
+                    } else if (butaca.estado === 4) {
+                        claseEstado = 'en-carrito';
+                        clickeable = false;
+                    }
+
+                    html += `<div class="butaca-admin ${claseEstado}"
+                                data-id="${butaca.id}"
+                                data-fila="${butaca.fila}"
+                                data-numero="${butaca.numero}"
+                                data-estado="${butaca.estado}"
+                                ${clickeable ? 'onclick="cambiarEstadoButaca(this)"' : ''}>
+                                <i class="fa-solid fa-chair"></i>
+                                <span class="numero-butaca">${butaca.numero}</span>
+                            </div>`;
+                } else {
+                    html += '<div class="butaca-vacia-admin"></div>';
+                }
+            }
+
+            html += '</div>';
+        }
+
+        document.querySelector('.sala-grid-admin').innerHTML = html;
+        actualizarEstadisticas();
+    }
+
     // Función para cambiar estado de butaca
     async function cambiarEstadoButaca(elemento) {
         const id = elemento.getAttribute('data-id');
@@ -591,7 +764,9 @@
         const disponibles = document.querySelectorAll('.butaca-admin.disponible').length;
         const bloqueadas = document.querySelectorAll('.butaca-admin.bloqueada').length;
         const reservadas = document.querySelectorAll('.butaca-admin.reservada').length;
+        const enCarrito = document.querySelectorAll('.butaca-admin.en-carrito').length;
 
+        document.getElementById('enCarrito').textContent = enCarrito;
         document.getElementById('disponibles').textContent = disponibles;
         document.getElementById('bloqueadas').textContent = bloqueadas;
         document.getElementById('reservadas').textContent = reservadas;

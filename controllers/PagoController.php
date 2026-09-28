@@ -295,9 +295,10 @@ class PagoController
 
                         $stmtInsert->execute([$idButaca, $idFuncion, $idEntrada, $idOrden]);
 
-                        // NUEVO: marcar la butaca como "No disponible" para que no aparezca libre en el mapa a futuros clientes
-                        $stmtButaca = $db->prepare("UPDATE butacas SET rela_estado_butaca = 2 WHERE id_butaca = ?");
-                        $stmtButaca->execute([$idButaca]);
+                        // NOTA: no se toca rela_estado_butaca acá. Ese flag es exclusivo del bloqueo
+                        // manual del administrador (mantenimiento); la disponibilidad real por función
+                        // ya queda registrada en butacas_vendidas. Marcarlo acá bloqueaba la butaca
+                        // para TODAS las demás funciones (otros días/horarios) de forma global.
 
                         error_log("✅ WEB: Butaca {$idButaca} vendida - Orden {$idOrden}" . ($idEntrada ? " - Entrada {$idEntrada}" : " - SIN ENTRADA"));
                     }
