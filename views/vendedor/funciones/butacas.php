@@ -753,6 +753,11 @@
     }
 
     /* === RESPONSIVE === */
+    /* Sin esto la celda de la grilla crece hasta el ancho del mapa y el overflow-x de .mapa-butacas nunca se activa */
+    .sala-contenido > * {
+        min-width: 0;
+    }
+
     @media (max-width: 1024px) {
         .sala-contenido {
             grid-template-columns: 1fr;
@@ -826,6 +831,16 @@
         .butaca-vacia {
             width: 26px;
             height: 26px;
+        }
+
+        .fila-numero {
+            min-width: 34px;
+            font-size: 0.75rem !important;
+        }
+
+        .sala-grid {
+            width: max-content;
+            margin: 0 auto;
         }
     }
 </style>

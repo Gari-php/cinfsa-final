@@ -1037,6 +1037,22 @@ async function agregarButacasAlCarrito() {
     }
 }
 
+@media (max-width: 768px) {
+    /* Salas anchas: el mapa se desplaza dentro de su recuadro. Los márgenes auto lo centran
+       cuando entra y, a diferencia de justify-content:center, no lo recortan cuando desborda. */
+    .mapa-butacas {
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sala-grid {
+        width: max-content;
+        max-width: none;
+        margin: 0 auto;
+    }
+}
+
 @media (max-width: 480px) {
     .butaca,
     .butaca-vacia {

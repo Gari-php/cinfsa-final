@@ -1130,6 +1130,21 @@
             background-color: #ffa733;
         }
 
+        /* Reportes: los gráficos se ajustan al ancho disponible en cualquier pantalla */
+        .graficos-grid > * {
+            min-width: 0;
+        }
+
+        .main-content-wrapper canvas {
+            max-width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            .grafico-container {
+                padding: 16px;
+            }
+        }
+
         @media (max-width: 1024px) {
             .nav-modular ul {
                 justify-content: space-between;
@@ -1139,22 +1154,24 @@
         @media (max-width: 768px) {
             .nav-modular {
                 padding: 6px;
+                width: calc(100% - 24px);
+                margin-top: 12px;
             }
 
-            @media (max-width: 768px) {
-                .main-content-wrapper {
-                    padding-top: 220px;
-                }
+            .main-content-wrapper {
+                padding-top: 16px;
             }
 
+            /* Dos columnas de módulos en lugar de una lista vertical que ocupaba toda la pantalla */
             .nav-modular ul {
-                flex-direction: column;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 6px;
-                align-items: stretch;
+                align-items: start;
             }
 
             .modulo-nav a {
-                padding: 12px 16px;
+                padding: 10px 12px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -1168,8 +1185,10 @@
             }
 
             .notifications-dropdown {
-                width: 300px;
-                right: -50px;
+                width: auto;
+                left: 12px;
+                right: 12px;
+                max-height: 70vh;
             }
         }
     </style>

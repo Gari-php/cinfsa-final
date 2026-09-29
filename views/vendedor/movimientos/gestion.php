@@ -370,7 +370,7 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         border: 1px solid var(--color-hover-gris);
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
         gap: 1.5rem;
     }
 
@@ -401,7 +401,7 @@
     /* === BOTONES DE ACCIÓN === */
     .acciones-movimientos {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
     }
@@ -465,7 +465,7 @@
         border: 1px solid var(--color-hover-gris);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
         gap: 1.5rem;
     }
 
@@ -726,7 +726,7 @@
 
     .form-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
         gap: 1rem;
     }
 

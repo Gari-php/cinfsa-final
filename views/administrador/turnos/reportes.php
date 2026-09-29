@@ -32,7 +32,7 @@
     </div>
 
     <!-- Tarjetas -->
-    <div class="tarjetas-totales" style="grid-template-columns:repeat(3,1fr);">
+    <div class="tarjetas-totales tarjetas-3">
         <div class="tarjeta-total">
             <i class="fa-solid fa-clock"></i>
             <div class="tarjeta-valor" id="totalTurnos">-</div>
@@ -247,6 +247,10 @@
 
     .contenedor-reportes.modo-oscuro td {
         border-color: #4a5568 !important;
+    }
+
+    .tarjetas-3 {
+        grid-template-columns: repeat(3, 1fr);
     }
 
     @media (max-width:768px) {

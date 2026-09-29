@@ -312,6 +312,9 @@
             flex-direction: column;
             gap: 0.8rem;
             align-items: center;
+            /* Toma el ancho de la fila más larga: centrada si entra, desplazable completa si no */
+            width: max-content;
+            min-width: 100%;
         }
 
         .fila-admin {

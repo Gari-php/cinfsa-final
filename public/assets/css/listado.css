@@ -681,9 +681,20 @@
 }
 
 /* Responsive */
+.form-logo {
+    max-width: 100%;
+    height: auto;
+}
+
 @media (max-width: 768px) {
-    .listado .tabla-listado {
-        width: 95%;
+    /* La tabla se desplaza dentro de su ancho en lugar de ensanchar toda la página */
+    .listado .tabla-listado,
+    .tabla-listado {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         font-size: 12px !important;
     }
 

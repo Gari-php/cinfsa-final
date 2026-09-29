@@ -254,7 +254,7 @@
 
         .info-orden-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
@@ -427,6 +427,32 @@
         .total-final {
             color: #22c55e;
             font-size: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .detalle-orden-container {
+                margin: 24px 12px;
+                padding: 18px;
+            }
+
+            .info-orden-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-row {
+                gap: 12px;
+            }
+
+            .info-row .value {
+                text-align: right;
+                word-break: break-word;
+            }
+
+            .tabla-productos {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
     </style>
 </body>

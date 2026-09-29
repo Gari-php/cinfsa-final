@@ -1,0 +1,117 @@
+/* Confirmación de cuenta (auth/confirmar). Mismo estilo que las demás pantallas de acceso. */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #363130;
+    min-height: 100vh;
+    font-family: 'Montserrat', 'Poppins', Arial, sans-serif;
+    color: #e2e8f0;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid #ed850f;
+    padding: 34px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(237, 133, 15, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.form-logo {
+    width: 130px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 22px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 12px rgba(237, 133, 15, 0.3));
+}
+
+.alerta {
+    position: relative;
+    z-index: 1;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 15px !important;
+    line-height: 1.5;
+    border: 1px solid #4a5568;
+    background: rgba(74, 85, 104, 0.25);
+    color: #e2e8f0;
+}
+
+.alerta.exito {
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.12);
+    color: #86efac;
+}
+
+.alerta.error {
+    border-color: rgba(220, 53, 69, 0.5);
+    background: rgba(220, 53, 69, 0.12);
+    color: #fca5a5;
+}
+
+.acciones {
+    margin-top: 22px;
+    position: relative;
+    z-index: 1;
+}
+
+.acciones a {
+    display: block;
+    padding: 13px 15px;
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    color: #fff;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 15px !important;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(237, 133, 15, 0.35);
+    transition: all 0.3s ease;
+}
+
+.acciones a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(237, 133, 15, 0.5);
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 14px;
+    }
+
+    .form-container {
+        padding: 26px 20px;
+        border-radius: 16px;
+    }
+
+    .form-logo {
+        width: 100px;
+    }
+}

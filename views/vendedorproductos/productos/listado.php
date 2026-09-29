@@ -617,6 +617,11 @@
         }
     }
 
+    /* Las celdas de la grilla pueden achicarse por debajo del ancho de la tabla */
+    .contenedor-flex > * {
+        min-width: 0;
+    }
+
     @media (max-width: 768px) {
         .dashboard-vendedor-productos {
             padding: 1rem;
@@ -629,6 +634,43 @@
 
         .fila-campos {
             grid-template-columns: 1fr;
+        }
+
+        .form-venta {
+            padding: 1.25rem;
+        }
+
+        .form-venta table {
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .selector-tipo {
+            gap: 0.5rem;
+        }
+
+        .btn-tipo {
+            font-size: 1rem;
+            padding: 0.8rem;
+        }
+
+        .total-section {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .total-section h2 {
+            font-size: 1.5rem;
+        }
+
+        .btn-completar {
+            justify-content: center;
+            padding: 0.9rem 1rem;
+            font-size: 1.05rem;
         }
     }
 </style>

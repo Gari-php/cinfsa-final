@@ -32,7 +32,7 @@
     </div>
 
     <!-- Tarjetas -->
-    <div class="tarjetas-totales" style="grid-template-columns:repeat(4,1fr);">
+    <div class="tarjetas-totales tarjetas-4">
         <div class="tarjeta-total">
             <i class="fa-solid fa-door-open"></i>
             <div class="tarjeta-valor" id="totalSalas">-</div>
@@ -252,6 +252,10 @@
 
     .contenedor-reportes.modo-oscuro td {
         border-color: #4a5568 !important;
+    }
+
+    .tarjetas-4 {
+        grid-template-columns: repeat(4, 1fr);
     }
 
     @media (max-width:768px) {

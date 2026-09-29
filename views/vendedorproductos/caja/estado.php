@@ -266,7 +266,7 @@
 
     .stats-caja {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
         gap: 1.5rem;
         margin-bottom: 1.5rem;
     }
@@ -321,7 +321,7 @@
 
     .acciones-principales {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
     }

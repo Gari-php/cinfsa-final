@@ -70,7 +70,7 @@
 
     .productos {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
       gap: 20px;
       text-align: center;
     }
@@ -136,6 +136,23 @@
       font-weight: bold;
       margin: 5px 0;
       color: #000;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin: 4px 0;
+      }
+
+      .contacto {
+        text-align: center;
+      }
     }
   </style>
 </head>
