@@ -68,8 +68,8 @@
                 </div>
 
                 <div class="checkout-actions">
-                    <a href="/carrito" class="btn-volver">
-                        <i class="fas fa-arrow-left"></i> Volver al carrito
+                    <a href="/menu" class="btn-volver">
+                        <i class="fas fa-arrow-left"></i> Volver al inicio
                     </a>
                     <button type="submit" class="btn-pagar">
                         <i class="fas fa-credit-card"></i> Proceder al pago
@@ -106,7 +106,6 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         }
         
         const data = await response.json();
-        console.log('Respuesta del servidor:', data);
         
         if (data.ok && data.init_point) {
             window.location.href = data.init_point;

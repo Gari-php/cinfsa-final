@@ -78,12 +78,12 @@ class FichaController {
         }
         $id = $_GET['id'] ?? null;
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/fichas');
+            header('Location: /administrador/fichas/listado');
             exit;
         }
         $ficha = Ficha::find($id);
         if (!$ficha) {
-            header('Location: /administrador/fichas');
+            header('Location: /administrador/fichas/listado');
             exit;
         }
         $router->render('administrador/fichas/editar', [

@@ -910,7 +910,6 @@
             }
 
             const data = await response.json();
-            console.log('✅ Datos recibidos:', data);
 
             if (data.ok) {
                 select.innerHTML = '<option value="">Todos los vendedores</option>';
@@ -950,13 +949,6 @@
         const idVendedor = document.getElementById('id_vendedor').value;
         const numeroComprobante = document.getElementById('numero_comprobante').value.trim();
 
-        console.log(' Parámetros de búsqueda:', {
-            fechaDesde,
-            fechaHasta,
-            idCaja: idCaja || 'TODAS',
-            idVendedor: idVendedor || 'TODOS',
-            numeroComprobante: numeroComprobante || 'TODOS'
-        });
 
         if (new Date(fechaDesde) > new Date(fechaHasta)) {
             window.mostrarAlerta('La fecha "Desde" no puede ser mayor que "Hasta"', 'error');
@@ -979,7 +971,6 @@
                 numero_comprobante: numeroComprobante || null
             };
 
-            console.log(' Enviando request:', payload);
 
             const response = await fetch('/ventas/consulta/api/consultar', {
                 method: 'POST',
@@ -1004,7 +995,6 @@
             }
 
             const data = await response.json();
-            console.log('✅ Datos recibidos:', data);
 
             if (data.ok) {
                 ventasActuales = data.ventas;
@@ -1022,10 +1012,6 @@
     }
 
     function mostrarResultados(ventas, resumen) {
-        console.log(' Mostrando resultados:', {
-            totalVentas: ventas.length,
-            resumen
-        });
 
         if (ventas.length === 0) {
             document.getElementById('card-resumen').style.display = 'none';
@@ -1325,7 +1311,6 @@
         }
 
         console.log('✅ Confirmando devolución:', ventaSeleccionada.id_venta);
-        console.log('Items a devolver:', itemsParaDevolver);
 
         // Deshabilitar botón
         const btnConfirmar = document.querySelector('.btn-confirmar');
@@ -1366,7 +1351,6 @@
             }
 
             const data = await response.json();
-            console.log(' Respuesta devolución:', data);
 
             // DESPUÉS
             if (data.ok) {

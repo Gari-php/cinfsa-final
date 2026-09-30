@@ -99,14 +99,14 @@ class SalaController
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/salas');
+            header('Location: /administrador/salas/listado');
             exit;
         }
 
         $sala = Sala::find($id);
 
         if (!$sala) {
-            header('Location: /administrador/salas');
+            header('Location: /administrador/salas/listado');
             exit;
         }
 

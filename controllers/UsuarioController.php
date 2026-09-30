@@ -178,13 +178,13 @@ class UsuarioController
 
         $id = $_GET['id'] ?? null;
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/usuarios');
+            header('Location: /administrador/usuarios/listado');
             return;
         }
 
         $usuario = Usuario::find($id);
         if (!$usuario) {
-            header('Location: /administrador/usuarios');
+            header('Location: /administrador/usuarios/listado');
             return;
         }
 

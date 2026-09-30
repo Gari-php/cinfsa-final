@@ -88,7 +88,7 @@ class TipoEntradaController {
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/salas');
+            header('Location: /administrador/tipos_entradas/listado');
             exit;
         }
 

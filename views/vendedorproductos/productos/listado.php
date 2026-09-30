@@ -1552,7 +1552,6 @@
                     datos_facturacion: datosFacturacion
                 };
 
-                console.log('📤 Enviando venta:', datosVenta);
 
                 try {
                     const response = await fetch('/vendedorproductos/completar-venta', {
@@ -1564,7 +1563,6 @@
                     });
 
                     const data = await response.json();
-                    console.log('📥 Respuesta:', data);
 
                     if (data.ok) {
                         mostrarAlerta('✅ ' + data.mensaje, 'exito');

@@ -83,12 +83,12 @@ class SexoController {
         }
         $id = $_GET['id'] ?? null;
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/sexo');
+            header('Location: /administrador/sexo/listado');
             exit;
         }
         $sexo = Sexo::find($id);
         if (!$sexo) {
-            header('Location: /administrador/sexo');
+            header('Location: /administrador/sexo/listado');
             exit;
         }
         $router->render('administrador/sexo/editar', [

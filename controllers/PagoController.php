@@ -23,7 +23,8 @@ class PagoController
     public static function crearOrden()
     {
 
-        $baseUrl = 'https://outcome-mammal-sudoku.ngrok-free.dev';
+        // URL pública del sitio (APP_URL en .env): MercadoPago vuelve a /carrito/retorno de este dominio
+        $baseUrl = rtrim($_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'https://outcome-mammal-sudoku.ngrok-free.dev', '/');
         if (!self::verificarUsuario()) {
             echo json_encode(['ok' => false, 'mensaje' => 'Usuario no autenticado']);
             return;

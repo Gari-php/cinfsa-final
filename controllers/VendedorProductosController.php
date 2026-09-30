@@ -18,7 +18,8 @@ class VendedorProductosController
         if (!isset($_SESSION['login'])) {
             return false;
         }
-        return ValidarModulo::tiene('GESTION_CAJA');
+        // Caja de productos: además de gestionar caja, debe vender productos
+        return ValidarModulo::tiene('GESTION_CAJA') && ValidarModulo::tiene('VENTA_PRODUCTOS');
     }
 
     private static function verificarPermisoVenta()

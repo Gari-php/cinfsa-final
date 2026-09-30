@@ -96,7 +96,6 @@ class Router {
             '/',
             '/crear-cuenta',
             '/olvide',
-            '/recuperar',
             '/confirmar-cuenta',
             '/restablecer',
             '/logaut',
@@ -107,7 +106,6 @@ class Router {
             '/api/obtener-trailer',
             '/juegos',
             '/cantina',
-            '/mapa',
             '/api/funciones/por-dia',
             '/api/butacas/funcion',
             '/api/carrito/contar'

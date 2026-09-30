@@ -213,13 +213,13 @@ class PeliculaController
 
         $id = $_GET['id'] ?? null;
         if (!$id) {
-            header('Location: /administrador/peliculas');
+            header('Location: /administrador/peliculas/listado');
             exit;
         }
 
         $pelicula = Pelicula::find($id);
         if (!$pelicula) {
-            header('Location: /administrador/peliculas');
+            header('Location: /administrador/peliculas/listado');
             exit;
         }
 
@@ -417,15 +417,7 @@ class PeliculaController
         ORDER BY p.id_pelicula DESC
         ";
 
-        $peliculas = Pelicula::consultarSQL($query);
-
-        // Debug temporal - remover después
-        error_log("=== PELÍCULAS PRÓXIMAMENTE ===");
-        foreach ($peliculas as $pelicula) {
-            error_log("ID: {$pelicula->id_pelicula}, Título: {$pelicula->titulo_pelicula}, Trailer: " . ($pelicula->trailer_url ?? 'NO TIENE'));
-        }
-
-        return $peliculas;
+        return Pelicula::consultarSQL($query);
     }
 
     public static function obtenerImagen()

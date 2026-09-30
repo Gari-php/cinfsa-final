@@ -114,7 +114,6 @@ function mostrarErrorCampo(input, mensaje) {
 function mostrarErroresEspecificos(formulario, errores) {
     limpiarErroresCampos(formulario);
 
-    console.log('🔍 INICIO DEBUG - Errores a procesar:', errores);
 
     errores.forEach((error, index) => {
         console.log(`\n--- ERROR ${index + 1}: "${error}" ---`);
@@ -605,7 +604,6 @@ function mostrarErroresEspecificos(formulario, errores) {
             mostrarErrorCampo(inputEncontrado, error);
         } else {
             console.log(`⚠️ ERROR "${error}" NO MAPEADO - Mostrando como alerta modal`);
-            console.log(`🔍 Campos disponibles:`, [...formulario.querySelectorAll('input, select, textarea')].map(el => ({ name: el.name, id: el.id })));
             mostrarAlerta(error, 'error', '.form-container', false);
         }
 
@@ -744,7 +742,6 @@ export async function enviarFetch(url, datos, metodo = 'POST', esMultipart = fal
 
         const respuesta = await fetch(url, opcionesFetch);
         const textoPlano = await respuesta.text();
-        console.log('🧪 Respuesta cruda del servidor:', textoPlano);
         return JSON.parse(textoPlano);
     } catch (error) {
         console.error('💥 Error en fetch:', error);
@@ -799,7 +796,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 respuesta = await enviarFetch(action, datos, metodo, tieneArchivo);
             }
 
-            console.log('📨 Respuesta recibida del backend:', respuesta);
 
             // MANEJO MEJORADO DE RESPUESTAS CON ALERTAS MODALES
             if (respuesta.ok === true || respuesta.ok === "true") {
@@ -818,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     erroresArray = Object.values(respuesta.errores).flat();
                 }
 
-                console.log('🔍 Errores a procesar:', erroresArray);
 
                 if (erroresArray.length > 0) {
                     mostrarErroresEspecificos(formulario, erroresArray);

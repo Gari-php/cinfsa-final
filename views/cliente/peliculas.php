@@ -224,7 +224,6 @@ $peliculasProximamente = \Controllers\PeliculaController::obtenerPeliculasProxim
                 const requestData = {
                     id_pelicula: parseInt(idPelicula) // Asegurar que sea un número
                 };
-                console.log('Datos enviados:', requestData);
                 
                 const response = await fetch('/api/obtener-trailer', {
                     method: 'POST',
@@ -241,7 +240,6 @@ $peliculasProximamente = \Controllers\PeliculaController::obtenerPeliculasProxim
                 }
                 
                 const data = await response.json();
-                console.log('Respuesta completa:', data);
 
                 if (data.ok && data.trailer_url) {
                     let trailerUrl = convertirAEmbedYoutube(data.trailer_url);
@@ -351,23 +349,6 @@ $peliculasProximamente = \Controllers\PeliculaController::obtenerPeliculasProxim
 // Pasar datos de PHP a JavaScript - VERIFICAR QUE ESTA LÍNEA ESTÉ PRESENTE
 const peliculasProximamente = <?php echo json_encode($peliculasProximamente ?? []); ?>;
 
-// Verificar que tenemos datos
-console.log('=== DEBUG PELÍCULAS PRÓXIMAMENTE ===');
-console.log('Datos recibidos:', peliculasProximamente);
-console.log('Total películas:', peliculasProximamente ? peliculasProximamente.length : 0);
-
-if (peliculasProximamente && peliculasProximamente.length > 0) {
-    peliculasProximamente.forEach((pelicula, index) => {
-        console.log(`Película ${index + 1}:`, {
-            id: pelicula.id_pelicula,
-            titulo: pelicula.titulo_pelicula,
-            imagen: pelicula.imagen_pelicula,
-            trailer_url: pelicula.trailer_url
-        });
-    });
-} else {
-    console.warn('No hay películas próximamente o los datos están vacíos');
-}
 
 class CarruselPeliculas {
     constructor(peliculas) {

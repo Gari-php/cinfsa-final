@@ -23,7 +23,7 @@ class EstadoPeliculaController {
 
         $estados_peliculas = EstadosPeliculas::obtenerEstadosPeliculas();
         
-        $router->render('/administrador/estados_peliculas/listado', [
+        $router->render('administrador/estados_peliculas/listado', [
             'estados_peliculas' => $estados_peliculas
         ]);
     }

@@ -151,7 +151,7 @@ public static function marcarTodasLeidas() {
 }
     public static function index() {
         if (!self::verificarSesion()) {
-            header('Location: /login');
+            header('Location: /');
             exit;
         }
 

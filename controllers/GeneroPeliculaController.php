@@ -85,14 +85,14 @@ class GeneroPeliculaController {
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/generos');
+            header('Location: /administrador/generos/listado');
             exit;
         }
 
         $genero = GeneroPelicula::find($id);
 
         if (!$genero) {
-            header('Location: /administrador/generos');
+            header('Location: /administrador/generos/listado');
             exit;
         }
 

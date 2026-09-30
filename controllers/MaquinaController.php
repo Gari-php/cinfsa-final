@@ -137,14 +137,14 @@ class MaquinaController
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/maquinas');
+            header('Location: /administrador/maquinas/listado');
             exit;
         }
 
         $maquina = Maquina::find($id);
 
         if (!$maquina) {
-            header('Location: /administrador/maquinas');
+            header('Location: /administrador/maquinas/listado');
             exit;
         }
 

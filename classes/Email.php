@@ -23,6 +23,13 @@ class Email
         return $_ENV['SENDGRID_API_KEY'] ?? getenv('SENDGRID_API_KEY') ?: '';
     }
 
+    // URL pública del sitio para armar los enlaces de los emails (APP_URL en .env)
+    private static function obtenerUrlBase()
+    {
+        $url = $_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'https://multiramose-connectional-hanna.ngrok-free.dev';
+        return rtrim($url, '/');
+    }
+
     public function enviarConfirmacion()
     {
         $email = new Mail();
@@ -30,7 +37,7 @@ class Email
         $email->setSubject("🎬 Verificá tu cuenta");
         $email->addTo($this->email, $this->nombre_usuario);
 
-        $url = "https://multiramose-connectional-hanna.ngrok-free.dev/confirmar-cuenta?token=" . $this->token_verificacion;
+        $url = self::obtenerUrlBase() . "/confirmar-cuenta?token=" . $this->token_verificacion;
 
         $contenido = '
         <!DOCTYPE html>
@@ -95,7 +102,7 @@ class Email
         $email->setSubject(" Restablecer Contraseña");
         $email->addTo($this->email, $this->nombre_usuario);
 
-        $url = "https://multiramose-connectional-hanna.ngrok-free.dev/restablecer?token=" . $token;
+        $url = self::obtenerUrlBase() . "/restablecer?token=" . $token;
 
         $contenido = '
         <!DOCTYPE html>

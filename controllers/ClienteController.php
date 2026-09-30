@@ -298,7 +298,7 @@ class ClienteController
         $diasValidos = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
         if (!$dia || !in_array(strtolower($dia), $diasValidos)) {
-            header('Location: /cliente/funciones');
+            header('Location: /funciones');
             exit;
         }
 

@@ -119,7 +119,6 @@ async function cargarMapaButacas() {
         console.log('📊 Response status:', response.status);
         
         const data = await response.json();
-        console.log('📦 Datos recibidos:', data);
         
         if (data.ok) {
             layoutSala = data.layout;
@@ -411,7 +410,6 @@ async function agregarButacasAlCarrito() {
         return;
     }
     
-    console.log('🛒 Agregando butacas al carrito:', butacasSeleccionadas);
     
     const btn = document.querySelector('.btn-agregar-carrito');
     btn.disabled = true;
@@ -499,7 +497,6 @@ async function agregarButacasAlCarrito() {
         return;
     }
     
-    console.log('🛒 Agregando butacas al carrito:', butacasSeleccionadas);
     
     const btn = document.querySelector('.btn-agregar-carrito');
     btn.disabled = true;

@@ -3,8 +3,6 @@ $session_user   = $_SESSION['nombre_usuario'] ?? null;
 $session_perfil = $_SESSION['perfil'] ?? null;
 $session_id     = $_SESSION['id_usuario'] ?? null;
 
-$esPerfil = (strpos($_SERVER['REQUEST_URI'], '/perfil') === 0);
-
 // Buscar el perfil SOLO del usuario en sesión
 $usuarioActual = null;
 
@@ -16,7 +14,7 @@ foreach ($perfil as $perfiles) {
 }
 ?>
 
-<body id="pagina-perfil-cliente" class="<?php echo $esPerfil ? 'perfil-abierto' : ''; ?>">
+<div id="pagina-perfil-cliente">
 
     <div class="contenedor">
         <div class="page-header">
@@ -230,30 +228,21 @@ foreach ($perfil as $perfiles) {
         </div>
     `;
 
-            console.log('Enviando datos:');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
 
             fetch('/perfil/actualizar', {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => {
-                    console.log('Response status:', response.status);
 
                     // NUEVO: Obtener el texto completo de la respuesta para ver qué está devolviendo
                     return response.text();
                 })
                 .then(responseText => {
-                    console.log('=== RESPUESTA COMPLETA DEL SERVIDOR ===');
-                    console.log(responseText);
-                    console.log('=== FIN RESPUESTA ===');
 
                     // Intentar parsear como JSON
                     try {
                         const data = JSON.parse(responseText);
-                        console.log('JSON parseado correctamente:', data);
 
                         if (data.success) {
                             mostrarExito('✅ Datos actualizados correctamente');
@@ -337,206 +326,6 @@ foreach ($perfil as $perfiles) {
             }, 5000);
         }
 
-
-        // Función para mostrar formulario de contacto
-        function mostrarFormulariodeContactanos() {
-            document.getElementById('modalPerfil').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevenir scroll del fondo
-
-            // Mostrar el formulario de contacto
-            mostrarFormularioContacto();
-        }
-
-        // Función para mostrar el formulario de contacto///////////////////////////////////////////////////////////////////////////////////
-        function mostrarFormularioContacto() {
-            const html = `
-        <div class="contacto-container">
-            <div class="contacto-header">
-                <h2 class="nombre">Contáctanos</h2>
-                <p class="parrafo">¿Tienes alguna pregunta o sugerencia? Escríbenos y te responderemos lo antes posible.</p>
-                <br>
-            </div>
-
-            <div id="mensajeRespuestaContacto"></div>
-
-            <form id="formContacto">
-                <div class="form-group">
-                    <label for="asunto">Asunto: <span class="required">*</span></label>
-                    <select id="tipo" name="tipo" required>
-                        <option value="">Selecciona un asunto...</option>
-                        <option value="problema_tecnico">Problema técnico</option>
-                        <option value="consulta_entradas">Consulta sobre entradas</option>
-                        <option value="problema_cantina">Problema con pedido de cantina</option>
-                        <option value="sugerencia">Sugerencia</option>
-                        <option value="queja">Queja</option>
-                        <option value="otro">Otro</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="mensaje">Mensaje: <span class="required">*</span></label>
-                    <textarea id="mensaje" name="mensaje" placeholder="Escribe aquí tu mensaje..." 
-                              rows="6" required maxlength="600"></textarea>
-                    <small class="char-count">0/600 caracteres</small>
-                </div>
-
-                <input type="hidden" id="id_usuario_contacto" value="${usuarioActualData ? usuarioActualData.id_usuario : ''}">
-                <input type="hidden" id="nombre_usuario_contacto" value="${usuarioActualData ? usuarioActualData.nombre_usuario : ''}">
-            </form>
-
-            <div style="text-align: center; margin-top: 30px;">
-                <button type="button" class="btn btn-primary" onclick="enviarContacto()">
-                    <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="cerrarModalPerfil()">
-                    <i class="fa-solid fa-times"></i> Cancelar
-                </button>
-            </div>
-        </div>
-    `;
-
-            document.getElementById('contenidoModal').innerHTML = html;
-
-            // Agregar evento para contar caracteres
-            document.getElementById('mensaje').addEventListener('input', function() {
-                const mensaje = this.value;
-                const charCount = mensaje.length;
-                const charCountElement = document.querySelector('.char-count');
-
-                charCountElement.textContent = `${charCount}/600 caracteres`;
-
-                if (charCount > 550) {
-                    charCountElement.style.color = '#dc3545'; // Rojo cuando se acerca al límite
-                } else {
-                    charCountElement.style.color = '#d05f19ff'; // Color normal
-                }
-            });
-        }
-
-        // Función para enviar el mensaje de contacto (CORREGIDA)
-        function enviarContacto() {
-            const tipo = document.getElementById('tipo').value.trim(); // CORREGIDO: era 'asunto'
-            const mensaje = document.getElementById('mensaje').value.trim();
-            const idUsuario = document.getElementById('id_usuario_contacto').value;
-            const nombreUsuario = document.getElementById('nombre_usuario_contacto').value;
-
-            // Validaciones
-            if (!tipo) {
-                mostrarErrorContacto('Por favor selecciona un asunto');
-                return;
-            }
-
-            if (!mensaje) {
-                mostrarErrorContacto('Por favor escribe tu mensaje');
-                return;
-            }
-
-            if (mensaje.length < 10) {
-                mostrarErrorContacto('El mensaje debe tener al menos 10 caracteres');
-                return;
-            }
-
-            if (mensaje.length > 600) {
-                mostrarErrorContacto('El mensaje no puede exceder los 600 caracteres');
-                return;
-            }
-
-            // Crear FormData para enviar
-            const formData = new FormData();
-            formData.append('tipo', tipo);
-            formData.append('mensaje', mensaje);
-            formData.append('id_usuario', idUsuario);
-            formData.append('nombre_usuario', nombreUsuario);
-
-            // Mostrar mensaje de carga
-            document.getElementById('mensajeRespuestaContacto').innerHTML = `
-        <div class="alert alert-info">
-            <div class="spinner" style="width: 20px; height: 20px; margin-right: 10px; display: inline-block;"></div>
-            Enviando mensaje...
-        </div>
-    `;
-
-            // Deshabilitar el botón para evitar envíos múltiples
-            const btnEnviar = document.querySelector('button[onclick="enviarContacto()"]');
-            const textoOriginal = btnEnviar.innerHTML;
-            btnEnviar.disabled = true;
-            btnEnviar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
-
-            console.log('Enviando datos de contacto:');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
-            // Realizar petición AJAX
-            fetch('/perfil/enviarConsulta', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.text();
-                })
-                .then(responseText => {
-                    console.log('=== RESPUESTA CONTACTO ===');
-                    console.log(responseText);
-                    console.log('=== FIN RESPUESTA ===');
-
-                    try {
-                        const data = JSON.parse(responseText);
-                        console.log('JSON parseado correctamente:', data);
-
-                        if (data.success) {
-                            mostrarExitoContacto('✅ Mensaje enviado correctamente. Te responderemos pronto.');
-
-                            // Limpiar formulario después de 2 segundos
-                            setTimeout(() => {
-                                document.getElementById('tipo').value = '';
-                                document.getElementById('mensaje').value = '';
-                                const charCount = document.querySelector('.char-count');
-                                if (charCount) {
-                                    charCount.textContent = '0/600 caracteres';
-                                    charCount.style.color = '#6c757d';
-                                }
-                            }, 2000);
-
-                        } else {
-                            mostrarErrorContacto('❌ Error al enviar mensaje: ' + (data.message || 'Error desconocido'));
-                        }
-                    } catch (error) {
-                        console.error('Error al parsear JSON:', error);
-                        mostrarErrorContacto('❌ Error del servidor. Revisa la consola para más detalles.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error de red:', error);
-                    mostrarErrorContacto('❌ Error de conexión: ' + error.message);
-                })
-                .finally(() => {
-                    // Rehabilitar el botón
-                    btnEnviar.disabled = false;
-                    btnEnviar.innerHTML = textoOriginal;
-                });
-        }
-
-        // Mostrar mensaje de éxito para contacto
-        function mostrarExitoContacto(mensaje) {
-            document.getElementById('mensajeRespuestaContacto').innerHTML = `
-        <div class="alert alert-success">${mensaje}</div>
-    `;
-            setTimeout(() => {
-                document.getElementById('mensajeRespuestaContacto').innerHTML = '';
-            }, 5000);
-        }
-
-        // Mostrar mensaje de error para contacto
-        function mostrarErrorContacto(mensaje) {
-            document.getElementById('mensajeRespuestaContacto').innerHTML = `
-        <div class="alert alert-danger">${mensaje}</div>
-    `;
-            setTimeout(() => {
-                document.getElementById('mensajeRespuestaContacto').innerHTML = '';
-            }, 5000);
-        }
 
         function mostrarCambioPassword() {
             document.getElementById('modalPerfil').style.display = 'block';
@@ -746,8 +535,6 @@ foreach ($perfil as $perfiles) {
             document.getElementById('contenidoModal').innerHTML = html;
         }
 
-        document.getElementById('contenidoModal').innerHTML = html;
-
         function cambiarTabCompras(tab) {
             document.getElementById('tabEntradas').style.display = tab === 'entradas' ? 'block' : 'none';
             document.getElementById('tabCantina').style.display = tab === 'cantina' ? 'block' : 'none';
@@ -838,4 +625,4 @@ foreach ($perfil as $perfiles) {
     </script>
 
     <script src="../../../assets/js/submenu-adm.js"></script>
-</body>
+</div>

@@ -1007,7 +1007,6 @@
             const response = await fetch('/api/movimientos/proveedores');
             const data = await response.json();
 
-            console.log('Respuesta proveedores:', data); // DEBUG
 
             if (data.ok) {
                 proveedores = data.proveedores;
@@ -1048,7 +1047,6 @@
             const response = await fetch(`/api/movimientos/servicios?id_proveedor=${idProveedor}`);
             const data = await response.json();
 
-            console.log('Respuesta servicios:', data); // DEBUG
 
             if (data.ok) {
                 servicios = data.servicios;

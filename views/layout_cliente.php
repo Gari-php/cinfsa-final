@@ -35,13 +35,13 @@
     <link rel="stylesheet" href="/assets/css/alertas.css">
 </head>
 
+<?php $esPerfil = (strpos($_SERVER['REQUEST_URI'], '/perfil') === 0); ?>
 <body class="<?php echo $esPerfil ? 'perfil-abierto' : ''; ?>">
 
     <?php
     $session_user   = $_SESSION['nombre_usuario'] ?? null;
     $session_perfil = $_SESSION['perfil'] ?? null;
     $session_id     = $_SESSION['id_usuario'] ?? null;
-    $esPerfil = (strpos($_SERVER['REQUEST_URI'], '/perfil') === 0);
 
     // Buscar datos del usuario actual directo desde la sesión
     // (no depende de que el controller pase $perfil)

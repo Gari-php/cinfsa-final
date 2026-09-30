@@ -58,7 +58,6 @@ $router->get('/api/notificaciones/obtener', [NotificacionesController::class, 'o
 $router->get('/api/notificaciones/contar', [NotificacionesController::class, 'contarNoLeidas']);
 $router->post('/api/notificaciones/marcar-leida', [NotificacionesController::class, 'marcarLeida']);
 $router->post('/api/notificaciones/marcar-todas-leidas', [NotificacionesController::class, 'marcarTodasLeidas']);
-$router->post('/api/notificaciones/limpiar', [NotificacionesController::class, 'limpiar']);
 $router->post('/api/notificaciones/verificar-funciones-vencidas', [NotificacionesController::class, 'verificarFuncionesVencidas']);
 
 
@@ -100,8 +99,6 @@ $router->get('/juegos', [ClienteController::class, 'salaJuegos']);
 $router->post('/juegos', [ClienteController::class, 'salaJuegos']);
 $router->get('/peliculas', [ClienteController::class, 'peliculas']);
 $router->post('/peliculas', [ClienteController::class, 'peliculas']);
-$router->get('/mapa', [ClienteController::class, 'mapa']);
-$router->post('/mapa', [ClienteController::class, 'mapa']);
 $router->get('/perfil', [ClienteController::class, 'mi_perfil']);
 $router->post('/perfil/actualizar', [ClienteController::class, 'actualizar_perfil']);
 $router->post('/perfil/cambiar-password', [ClienteController::class, 'cambiarPassword']);
@@ -117,12 +114,10 @@ $router->get('/calificacion-peliculas', [ClienteController::class, 'verCalificac
 // Si también quieres que los administradores puedan obtener tráilers
 $router->post('/administrador/api/obtener-trailer', [PeliculaController::class, 'obtenerTrailer']);
 // Nuevas rutas del carrito:
-$router->get('/carrito', [CarritoController::class, 'ver']);
 $router->post('/carrito/agregar', [CarritoController::class, 'agregar']);
 $router->post('/carrito/actualizar', [CarritoController::class, 'actualizar']);
 $router->post('/carrito/eliminar', [CarritoController::class, 'eliminar']);
 $router->post('/carrito/vaciar', [CarritoController::class, 'vaciar']);
-$router->get('/carrito/resumen', [CarritoController::class, 'resumen']);
 $router->get('/carrito/checkout', [CarritoController::class, 'checkout']); // NUEVA LÍNEA
 $router->get('/carrito/retorno', [CarritoController::class, 'retorno']);
 
@@ -135,8 +130,6 @@ $router->get('/pago/pendiente', [PagoController::class, 'pendiente']);
 // Recuperar Password
 $router->get('/olvide',[LoginController::class, 'olvide']);
 $router->post('/olvide',[LoginController::class, 'olvide']);
-$router->get('/recuperar',[LoginController::class,'recuperar']);
-$router->post('/recuperar',[LoginController::class ,'recuperar']);
 
 //Crear Cuenta
 $router->get('/crear-cuenta',[RegistroController::class, 'crear']);
@@ -164,7 +157,6 @@ $router->get('/administrador/sexo/crear', [SexoController::class, 'crear']);
 $router->post('/administrador/sexo/guardar', [SexoController::class, 'guardar']);
 $router->get('/administrador/sexo/editar', [SexoController::class, 'editar']);
 $router->post('/administrador/sexo/actualizar', [SexoController::class, 'actualizar']);
-$router->post('/administrador/sexo/eliminar', [SexoController::class, 'eliminar']);
 $router->post('/administrador/sexo/buscar', [SexoController::class, 'buscar']);
 $router->get('/administrador/sexo/exportar', [SexoController::class, 'exportar']);
 
@@ -195,8 +187,6 @@ $router->post('/administrador/peliculas/eliminar', [PeliculaController::class, '
 $router->post('/administrador/peliculas/buscar', [PeliculaController::class, 'buscar']);
 $router->post('/administrador/peliculas/obtener-imagen', [PeliculaController::class, 'obtenerImagen']);
 $router->get('/administrador/peliculas/exportar', [PeliculaController::class, 'exportar']);
-$router->get('/administrador/peliculas/reportes', [PeliculaController::class, 'reportes']);
-$router->get('/administrador/peliculas/exportar-reporte', [PeliculaController::class, 'exportarReporte']);
 
 
 // ==============================================
@@ -210,7 +200,6 @@ $router->post('/administrador/salas/actualizar', [SalaController::class, 'actual
 $router->post('/administrador/salas/eliminar', [SalaController::class, 'eliminar']);
 $router->post('/administrador/salas/buscar', [SalaController::class, 'buscar']);
 $router->get('/administrador/salas/exportar', [SalaController::class, 'exportar']);
-$router->get('/administrador/salas/exportar-reporte', [SalaController::class, 'exportarReporte']);
 $router->get('/administrador/salas/reportes', [SalaController::class, 'reportes']);
 $router->get('/administrador/salas/reportes/api-datos', [SalaController::class, 'apiDatosReportes']);
 
@@ -265,7 +254,6 @@ $router->get('/administrador/entradas/detalle', [EntradaController::class, 'deta
 // ==============================================
 $router->get('/administrador/entradas/exportar', [EntradaController::class, 'exportar']);
 $router->get('/administrador/entradas/listado', [EntradaController::class, 'index']);
-$router->get('/administrador/entradas/crear', [EntradaController::class, 'crear']);
 $router->post('/administrador/entradas/guardar', [EntradaController::class, 'guardar']);
 $router->get('/administrador/entradas/editar', [EntradaController::class, 'editar']);
 $router->post('/administrador/entradas/actualizar', [EntradaController::class, 'actualizar']);
@@ -290,7 +278,6 @@ $router->post('/administrador/productos/eliminar', [ProductoController::class, '
 $router->post('/administrador/productos/buscar', [ProductoController::class, 'buscar']);
 $router->get('/administrador/productos/reportes', [ProductoController::class, 'reportes']);
 $router->get('/administrador/productos/exportar', [ProductoController::class, 'exportar']);
-$router->get('/administrador/productos/exportar-reporte', [PeliculaController::class, 'exportarReporte']);
 
 // ==============================================
 // RUTAS DE Stock
@@ -313,7 +300,6 @@ $router->get('/administrador/fichas/crear', [FichaController::class, 'crear']);
 $router->post('/administrador/fichas/guardar', [FichaController::class, 'guardar']);
 $router->get('/administrador/fichas/editar', [FichaController::class, 'editar']);
 $router->post('/administrador/fichas/actualizar', [FichaController::class, 'actualizar']);
-$router->post('/administrador/fichas/eliminar', [FichaController::class, 'eliminar']);
 $router->post('/administrador/fichas/buscar', [FichaController::class, 'buscar']);
 
 // ==============================================
@@ -450,11 +436,8 @@ $router->get('/vendedor/funciones/listado', [VentaFuncionesController::class, 'i
 $router->post('/vendedor/funciones/buscar', [VentaFuncionesController::class, 'buscar']);
 $router->get('/vendedor/funciones/butacas', [VentaFuncionesController::class, 'verButacas']);
 $router->get('/api/vendedor/butacas/funcion', [VentaFuncionesController::class, 'apiObtenerButacasFuncion']);
-$router->post('/api/vendedor/butacas/seleccionar', [VentaFuncionesController::class, 'apiSeleccionarButacas']);
 $router->post('/vendedor/funciones/procesar-venta', [VentaFuncionesController::class, 'procesarVenta']);
 $router->get('/vendedor/funciones/ticket', [VentaFuncionesController::class, 'verTicket']);
-$router->get('/api/vendedor/ticket/imprimir', [VentaFuncionesController::class, 'apiImprimirTicket']);
-$router->post('/api/vendedor/venta/cancelar', [VentaFuncionesController::class, 'cancelarVenta']);
 $router->get('/vendedor/obtener-tipos-comprobante', [VentaFuncionesController::class, 'obtenerTiposComprobante']);
 $router->post('/vendedor/obtener-tipos-comprobante', [VentaFuncionesController::class, 'obtenerTiposComprobante']);
 $router->get('/vendedor/entradas/datos-devolucion', [VentaFuncionesController::class, 'apiDatosEntradaDevolucion']);
@@ -474,7 +457,6 @@ $router->get('/vendedorproductos/caja/estado', [VendedorProductosController::cla
 $router->post('/vendedorproductos/caja/cerrar', [VendedorProductosController::class, 'cerrarCaja']);
 
 // API DE CAJA
-$router->get('/vendedorproductos/api/verificar-estado', [VendedorProductosController::class, 'apiVerificarEstado']);
 $router->get('/vendedorproductos/api/resumen-cierre', [VendedorProductosController::class, 'apiResumenCierre']);
 $router->get('/vendedorproductos/caja/pdf-arqueo', [VendedorProductosController::class, 'generarPDFArqueo']);
 

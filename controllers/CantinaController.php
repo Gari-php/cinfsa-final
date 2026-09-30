@@ -78,14 +78,14 @@ class CantinaController {
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/cantina');
+            header('Location: /administrador/cantina/listado');
             exit;
         }
 
         $cantina = Cantina::find($id);
 
         if (!$cantina) {
-            header('Location: /administrador/cantina');
+            header('Location: /administrador/cantina/listado');
             exit;
         }
 
@@ -178,14 +178,14 @@ class CantinaController {
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/cantina');
+            header('Location: /administrador/cantina/listado');
             exit;
         }
 
         $cantina = Cantina::find($id);
 
         if (!$cantina) {
-            header('Location: /administrador/cantina');
+            header('Location: /administrador/cantina/listado');
             exit;
         }
 

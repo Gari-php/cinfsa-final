@@ -19,7 +19,8 @@ class CajaController {
             return false;
         }
 
-        return ValidarModulo::tiene('GESTION_CAJA');
+        // Caja de funciones: además de gestionar caja, debe vender funciones
+        return ValidarModulo::tiene('GESTION_CAJA') && ValidarModulo::tiene('VENTA_FUNCIONES');
     }
 
   

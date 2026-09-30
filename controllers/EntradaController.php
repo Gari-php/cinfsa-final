@@ -163,7 +163,7 @@ class EntradaController
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/entradas');
+            header('Location: /administrador/entradas/listado');
             exit;
         }
 

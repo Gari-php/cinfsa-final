@@ -172,7 +172,6 @@ class Notificaciones {
     }
 
     handleNewNotification(data) {
-        console.log('📢 Nueva notificación:', data);
 
         // Actualizar contador inmediatamente
         this.updateBadgeCount(1);

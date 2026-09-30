@@ -243,7 +243,7 @@ class LoginController
         $token = $_GET['token'] ?? '';
 
         if (!$token) {
-            $router->render('auth/restablecer', [
+            $router->render('auth/restablecer-password', [
                 'tokenValido' => false,
                 'mensaje' => 'Token inválido o faltante.'
             ]);

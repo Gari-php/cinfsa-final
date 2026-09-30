@@ -62,7 +62,6 @@
                 }
                 
                 const data = await response.json();
-                console.log('Datos recibidos:', data);
                 
                 if (data.ok) {
                     this.actualizarContador(data.total);
@@ -78,7 +77,6 @@
                 if (!response.ok) return;
                 
                 const data = await response.json();
-                console.log('Items cargados:', data);
                 
                 if (data.ok) {
                     this.mostrarItems(data.items);
@@ -160,7 +158,6 @@
 
         async agregar(idProducto, tipo, cantidad = 1) {
             try {
-                console.log('Agregando:', { idProducto, tipo, cantidad });
                 
                 const response = await fetch('/carrito/agregar', {
                     method: 'POST',
@@ -173,7 +170,6 @@
                 });
 
                 const data = await response.json();
-                console.log('Respuesta agregar:', data);
                 
                 if (data.ok) {
                     this.mostrarNotificacion(data.mensaje || 'Producto agregado');

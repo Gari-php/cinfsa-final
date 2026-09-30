@@ -254,7 +254,7 @@ class CarritoController
             $estadisticas = Carrito::obtenerEstadisticas($idUsuario);
 
             if (empty($items)) {
-                header('Location: /carrito');
+                header('Location: /menu');
                 exit;
             }
 
@@ -288,7 +288,7 @@ class CarritoController
             ]);
         } catch (\Exception $e) {
             $_SESSION['error'] = 'Error al procesar el carrito';
-            header('Location: /carrito');
+            header('Location: /menu');
             exit;
         }
     }
