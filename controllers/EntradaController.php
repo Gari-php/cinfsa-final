@@ -152,38 +152,6 @@ class EntradaController
         }
     }
 
-
-    public static function editar(Router $router)
-    {
-        if (!self::verificarAdmin()) {
-            header('Location: /');
-            exit;
-        }
-
-        $id = $_GET['id'] ?? null;
-
-        if (!$id || !is_numeric($id)) {
-            header('Location: /administrador/entradas/listado');
-            exit;
-        }
-
-        $entrada = Entrada::find($id);
-
-        if (!$entrada) {
-            header('Location: /administrador/entradas/listado');
-            exit;
-        }
-
-        $tipos_entradas = Entrada::obtenerTiposEntradas();
-        $funciones = Entrada::obtenerFunciones();
-
-        $router->render('administrador/entradas/editar', [
-            'entrada' => $entrada,
-            'tipos_entradas' => $tipos_entradas,
-            'funciones' => $funciones
-        ]);
-    }
-
     public static function detalle(Router $router)
     {
         if (!self::verificarAdmin()) {
@@ -242,63 +210,6 @@ class EntradaController
         $router->render('administrador/entradas/detalle', [
             'entrada' => $entrada
         ]);
-    }
-
-
-    public static function actualizar()
-    {
-        if (!self::verificarAdmin()) {
-            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
-            return;
-        }
-
-        $contenido = file_get_contents('php://input');
-        $datos = json_decode($contenido, true);
-
-        if (!$datos) {
-            echo json_encode(['ok' => false, 'mensaje' => 'Datos inválidos']);
-            return;
-        }
-
-        $id = $datos['id_entrada'] ?? null;
-        $numero_ticket = $datos['numero_ticket_entrada'] ?? '';
-        $tipo_entrada = $datos['rela_tipo_entrada'] ?? '';
-        $funcion = $datos['rela_funcion'] ?? '';
-
-        // Validaciones básicas
-        $errores = [];
-        if (!$id || !is_numeric($id)) $errores['id_entrada'] = 'ID de entrada no válido';
-        if (!$numero_ticket) $errores['numero_ticket_entrada'] = 'El número de ticket es obligatorio';
-        if (!$tipo_entrada) $errores['rela_tipo_entrada'] = 'El tipo de entrada es obligatorio';
-        if (!$funcion) $errores['rela_funcion'] = 'La función es obligatoria';
-
-        if (!empty($errores)) {
-            echo json_encode(['errores' => $errores]);
-            return;
-        }
-
-        $entrada = Entrada::find($id);
-
-        if (!$entrada) {
-            echo json_encode(['ok' => false, 'mensaje' => 'Entrada no encontrada']);
-            return;
-        }
-
-        $entrada->numero_ticket_entrada = $numero_ticket;
-        $entrada->rela_tipo_entrada = $tipo_entrada;
-        $entrada->rela_funcion = $funcion;
-
-        $resultado = $entrada->actualizar();
-
-        if ($resultado) {
-            echo json_encode([
-                'ok' => true,
-                'mensaje' => 'Entrada actualizada correctamente',
-                'redirigir' => '/administrador/entradas/listado'
-            ]);
-        } else {
-            echo json_encode(['ok' => false, 'mensaje' => 'Error al actualizar la entrada']);
-        }
     }
 
 

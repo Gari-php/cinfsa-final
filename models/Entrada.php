@@ -259,67 +259,6 @@ class Entrada extends ActiveRecord
         return false;
     }
 
-    public static function obtenerTiposEntradas()
-    {
-        $db = self::getDB();
-
-        if (!$db) {
-            error_log("Error: No se pudo conectar a la base de datos");
-            return [];
-        }
-
-        $query = "SELECT * FROM tipo_entradas WHERE estado = 1 ORDER BY tipo_entrada_desc";
-        $resultado = $db->query($query);
-
-        if (!$resultado) {
-            error_log("Error en la consulta de tipos de entradas: " . $db->error);
-            return [];
-        }
-
-        $tipos = [];
-        while ($row = $resultado->fetch_assoc()) {
-            $tipos[] = $row;
-        }
-
-        return $tipos;
-    }
-
-    public static function obtenerFunciones()
-    {
-        $db = self::getDB();
-
-        if (!$db) {
-            error_log("Error: No se pudo conectar a la base de datos");
-            return [];
-        }
-
-        $query = "SELECT 
-                    f.id_funcion,
-                    f.fecha_hora,
-                    f.fecha_finalizacion,
-                    p.titulo_pelicula,
-                    s.id_sala
-                  FROM funciones f
-                  INNER JOIN peliculas p ON f.rela_peliculas = p.id_pelicula
-                  INNER JOIN salas s ON f.rela_salas = s.id_sala
-                  WHERE f.estado = 1 AND f.fecha_hora > NOW()
-                  ORDER BY f.fecha_hora ASC";
-
-        $resultado = $db->query($query);
-
-        if (!$resultado) {
-            error_log("Error en la consulta de funciones: " . $db->error);
-            return [];
-        }
-
-        $funciones = [];
-        while ($row = $resultado->fetch_assoc()) {
-            $funciones[] = $row;
-        }
-
-        return $funciones;
-    }
-
     public static function find($id)
     {
         $db = self::getDB();

@@ -253,8 +253,6 @@ $router->get('/administrador/entradas/detalle', [EntradaController::class, 'deta
 $router->get('/administrador/entradas/exportar', [EntradaController::class, 'exportar']);
 $router->get('/administrador/entradas/listado', [EntradaController::class, 'index']);
 $router->post('/administrador/entradas/guardar', [EntradaController::class, 'guardar']);
-$router->get('/administrador/entradas/editar', [EntradaController::class, 'editar']);
-$router->post('/administrador/entradas/actualizar', [EntradaController::class, 'actualizar']);
 $router->post('/administrador/entradas/eliminar', [EntradaController::class, 'eliminar']);
 $router->post('/administrador/entradas/buscar', [EntradaController::class, 'buscar']);
 $router->post('/administrador/entradas/usar', [EntradaController::class, 'usar']);
