@@ -3,10 +3,6 @@
 namespace Controllers;
 
 use Models\Carrito;
-use Models\Stock;
-use Models\Ficha;
-use Models\Maquina;
-use Models\Butaca;
 use MVC\Router;
 
 class PagoController

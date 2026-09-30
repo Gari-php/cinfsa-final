@@ -3,34 +3,8 @@
 namespace Controllers;
 
 use MVC\Router;
-use Middlewares\ValidarModulo;
 
 class ModulosController {
-    
-    /**
-     * Listado de módulos del sistema
-     */
-    public static function listado(Router $router) {
-        // Verificar que es administrador
-        if (!isset($_SESSION['perfil']) || $_SESSION['perfil'] != 3) {
-            header('Location: /');
-            exit;
-        }
-        
-        $db = \Models\ActiveRecord::getDB();
-        $queryModulos = "SELECT * FROM modulos ORDER BY modulo_nombre";
-        $resultadoModulos = $db->query($queryModulos);
-        
-        $modulos = [];
-        while ($row = $resultadoModulos->fetch_assoc()) {
-            $modulos[] = $row;
-        }
-        
-        $router->render('administrador/modulos/listado', [
-            'vista' => 'administrador/modulos/listado',
-            'modulos' => $modulos
-        ]);
-    }
     
     /**
      * Gestionar asignación de módulos a perfiles
@@ -218,65 +192,5 @@ class ModulosController {
         }
         
         echo json_encode(['ok' => true, 'modulos' => $modulos]);
-    }
-    
-    /**
-     * Crear nuevo módulo
-     */
-    public static function crear(Router $router) {
-        if (!isset($_SESSION['perfil']) || $_SESSION['perfil'] != 3) {
-            header('Location: /');
-            exit;
-        }
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            header('Content-Type: application/json');
-            
-            $json = file_get_contents('php://input');
-            $datos = json_decode($json, true);
-            
-            $nombreModulo = trim($datos['modulo_nombre'] ?? '');
-            
-            if (!$nombreModulo) {
-                echo json_encode(['ok' => false, 'error' => 'El nombre del módulo es requerido']);
-                return;
-            }
-            
-            $db = \Models\ActiveRecord::getDB();
-            
-            // Verificar si ya existe
-            $query = "SELECT id_modulo FROM modulos WHERE modulo_nombre = ?";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("s", $nombreModulo);
-            $stmt->execute();
-            $resultado = $stmt->get_result();
-            
-            if ($resultado->fetch_assoc()) {
-                echo json_encode(['ok' => false, 'error' => 'Ya existe un módulo con ese nombre']);
-                return;
-            }
-            
-            // Insertar nuevo módulo
-            $queryInsert = "INSERT INTO modulos (modulo_nombre) VALUES (?)";
-            $stmtInsert = $db->prepare($queryInsert);
-            $stmtInsert->bind_param("s", $nombreModulo);
-            $success = $stmtInsert->execute();
-            
-            if ($success) {
-                echo json_encode([
-                    'ok' => true,
-                    'mensaje' => 'Módulo creado correctamente',
-                    'id' => $db->insert_id
-                ]);
-            } else {
-                echo json_encode(['ok' => false, 'error' => 'No se pudo crear el módulo']);
-            }
-            
-            return;
-        }
-        
-        $router->render('administrador/modulos/crear', [
-            'vista' => 'administrador/modulos/crear'
-        ]);
     }
 }

@@ -5,9 +5,6 @@ namespace Controllers;
 use Models\Funciones;
 use Models\Butaca;
 use Models\ArqueoCaja;
-use Models\CabeceraFactCine;
-use Models\DetalleFactCine;
-use Models\MovimientoCaja;
 use MVC\Router;
 use Middlewares\ValidarModulo;
 
@@ -674,54 +671,6 @@ class VentaFuncionesController
             'detalles' => $detalles,
             'total_entradas' => $totalEntradas
         ]);
-    }
-
-    public static function reportes(Router $router)
-    {
-        if (!self::verificarPermisos()) {
-            header('Location: /');
-            exit;
-        }
-
-        $router->render('vendedor/funciones/reportes', [
-            'titulo' => 'Reportes de Ventas de Funciones'
-        ]);
-    }
-
-    public static function obtenerDatosGrafico()
-    {
-        if (!self::verificarPermisos()) {
-            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
-            return;
-        }
-
-        header('Content-Type: application/json');
-
-        $tipo = $_GET['tipo'] ?? 'ventas-diarias';
-        $fechaDesde = $_GET['fecha_desde'] ?? date('Y-m-d', strtotime('-30 days'));
-        $fechaHasta = $_GET['fecha_hasta'] ?? date('Y-m-d');
-        $agrupar = $_GET['agrupar'] ?? 'dia';
-
-        try {
-            $datos = match ($tipo) {
-                'ventas-diarias' => \Classes\GeneradorGraficos::obtenerVentasEntradas($fechaDesde, $fechaHasta, $agrupar),
-                'peliculas-populares' => \Classes\GeneradorGraficos::obtenerPeliculasMasVendidas($fechaDesde, $fechaHasta),
-                'tipos-entrada' => \Classes\GeneradorGraficos::obtenerEstadisticasTipoEntrada($fechaDesde, $fechaHasta),
-                'ocupacion-salas' => \Classes\GeneradorGraficos::obtenerOcupacionSalas($fechaDesde, $fechaHasta),
-                default => []
-            };
-
-            echo json_encode([
-                'ok' => true,
-                'datos' => $datos,
-                'tipo' => $tipo
-            ]);
-        } catch (\Exception $e) {
-            echo json_encode([
-                'ok' => false,
-                'mensaje' => 'Error: ' . $e->getMessage()
-            ]);
-        }
     }
 
     private static function obtenerFormaPago($idTipoPago)

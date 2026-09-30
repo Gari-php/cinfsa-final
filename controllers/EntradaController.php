@@ -608,39 +608,6 @@ class EntradaController
         ]);
     }
 
-
-    public static function estadisticas()
-    {
-        if (!self::verificarAdmin()) {
-            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
-            return;
-        }
-
-        $db = Entrada::getDB();
-
-        $query = "SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE WHEN estado = 1 THEN 1 ELSE 0 END) as activas,
-                    SUM(CASE WHEN estado = 2 THEN 1 ELSE 0 END) as usadas,
-                    SUM(CASE WHEN estado = 0 THEN 1 ELSE 0 END) as expiradas,
-                    SUM(CASE WHEN estado = -1 THEN 1 ELSE 0 END) as canceladas
-                  FROM entradas";
-
-        $resultado = $db->query($query);
-        $stats = $resultado->fetch_assoc();
-
-        echo json_encode([
-            'ok' => true,
-            'estadisticas' => [
-                'total' => (int)$stats['total'],
-                'activas' => (int)$stats['activas'],
-                'usadas' => (int)$stats['usadas'],
-                'expiradas' => (int)$stats['expiradas'],
-                'canceladas' => (int)$stats['canceladas']
-            ]
-        ]);
-    }
-
     public static function reportes(Router $router)
     {
         if (!self::verificarAdmin()) {

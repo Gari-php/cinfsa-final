@@ -36,12 +36,6 @@ class AdministradorController
         $router->render('administrador/index');
     }
 
-    public static function respuestaNoAutorizado()
-    {
-        echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
-        return;
-    }
-
     public static function actualizarFoto()
     {
         if (!self::verificarAdmin()) {

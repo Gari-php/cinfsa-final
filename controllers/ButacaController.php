@@ -2,9 +2,7 @@
 namespace Controllers;
 
 use Models\Butaca;
-use Models\Sala;
 use MVC\Router;
-use Classes\ExportadorDatos;
 
 class ButacaController {
 
@@ -13,19 +11,6 @@ class ButacaController {
             session_start();
         }
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
-    }
-
-    public static function index(Router $router) {
-        if (!self::verificarAdmin()) {
-            header('Location: /');
-            exit;
-        }
-
-        $butacas = Butaca::obtenerTodas();
-        
-        $router->render('administrador/butacas/listado', [
-            'butacas' => $butacas
-        ]);
     }
     // Método para generar butacas automáticamente
     public static function generarButacas() {
@@ -52,47 +37,6 @@ class ButacaController {
             ]);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => $resultado['mensaje']]);
-        }
-    }
-
-    // Método para obtener butacas por sala (AJAX)
-    public static function obtenerPorSala() {
-        if (!self::verificarAdmin()) {
-            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
-            return;
-        }
-
-        header('Content-Type: application/json');
-
-        $idSala = $_GET['id_sala'] ?? null;
-
-        if (!$idSala || !is_numeric($idSala)) {
-            echo json_encode(['ok' => false, 'mensaje' => 'ID de sala inválido']);
-            return;
-        }
-
-        try {
-            $butacas = Butaca::obtenerPorSala($idSala);
-            
-            $butacasArray = [];
-            foreach ($butacas as $butaca) {
-                $butacasArray[] = [
-                    'id_butaca' => $butaca->id_butaca,
-                    'fila_butaca' => $butaca->fila_butaca,
-                    'numero_butaca' => $butaca->numero_butaca,
-                    'rela_estado_butaca' => $butaca->rela_estado_butaca,
-                    'nombre_estado' => $butaca->nombre_estado
-                ];
-            }
-
-            echo json_encode([
-                'ok' => true,
-                'butacas' => $butacasArray,
-                'total' => count($butacasArray)
-            ]);
-
-        } catch (\Exception $e) {
-            echo json_encode(['ok' => false, 'mensaje' => 'Error al obtener butacas']);
         }
     }
     public static function gestionSalas(Router $router) {

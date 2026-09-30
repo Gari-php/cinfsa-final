@@ -18,7 +18,6 @@ use Controllers\TurnoController;
 use Controllers\TipoEntradaController;
 use Controllers\ProductoController;
 use Controllers\EntradaController;
-use Controllers\VendedorController;
 use Controllers\StockController;
 use Controllers\FichaController;
 use Controllers\MaquinaController;
@@ -32,7 +31,6 @@ use Controllers\ButacaController;
 use Controllers\PagoController;
 use Controllers\CajaController;
 use Controllers\VentaFuncionesController;
-use controllers\API\ButacasAPIController;
 use Controllers\MovimientosController;
 use Controllers\VentasConsultaController;
 use Controllers\VentasConsultaControllerP;
@@ -403,9 +401,6 @@ $router->post('/api/ventas/consultar', [VentasConsultaController::class, 'apiCon
 
 //consulta de ventas de productos
 // Ventas////////////////////////////////////////////////////////////////////
-$router->post('/vendedorproductos/completar-venta', [VendedorProductosController::class, 'completarVenta']);
-$router->get('/vendedorproductos/ventas/ticket', [VendedorProductosController::class, 'verTicket']);
-$router->get('/vendedorproductos/ventas/consulta', [VendedorProductosController::class, 'consultaVentas']);
 ////////////////////
 $router->get('/ventas/consulta/api/vendedores', [VentasConsultaControllerP::class, 'apiObtenerVendedores']);
 $router->post('/ventas/consulta/api/consultar', [VentasConsultaControllerP::class, 'apiConsultarVentas']);
@@ -414,8 +409,6 @@ $router->post('/ventas/consulta/api/devolucion', [VentasConsultaControllerP::cla
 
 
 // Productos
-$router->get('/vendedorproductos/productos/listado', [VendedorProductosController::class, 'listadoProductos']);
-$router->post('/vendedorproductos/buscar-producto', [VendedorProductosController::class, 'buscarProducto']);
 $router->post('/vendedorproductos/buscar-ficha', [VendedorProductosController::class, 'buscarFicha']);
 
 

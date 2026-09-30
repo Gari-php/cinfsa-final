@@ -2,7 +2,6 @@
 
 namespace Controllers;
 
-use MVC\Router;
 use Middlewares\ValidarModulo;
 
 class VentasConsultaControllerP
@@ -28,22 +27,6 @@ class VentasConsultaControllerP
             return false;
         }
         return ValidarModulo::tiene('DEVOLUCION_PRODUCTOS');
-    }
-
-    public static function index(Router $router)
-    {
-        if (!self::verificarVendedor()) {
-            header('Location: /');
-            exit;
-        }
-
-        $db = \Models\ActiveRecord::getDB();
-        // Solo cajas 3 y 4 (productos)
-        $cajas = $db->query("SELECT * FROM cajas WHERE activo = 1 AND id_caja IN (3, 4)")->fetch_all(MYSQLI_ASSOC);
-
-        $router->render('vendedor/ventas/consulta', [
-            'cajas' => $cajas
-        ]);
     }
 
     public static function apiObtenerVendedores()
