@@ -790,6 +790,20 @@ class Butaca extends ActiveRecord {
     }
 
     /**
+     * Al cancelar una entrada desde el administrador, su registro en butacas_vendidas se conserva
+     * (así se puede restaurar) pero la butaca ya cuenta como libre en esa función.
+     * Antes de volver a venderla hay que borrar ese registro viejo (la tabla admite uno por butaca y función).
+     */
+    public static function quitarVentaCancelada(int $idButaca, int $idFuncion): void
+    {
+        $stmt = self::getDB()->prepare("DELETE bv FROM butacas_vendidas bv
+                                        INNER JOIN entradas e ON e.id_entrada = bv.id_entrada
+                                        WHERE bv.id_butaca = ? AND bv.id_funcion = ? AND e.estado = -1");
+        $stmt->bind_param('ii', $idButaca, $idFuncion);
+        $stmt->execute();
+    }
+
+    /**
      * Bloquea las filas de las butacas hasta el fin de la transacción en curso, para que
      * dos ventas simultáneas (online o boletería) de la misma butaca se atiendan de a una.
      */

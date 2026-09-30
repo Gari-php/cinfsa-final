@@ -140,7 +140,7 @@ class VentaFuncionesController
                             b.fila_butaca,
                             b.numero_butaca,
                             CASE
-                                WHEN bv.id_venta_butaca IS NOT NULL THEN 3
+                                WHEN bv.id_venta_butaca IS NOT NULL AND (e.id_entrada IS NULL OR e.estado != -1) THEN 3
                                 -- un cliente la está pagando online en este momento
                                 WHEN EXISTS (
                                     SELECT 1 FROM reservas_butacas rb
@@ -152,8 +152,9 @@ class VentaFuncionesController
                             END as estado,
                             CONCAT('F', b.fila_butaca, '-C', b.numero_butaca) as label
                         FROM butacas b
-                        LEFT JOIN butacas_vendidas bv ON bv.id_butaca = b.id_butaca 
+                        LEFT JOIN butacas_vendidas bv ON bv.id_butaca = b.id_butaca
                             AND bv.id_funcion = ?
+                        LEFT JOIN entradas e ON e.id_entrada = bv.id_entrada
                         WHERE b.rela_salas = ?
                         ORDER BY b.fila_butaca, b.numero_butaca";
 
@@ -384,10 +385,12 @@ class VentaFuncionesController
                         throw new \Exception("La butaca Fila $filaButaca-$numeroButaca no está disponible (bloqueada)");
                     }
 
-                    // 4.2 Verificar disponibilidad
-                    $queryVerif = "SELECT id_venta_butaca 
-                              FROM butacas_vendidas 
-                              WHERE id_butaca = ? AND id_funcion = ?";
+                    // 4.2 Verificar disponibilidad (una venta cuya entrada se canceló no cuenta)
+                    $queryVerif = "SELECT bv.id_venta_butaca
+                              FROM butacas_vendidas bv
+                              LEFT JOIN entradas e ON e.id_entrada = bv.id_entrada
+                              WHERE bv.id_butaca = ? AND bv.id_funcion = ?
+                                AND (e.id_entrada IS NULL OR e.estado != -1)";
                     $stmtV = $db->prepare($queryVerif);
                     $stmtV->bind_param("ii", $idButaca, $idFuncion);
                     $stmtV->execute();
@@ -396,6 +399,9 @@ class VentaFuncionesController
                     if ($resultadoV->num_rows > 0) {
                         throw new \Exception("La butaca Fila $filaButaca-$numeroButaca ya está vendida");
                     }
+
+                    // Si tuvo una entrada cancelada, se libera ese registro viejo para poder venderla
+                    \Models\Butaca::quitarVentaCancelada((int)$idButaca, (int)$idFuncion);
 
                     // 4.3 CREAR ENTRADA
                     $queryInsertEntrada = "INSERT INTO entradas 

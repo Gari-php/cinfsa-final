@@ -321,6 +321,9 @@ class PagoController
                     $idFuncion = $detalle['id_funcion'];
                     $paresOrden[] = ['id_butaca' => $idButaca, 'id_funcion' => $idFuncion];
 
+                    // Si la butaca tuvo una entrada que el administrador canceló, ese registro viejo se libera
+                    Butaca::quitarVentaCancelada((int)$idButaca, (int)$idFuncion);
+
                     $stmtCheck = $db->prepare("SELECT id_orden FROM butacas_vendidas
                               WHERE id_butaca = ? AND id_funcion = ?");
                     $stmtCheck->execute([$idButaca, $idFuncion]);

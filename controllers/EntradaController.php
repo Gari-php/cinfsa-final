@@ -237,25 +237,14 @@ class EntradaController
             return;
         }
 
+        // Al cancelar, la butaca queda libre para volver a venderse SOLO en esta función:
+        // el registro en butacas_vendidas se conserva ligado a la entrada cancelada (para poder
+        // restaurarla) y ya no cuenta como vendida; se reemplaza si alguien la compra.
+        // No se toca rela_estado_butaca: ese flag es el bloqueo por mantenimiento de TODAS las funciones.
         $resultado = $entrada->eliminar();
 
         if ($resultado) {
-            // Si esta entrada venía de una compra web (tiene butaca asociada), liberarla
-            $db = \Models\ActiveRecord::getDB();
-            $query = "SELECT id_butaca FROM butacas_vendidas WHERE id_entrada = ?";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param('i', $id);
-            $stmt->execute();
-            $venta = $stmt->get_result()->fetch_assoc();
-
-            if ($venta) {
-                $queryLiberar = "UPDATE butacas SET rela_estado_butaca = 1 WHERE id_butaca = ?";
-                $stmtLiberar = $db->prepare($queryLiberar);
-                $stmtLiberar->bind_param('i', $venta['id_butaca']);
-                $stmtLiberar->execute();
-            }
-
-            echo json_encode(['ok' => true, 'mensaje' => 'Entrada cancelada correctamente']);
+            echo json_encode(['ok' => true, 'mensaje' => 'Entrada cancelada correctamente. La butaca quedó disponible para esta función.']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al cancelar la entrada']);
         }
@@ -357,40 +346,49 @@ class EntradaController
             return;
         }
 
-        // Si esta entrada tenía butaca asociada, verificar que nadie más la haya tomado
-        $queryButaca = "SELECT id_butaca FROM butacas_vendidas WHERE id_entrada = ?";
-        $stmtButaca = $db->prepare($queryButaca);
+        // La butaca tiene que seguir siendo de esta entrada: si mientras estuvo cancelada se volvió
+        // a vender, su registro se reemplazó; si se devolvió el dinero, el registro se borró.
+        $stmtButaca = $db->prepare("SELECT id_butaca, id_funcion FROM butacas_vendidas WHERE id_entrada = ?");
         $stmtButaca->bind_param('i', $id);
         $stmtButaca->execute();
         $venta = $stmtButaca->get_result()->fetch_assoc();
 
-        if ($venta) {
-            $queryEstadoButaca = "SELECT rela_estado_butaca FROM butacas WHERE id_butaca = ?";
-            $stmtEstado = $db->prepare($queryEstadoButaca);
-            $stmtEstado->bind_param('i', $venta['id_butaca']);
-            $stmtEstado->execute();
-            $butaca = $stmtEstado->get_result()->fetch_assoc();
+        if (!$venta) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No se puede restaurar: la butaca de esta entrada ya se vendió a otra persona o se devolvió el dinero']);
+            return;
+        }
 
-            if ($butaca && $butaca['rela_estado_butaca'] == 2) {
-                echo json_encode(['ok' => false, 'mensaje' => 'No se puede restaurar: la butaca ya fue reservada por otro cliente']);
+        $db->begin_transaction();
+        try {
+            // Se bloquea la butaca y se vuelve a verificar, por si se está vendiendo en este instante
+            \Models\Butaca::bloquearParaVenta([$venta['id_butaca']]);
+            $stmtButaca->execute();
+            $venta = $stmtButaca->get_result()->fetch_assoc();
+
+            if (!$venta) {
+                $db->rollback();
+                echo json_encode(['ok' => false, 'mensaje' => 'No se puede restaurar: la butaca de esta entrada ya se vendió a otra persona']);
                 return;
             }
-        }
 
-        $resultado = $entrada->restaurar();
-
-        if ($resultado) {
-            if ($venta) {
-                $queryOcupar = "UPDATE butacas SET rela_estado_butaca = 2 WHERE id_butaca = ?";
-                $stmtOcupar = $db->prepare($queryOcupar);
-                $stmtOcupar->bind_param('i', $venta['id_butaca']);
-                $stmtOcupar->execute();
+            $par = [['id_butaca' => $venta['id_butaca'], 'id_funcion' => $venta['id_funcion']]];
+            if (\Models\Butaca::noDisponibles($par)) {
+                $db->rollback();
+                echo json_encode(['ok' => false, 'mensaje' => 'No se puede restaurar: un cliente está pagando esa butaca en este momento']);
+                return;
             }
 
-            echo json_encode(['ok' => true, 'mensaje' => 'Entrada restaurada correctamente']);
-        } else {
+            if (!$entrada->restaurar()) {
+                throw new \Exception('No se pudo actualizar la entrada');
+            }
+            $db->commit();
+        } catch (\Exception $e) {
+            $db->rollback();
             echo json_encode(['ok' => false, 'mensaje' => 'Error al restaurar la entrada']);
+            return;
         }
+
+        echo json_encode(['ok' => true, 'mensaje' => 'Entrada restaurada correctamente']);
     }
 
 
