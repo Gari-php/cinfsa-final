@@ -28,8 +28,10 @@ foreach ($t in $tareas) {
     $accion = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument $argumentos -WorkingDirectory $raiz
     $disparador = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 15)
     $config = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries
+    # Corre como SYSTEM: sin abrir una ventana de consola cada 15 minutos y aunque no haya sesión iniciada
+    $usuario = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
 
-    Register-ScheduledTask -TaskName $t.Nombre -Action $accion -Trigger $disparador -Settings $config -Force | Out-Null
+    Register-ScheduledTask -TaskName $t.Nombre -Action $accion -Trigger $disparador -Settings $config -Principal $usuario -Force | Out-Null
     Write-Host "OK: '$($t.Nombre)' -> $($t.Script) cada 15 minutos"
 }
 
