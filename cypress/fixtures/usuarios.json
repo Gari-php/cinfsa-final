@@ -1,0 +1,7 @@
+{
+  "admin":       { "usuario": "admin_test",      "clave": "Prueba123!", "inicio": "/administrador" },
+  "vfunciones":  { "usuario": "vfunciones_test", "clave": "Prueba123!", "inicio": "/vendedor/caja" },
+  "vproductos":  { "usuario": "vproductos_test", "clave": "Prueba123!", "inicio": "/vendedorproductos" },
+  "cliente":     { "usuario": "cliente_test",    "clave": "Prueba123!", "inicio": "/menu" },
+  "cliente2":    { "usuario": "cliente2_test",   "clave": "Prueba123!", "inicio": "/menu" }
+}

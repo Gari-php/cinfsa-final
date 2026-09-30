@@ -1,0 +1,71 @@
+/* Página de error 404 (misma paleta que login.css) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #363130;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #e2e8f0;
+    font-family: 'Montserrat', 'Poppins', Arial, sans-serif;
+    padding: 20px;
+}
+
+.error-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 2px solid #ed850f;
+    padding: 30px 32px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.error-logo {
+    width: 140px;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto 10px;
+    filter: drop-shadow(0 4px 12px rgba(237, 133, 15, 0.3));
+}
+
+.error-codigo {
+    font-size: 64px;
+    font-weight: bold;
+    line-height: 1;
+    color: #ed850f;
+}
+
+.error-container h2 {
+    margin: 10px 0 12px;
+    font-size: 24px;
+    color: #ed850f;
+}
+
+.error-texto {
+    color: #a0aec0;
+    margin-bottom: 24px;
+}
+
+.error-container .boton {
+    display: block;
+    padding: 13px 15px;
+    background: linear-gradient(135deg, #ed850f, #f7931e);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: bold;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(237, 133, 15, 0.35);
+    transition: all 0.3s ease;
+}
+
+.error-container .boton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(237, 133, 15, 0.5);
+}

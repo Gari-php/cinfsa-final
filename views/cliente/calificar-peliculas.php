@@ -12,7 +12,7 @@
     <div class="peliculas-grid" id="peliculasGrid">
         <?php foreach ($peliculas as $pelicula): ?>
             <div class="pelicula-card" data-titulo="<?php echo strtolower(htmlspecialchars($pelicula['titulo_pelicula'])); ?>">
-                <img src="/assets/img/peliculas/<?php echo htmlspecialchars($pelicula['imagen_pelicula']); ?>"
+                <img src="/assets/img/peliculas/<?php echo s($pelicula['imagen_pelicula']); ?>"
                     alt="<?php echo htmlspecialchars($pelicula['titulo_pelicula']); ?>"
                     onerror="this.src='/assets/img/LOGO.png'">
                 <div class="pelicula-info">

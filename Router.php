@@ -303,15 +303,18 @@ class Router {
     private function mostrar404()
     {
         http_response_code(404);
-        echo "
-        <html>
-        <head><title>404 - Página no encontrada</title></head>
-        <body style='font-family: Arial; text-align: center; margin-top: 100px;'>
-            <h1>404 - Página no encontrada</h1>
-            <p>La ruta solicitada no existe o no tienes permisos para acceder.</p>
-            <a href='/'>Volver al inicio</a>
-        </body>
-        </html>";
+
+        // Las llamadas AJAX/API esperan JSON
+        $esAjax = strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest';
+        $pideJson = str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+        $esApi = strpos(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/api/') !== false;
+        if ($esAjax || $pideJson || $esApi) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'mensaje' => 'Ruta no encontrada']);
+            return;
+        }
+
+        $this->render('errores/404');
     }
 
     public function render($view, $datos = [])

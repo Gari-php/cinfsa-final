@@ -31,19 +31,61 @@
  * Uso: cy.loginAsAdmin()
  */
 Cypress.Commands.add('loginAsAdmin', () => {
-  cy.visit('/');
-  
-  // Verificar que estamos en la página de login
-  cy.get('h2').should('contain.text', 'Iniciar Sesión');
-  
-  // Realizar login
-  cy.get('#nombre_usuario').type('admin1');
-  cy.get('#clave_usuario').type('admin1');
-  cy.get('input[type="submit"]').click();
-  
-  // Verificar que el login fue exitoso
-  cy.url().should('include', '/administrador');
-  
+  cy.fixture('usuarios').then(({ admin }) => {
+    cy.visit('/');
+
+    // Verificar que estamos en la página de login
+    cy.get('h2').should('contain.text', 'Iniciar Sesión');
+
+    // Realizar login (usuario de la base de prueba, ver tests/db/datos_prueba.sql)
+    cy.get('#nombre_usuario').type(admin.usuario);
+    cy.get('#clave_usuario').type(admin.clave);
+    cy.get('input[type="submit"]').click();
+
+    // Verificar que el login fue exitoso
+    cy.url().should('include', '/administrador');
+  });
+});
+
+/**
+ * Obtiene el token CSRF de la sesión actual (lo expone cada layout en window.CSRF_TOKEN)
+ * Uso: cy.csrfToken().then(token => ...)
+ */
+Cypress.Commands.add('csrfToken', () => {
+  return cy.request('/').its('body').then((html) => {
+    const coincidencia = html.match(/CSRF_TOKEN = "([a-f0-9]+)"/);
+    expect(coincidencia, 'token CSRF en la página').to.not.be.null;
+    return coincidencia[1];
+  });
+});
+
+/**
+ * POST con JSON y token CSRF, igual que hace el frontend con fetch()
+ * Uso: cy.postJson('/api/butacas/reservar', { ... })
+ */
+Cypress.Commands.add('postJson', (url, body) => {
+  return cy.csrfToken().then((token) =>
+    cy.request({
+      method: 'POST',
+      url,
+      body,
+      headers: { 'X-CSRF-Token': token },
+      failOnStatusCode: false,
+    })
+  );
+});
+
+/**
+ * Inicia sesión por API con un usuario del fixture (sin pasar por la pantalla de login)
+ * Uso: cy.loginComo('cliente')  → roles: admin, vfunciones, vproductos, cliente, cliente2
+ */
+Cypress.Commands.add('loginComo', (rol) => {
+  cy.clearCookies();
+  cy.fixture('usuarios').then((usuarios) => {
+    const u = usuarios[rol];
+    cy.postJson('/', { nombre_usuario: u.usuario, clave_usuario: u.clave })
+      .its('body.ok').should('eq', true);
+  });
 });
 
 /**

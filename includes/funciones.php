@@ -7,6 +7,15 @@ function debuguear($variable) : string {
     exit;
 }
 
+// Lee una variable de configuración (.env o entorno del proceso).
+// $_ENV puede venir vacío según variables_order, por eso se miran las tres fuentes.
+function env(string $clave, $defecto = null) {
+    if (isset($_ENV[$clave])) return $_ENV[$clave];
+    if (isset($_SERVER[$clave]) && is_string($_SERVER[$clave])) return $_SERVER[$clave];
+    $valor = getenv($clave);
+    return $valor !== false ? $valor : $defecto;
+}
+
 // Escapa / Sanitizar el HTML
 function s($html) : string {
     $s = htmlspecialchars($html ?? '', ENT_QUOTES, 'UTF-8');

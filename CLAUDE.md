@@ -12,13 +12,11 @@ There is no build step (PHP is served directly by Apache/XAMPP) and no PHP test 
 
 - Install PHP deps: `composer install`
 - Install JS deps (Cypress only): `npm install`
-- Run Cypress E2E tests (interactive): `npx cypress open`
-- Run Cypress E2E tests (headless): `npx cypress run`
-- Run a single spec: `npx cypress run --spec "cypress/e2e/turnos/crear-turnos.cy.js"`
-- `cypress.config.js` sets `baseUrl: 'http://localhost:3000'` — point a PHP server at the repo root on port 3000 before running tests (e.g. `php -S localhost:3000 -t public`), or via XAMPP with a vhost matching that base URL.
-- Cron-style maintenance scripts (run manually or scheduled): `php scripts/expirar_entradas_cron.php`, `php scripts/limpiar_reservas_expiradas.php`.
-
-Note: `cypress/e2e/` currently only has real specs under `turnos/` (the `usuarios/` folder is empty and there's a leftover scaffold at `cypress/cypress/` from `cypress open`'s default project — not real tests).
+- Quick smoke test (run before committing): `php scripts/prueba_rapida.php` (`npm run test:rapido`) — checks every route maps to an existing method, logs in as each role against the test DB and GETs every route, failing on any PHP error/warning/deprecation.
+- E2E tests: start `npm run test:servidor` (php -S on :3000 via `tests/servidor_pruebas.php`, forced to the test DB), then `npm run test:e2e` / `npx cypress open`. Single spec: `npx cypress run --spec "cypress/e2e/caja/caja-funciones.cy.js"`.
+- Tests never touch the real DB: they use `cinfsa1_test`, rebuilt from `cinfsa1_schema.sql` + `tests/db/datos_prueba.sql` by `php tests/preparar_base_pruebas.php` (Cypress task `prepararBase`, run before each spec). Test users (password `Prueba123!`) live in `cypress/fixtures/usuarios.json`. `cy.task('consultarBase', sql)` runs a read-only SELECT for assertions; `cy.loginComo(rol)` / `cy.postJson(url, body)` handle login and CSRF.
+- When the DB schema changes, regenerate `cinfsa1_schema.sql` (`mysqldump --no-data --skip-dump-date --databases cinfsa1`, strip `AUTO_INCREMENT=`), or the test DB will drift from the real one.
+- Maintenance scripts (every 15 min): `php scripts/expirar_entradas_cron.php`, `php scripts/limpiar_reservas_expiradas.php`. On Windows register them with `scripts/instalar_tareas_windows.ps1` (as Administrator); output goes to `logs/cron.log`.
 
 ## Architecture
 
@@ -43,6 +41,8 @@ Custom front-controller MVC, autoloaded via Composer PSR-4 (see `composer.json`)
 **Classes (`classes/`)**: cross-cutting services — `Email.php` (SendGrid), `Notificaciones.php`, `ExportadorDatos.php`, `GeneradorArqueoPDF.php` (TCPDF cash-register reports), `GeneradorGraficos.php`, `Paginador.php` (pagination helper used across admin `index()` listers).
 
 **Middlewares (`middlewares/`)**: currently just `ValidarModulo.php`, described above.
+
+**Config**: read settings with the global `env('CLAVE', $defecto)` helper (`includes/funciones.php`), not `$_ENV` directly — `$_ENV` is empty under XAMPP's `variables_order`, so process-level overrides (like the test server's `DB_NAME`) would otherwise be ignored. `APP_ENV=production` hides errors and logs them to `logs/php_errors.log` (`includes/app.php`); `APP_URL` builds email links and MercadoPago back_urls. Unknown routes render `views/errores/404.php` (or JSON for AJAX/`/api/` requests).
 
 **Config/secrets**: `includes/config/mercadopago.php` and `api_keys/llave_cinfsa.php` hold hardcoded API keys/tokens checked into the repo (not `.env`-based) — treat any value in those files as already-committed and not fit for reuse; `.gitignore` only excludes `/vendor/` and `.env`. Some newer classes (`Email.php`, `Notificaciones.php`) read `$_ENV`/`getenv()` (via `vlucas/phpdotenv`) with fallbacks to the hardcoded XAMPP defaults (`root`/no password/`cinfsa1`) — there's no committed `.env.example`.
 

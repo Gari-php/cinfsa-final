@@ -850,7 +850,6 @@
         console.log('🚀 Cargando tipos de comprobante...');
 
         const selectTipoComprobante = document.getElementById('tipo_comprobante');
-        const infoComprobante = document.getElementById('info-comprobante');
 
         try {
             // Cargar tipos de comprobante
@@ -874,30 +873,6 @@
         } catch (error) {
             console.error('❌ Error cargando tipos de comprobante:', error);
         }
-
-        // Función para actualizar información
-        function actualizarInfoComprobante() {
-            const tipoSeleccionado = selectTipoComprobante.value;
-            const info = infoTipos[tipoSeleccionado];
-
-            if (info) {
-                infoComprobante.innerHTML = `
-                <div class="info-box ${info.clase}">
-                    <i class="fas ${info.icono}"></i>
-                    <div class="info-text">
-                        <strong>${info.titulo}</strong>
-                        <p>${info.descripcion}</p>
-                    </div>
-                </div>
-            `;
-            }
-        }
-
-        // Escuchar cambios
-        selectTipoComprobante.addEventListener('change', actualizarInfoComprobante);
-
-        // Inicializar
-        actualizarInfoComprobante();
     });
 
     // Variables globales - IGUAL QUE CLIENTE

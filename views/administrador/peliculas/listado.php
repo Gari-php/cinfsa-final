@@ -100,7 +100,7 @@
                         <td><?php echo $p->anyo_pelicula; ?></td>
                         <td><?php echo $p->duracion_pelicula; ?> min</td>
                         <td><?php echo htmlspecialchars($p->nombre_tipo_clasificacion); ?></td>
-                        <td><?php echo htmlspecialchars($p->nombre_idioma_pelicula); ?></td>
+                        <td><?php echo s($p->nombre_idioma_pelicula); ?></td>
                         <td><?php echo htmlspecialchars($p->generos ?? ''); ?></td>
                         <td>
                             <?php

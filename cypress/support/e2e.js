@@ -15,3 +15,8 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+
+// Cada archivo de tests arranca con la base de prueba recién creada (ver tests/preparar_base_pruebas.php)
+before(() => {
+  cy.task('prepararBase', null, { timeout: 60000 });
+});

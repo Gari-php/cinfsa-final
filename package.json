@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:rapido": "php scripts/prueba_rapida.php",
+    "test:preparar-base": "php tests/preparar_base_pruebas.php",
+    "test:servidor": "php -S localhost:3000 -t public tests/servidor_pruebas.php",
+    "test:e2e": "cypress run"
   },
   "repository": {
     "type": "git",
