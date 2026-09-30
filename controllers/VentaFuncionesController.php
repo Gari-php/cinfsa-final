@@ -139,8 +139,14 @@ class VentaFuncionesController
                             b.id_butaca,
                             b.fila_butaca,
                             b.numero_butaca,
-                            CASE 
+                            CASE
                                 WHEN bv.id_venta_butaca IS NOT NULL THEN 3
+                                -- un cliente la está pagando online en este momento
+                                WHEN EXISTS (
+                                    SELECT 1 FROM reservas_butacas rb
+                                    WHERE rb.id_butaca = b.id_butaca AND rb.id_funcion = ?
+                                      AND rb.estado_reserva = 'temporal' AND rb.fecha_expiracion > NOW()
+                                ) THEN 3
                                 WHEN b.rela_estado_butaca = 2 THEN 2
                                 ELSE 1
                             END as estado,
@@ -152,7 +158,7 @@ class VentaFuncionesController
                         ORDER BY b.fila_butaca, b.numero_butaca";
 
             $stmt2 = $db->prepare($queryButacas);
-            $stmt2->bind_param("ii", $idFuncion, $idSala);
+            $stmt2->bind_param("iii", $idFuncion, $idFuncion, $idSala);
             $stmt2->execute();
             $resultado2 = $stmt2->get_result();
 
@@ -345,6 +351,14 @@ class VentaFuncionesController
 
                 $idCabecera = $db->insert_id;
                 $fechaHora = date('Y-m-d H:i:s');
+
+                // 4.0 Bloquear las butacas (una venta online simultánea espera su turno)
+                //     y rechazar las que un cliente está pagando online en este momento
+                \Models\Butaca::bloquearParaVenta($butacasIds);
+                $pares = array_map(fn($id) => ['id_butaca' => $id, 'id_funcion' => $idFuncion], $butacasIds);
+                if (in_array('reservada', \Models\Butaca::noDisponibles($pares), true)) {
+                    throw new \Exception('Una o más butacas las está pagando un cliente online en este momento. Elegí otras.');
+                }
 
                 // 4. PROCESAR CADA BUTACA
                 foreach ($butacasIds as $idButaca) {

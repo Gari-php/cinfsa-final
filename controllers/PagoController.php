@@ -2,6 +2,7 @@
 
 namespace Controllers;
 
+use Models\Butaca;
 use Models\Carrito;
 use MVC\Router;
 
@@ -20,7 +21,7 @@ class PagoController
     {
 
         // URL pública del sitio (APP_URL en .env): MercadoPago vuelve a /carrito/retorno de este dominio
-        $baseUrl = rtrim($_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'https://outcome-mammal-sudoku.ngrok-free.dev', '/');
+        $baseUrl = rtrim(env('APP_URL', 'https://outcome-mammal-sudoku.ngrok-free.dev'), '/');
         if (!self::verificarUsuario()) {
             echo json_encode(['ok' => false, 'mensaje' => 'Usuario no autenticado']);
             return;
@@ -39,6 +40,50 @@ class PagoController
                 return;
             }
 
+            $db = \Models\ActiveRecord::getDB();
+
+            // ─── Validación final antes de cobrar ───────────────────────────
+            // Las butacas se bloquean y se revisan dentro de una transacción para que dos
+            // pagos (o una venta en boletería) de la misma butaca no pasen a la vez.
+            $butacas = array_values(array_filter($items, fn($i) => $i['tipo_producto'] === 'butacas' && $i['id_butaca']));
+            $paresButacas = array_map(fn($i) => ['id_butaca' => $i['id_butaca'], 'id_funcion' => $i['id_funcion']], $butacas);
+
+            $db->begin_transaction();
+            Butaca::bloquearParaVenta(array_column($paresButacas, 'id_butaca'));
+            $noDisponibles = Butaca::noDisponibles($paresButacas, (int)$idUsuario);
+
+            $problemas = [];
+            foreach ($items as $item) {
+                if ($item['tipo_producto'] === 'butacas') {
+                    $motivo = $noDisponibles[$item['id_butaca'] . '-' . $item['id_funcion']] ?? null;
+                    if ($motivo) {
+                        $problemas[] = [
+                            'id_item' => $item['id'],
+                            'nombre' => $item['nombre'],
+                            'motivo' => $motivo,
+                        ];
+                    }
+                } elseif (Carrito::obtenerStockActual($item['id_producto'], $item['tipo_producto']) < $item['cantidad']) {
+                    $problemas[] = ['id_item' => $item['id'], 'nombre' => $item['nombre'], 'motivo' => 'sin_stock'];
+                }
+            }
+
+            if ($problemas) {
+                $db->rollback();
+                $textos = ['vendida' => 'ya fue vendida', 'reservada' => 'la está pagando otro cliente', 'sin_stock' => 'no tiene stock suficiente'];
+                $detalle = implode("\n", array_map(fn($p) => "• {$p['nombre']}: {$textos[$p['motivo']]}", $problemas));
+                echo json_encode([
+                    'ok' => false,
+                    'mensaje' => "No se puede completar la compra:\n$detalle\n\nQuitalo del carrito para continuar.",
+                    'no_disponibles' => $problemas,
+                ]);
+                return;
+            }
+
+            // Todo disponible: las butacas quedan reservadas para este usuario mientras paga
+            $venceReserva = Butaca::reservarParaPago($paresButacas, (int)$idUsuario);
+            $db->commit();
+
             $total = 0;
             foreach ($items as $item) {
                 $total += $item['precio'] * $item['cantidad'];
@@ -46,7 +91,6 @@ class PagoController
 
             $numeroOrden = 'CINFSA-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
 
-            $db = \Models\ActiveRecord::getDB();
             $query = "INSERT INTO ordenes (id_usuario, numero_orden, total, estado, metodo_pago, fecha_creacion) 
                     VALUES (?, ?, ?, 'pendiente', 'Mercado Pago', NOW())";
             $stmt = $db->prepare($query);
@@ -99,6 +143,11 @@ class PagoController
 
                 'auto_return' => 'approved',
 
+                // El link de pago vence junto con la reserva de las butacas: pasado ese tiempo
+                // MercadoPago no acepta el pago, así no se cobra una butaca que ya se liberó
+                'expires' => true,
+                'expiration_date_from' => date('Y-m-d\TH:i:s.vP'),
+                'expiration_date_to' => date('Y-m-d\TH:i:s.vP', $venceReserva),
             ];
 
             $ch = curl_init('https://api.mercadopago.com/checkout/preferences');
@@ -148,6 +197,13 @@ class PagoController
                 'numero_orden' => $numeroOrden
             ]);
         } catch (\Exception $e) {
+            // Si algo falló después de reservar, las butacas vuelven a estar disponibles
+            if (isset($db)) {
+                $db->rollback();
+            }
+            if (!empty($paresButacas)) {
+                Butaca::liberarReservasDeUsuario($paresButacas, (int)$idUsuario);
+            }
             file_put_contents(
                 __DIR__ . '/../debug_mp.log',
                 "ERROR: " . $e->getMessage() . PHP_EOL,
@@ -215,6 +271,8 @@ class PagoController
 
         $numeroOrden = $_GET['orden'] ?? null;
         $paymentId = $_GET['payment_id'] ?? null;
+        $butacasNoAsignadas = [];
+        $paresOrden = [];
 
         if ($numeroOrden && $paymentId) {
             $db = \Models\ActiveRecord::getDB();
@@ -252,17 +310,31 @@ class PagoController
                  WHERE id_orden = ? AND tipo_producto = 'butacas' AND id_butaca IS NOT NULL";
                 $stmtDetalles = $db->prepare($queryDetalles);
                 $stmtDetalles->execute([$idOrden]);
-                $resultDetalles = $stmtDetalles->get_result();
+                $detallesButacas = $stmtDetalles->get_result()->fetch_all(MYSQLI_ASSOC);
 
-                while ($detalle = $resultDetalles->fetch_assoc()) {
+                // Se bloquean las butacas de la orden: una venta simultánea de la misma butaca espera su turno
+                $db->begin_transaction();
+                Butaca::bloquearParaVenta(array_column($detallesButacas, 'id_butaca'));
+
+                foreach ($detallesButacas as $detalle) {
                     $idButaca = $detalle['id_butaca'];
                     $idFuncion = $detalle['id_funcion'];
+                    $paresOrden[] = ['id_butaca' => $idButaca, 'id_funcion' => $idFuncion];
 
-                    $stmtCheck = $db->prepare("SELECT id_venta_butaca FROM butacas_vendidas 
+                    $stmtCheck = $db->prepare("SELECT id_orden FROM butacas_vendidas
                               WHERE id_butaca = ? AND id_funcion = ?");
                     $stmtCheck->execute([$idButaca, $idFuncion]);
+                    $ventaExistente = $stmtCheck->get_result()->fetch_assoc();
 
-                    if ($stmtCheck->get_result()->num_rows === 0) {
+                    // La butaca se vendió a otra persona mientras este cliente pagaba (la reserva venció).
+                    // No se puede asignar: se avisa al cliente y queda registrado para el reintegro.
+                    if ($ventaExistente && (int)$ventaExistente['id_orden'] !== (int)$idOrden) {
+                        $butacasNoAsignadas[] = $idButaca;
+                        error_log("❌ WEB: Butaca {$idButaca} (función {$idFuncion}) pagada en la orden {$numeroOrden} (payment {$paymentId}) pero ya estaba vendida. Requiere reintegro.");
+                        continue;
+                    }
+
+                    if (!$ventaExistente) {
                         // NUEVO: crear la entrada real, usando el tipo de entrada de la función
                         $idEntrada = null;
                         $stmtTipoEntrada = $db->prepare("SELECT rela_tipo_entrada FROM funciones WHERE id_funcion = ?");
@@ -300,6 +372,11 @@ class PagoController
                         error_log("✅ WEB: Butaca {$idButaca} vendida - Orden {$idOrden}" . ($idEntrada ? " - Entrada {$idEntrada}" : " - SIN ENTRADA"));
                     }
                 }
+
+                $db->commit();
+
+                // Ya vendidas: la reserva temporal que se hizo al iniciar el pago no hace falta más
+                Butaca::liberarReservasDeUsuario($paresOrden, (int)$idUsuario);
             }
 
             // PASO 4: Procesar carrito (productos y fichas)
@@ -329,7 +406,8 @@ class PagoController
 
         $router->render('cliente/pago-exitoso', [
             'numero_orden' => $numeroOrden,
-            'payment_id' => $paymentId
+            'payment_id' => $paymentId,
+            'butacas_no_asignadas' => $butacasNoAsignadas
         ]);
     }
     public static function fallido(Router $router)

@@ -35,6 +35,17 @@
             <p>ha sido procesada correctamente</p>
         </div>
 
+        <?php if (!empty($butacas_no_asignadas)): ?>
+        <div class="aviso-butacas-no-asignadas">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>
+                <strong><?php echo count($butacas_no_asignadas); ?> butaca(s) de tu compra ya habían sido vendidas</strong>
+                mientras completabas el pago, así que no pudimos asignártelas.
+                Contactanos con tu número de orden para gestionar el reintegro de ese importe.
+            </p>
+        </div>
+        <?php endif; ?>
+
         <div class="mensaje-email">
             <i class="fas fa-envelope"></i>
             <p>Revisa tu bandeja de entrada.<br>Ahí se enviará el ticket de compra.</p>
@@ -109,6 +120,26 @@
     font-size: 2rem;
     margin-bottom: 2rem;
     font-weight: 700;
+}
+
+/* Aviso: butacas pagadas que ya estaban vendidas */
+.aviso-butacas-no-asignadas {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    text-align: left;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid #dc2626;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 2rem;
+    color: #fecaca;
+}
+
+.aviso-butacas-no-asignadas i {
+    color: #f87171;
+    font-size: 1.3rem;
+    margin-top: 0.15rem;
 }
 
 /* Información de la orden */

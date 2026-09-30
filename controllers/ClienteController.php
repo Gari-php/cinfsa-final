@@ -503,21 +503,29 @@ class ClienteController
                 b.fila_butaca,
                 b.numero_butaca,
                 b.rela_estado_butaca,
-                CASE 
+                CASE
                     WHEN bv.id_venta_butaca IS NOT NULL AND (e.id_entrada IS NULL OR e.estado != -1) THEN 3
+                    WHEN EXISTS (
+                        SELECT 1 FROM reservas_butacas rb
+                        WHERE rb.id_butaca = b.id_butaca AND rb.id_funcion = ?
+                          AND rb.estado_reserva = 'temporal' AND rb.fecha_expiracion > NOW()
+                          AND (rb.id_usuario IS NULL OR rb.id_usuario <> ?)
+                    ) THEN 3
                     WHEN b.rela_estado_butaca = 2 THEN 2
                     ELSE 1
                 END as estado,
                 CONCAT('F', b.fila_butaca, '-C', b.numero_butaca) as label
             FROM butacas b
-            LEFT JOIN butacas_vendidas bv ON bv.id_butaca = b.id_butaca 
+            LEFT JOIN butacas_vendidas bv ON bv.id_butaca = b.id_butaca
                 AND bv.id_funcion = ?
             LEFT JOIN entradas e ON e.id_entrada = bv.id_entrada
             WHERE b.rela_salas = ?
             ORDER BY b.fila_butaca, b.numero_butaca";
 
+            // Las butacas que otro cliente está pagando se muestran ocupadas (las propias no)
+            $idUsuarioActual = (int)($_SESSION['id_usuario'] ?? 0);
             $stmt2 = $db->prepare($queryButacas);
-            $stmt2->bind_param("ii", $idFuncion, $idSala);
+            $stmt2->bind_param("iiii", $idFuncion, $idUsuarioActual, $idFuncion, $idSala);
             $stmt2->execute();
             $resultado2 = $stmt2->get_result();
 
@@ -579,23 +587,22 @@ class ClienteController
         try {
             $db = \Models\ActiveRecord::getDB();
 
-            // ⭐ VERIFICAR QUE LAS BUTACAS NO ESTÉN VENDIDAS
+            // ⭐ VERIFICAR QUE LAS BUTACAS NO ESTÉN VENDIDAS NI SIENDO PAGADAS POR OTRO CLIENTE
             $idsButacas = implode(',', array_map('intval', $butacasIds));
-            $queryCheck = "SELECT b.id_butaca 
-          FROM butacas b
-          INNER JOIN butacas_vendidas bv ON bv.id_butaca = b.id_butaca AND bv.id_funcion = ?
-          LEFT JOIN entradas e ON e.id_entrada = bv.id_entrada
-          WHERE b.id_butaca IN ($idsButacas)
-            AND (e.id_entrada IS NULL OR e.estado != -1)";
+            $pares = array_map(fn($id) => ['id_butaca' => $id, 'id_funcion' => $idFuncion], $butacasIds);
+            $noDisponibles = \Models\Butaca::noDisponibles($pares, (int)$idUsuario);
 
-            $stmtCheck = $db->prepare($queryCheck);
-            $stmtCheck->execute([$idFuncion]);
-            $yaVendidas = $stmtCheck->get_result();
-
-            if ($yaVendidas->num_rows > 0) {
+            if (in_array('vendida', $noDisponibles, true)) {
                 echo json_encode([
                     'ok' => false,
                     'mensaje' => 'Una o más butacas ya fueron vendidas. Recarga la página.'
+                ]);
+                return;
+            }
+            if ($noDisponibles) {
+                echo json_encode([
+                    'ok' => false,
+                    'mensaje' => 'Una o más butacas están siendo compradas por otro cliente. Elegí otras o probá en unos minutos.'
                 ]);
                 return;
             }

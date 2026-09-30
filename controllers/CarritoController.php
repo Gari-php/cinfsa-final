@@ -241,19 +241,31 @@ class CarritoController
                 exit;
             }
 
-            // Calcular total y validar stock
+            // Butacas que ya se vendieron o que otro cliente está pagando en este momento
+            $paresButacas = [];
+            foreach ($items as $item) {
+                if ($item['tipo_producto'] === 'butacas' && $item['id_butaca']) {
+                    $paresButacas[] = ['id_butaca' => $item['id_butaca'], 'id_funcion' => $item['id_funcion']];
+                }
+            }
+            $noDisponibles = \Models\Butaca::noDisponibles($paresButacas, (int)$idUsuario);
+
+            // Calcular total y validar disponibilidad
             $itemsValidos = [];
             $total = 0;
 
             foreach ($items as $item) {
-                // Para butacas no verificar stock
+                $item['motivo'] = null;
                 if ($item['tipo_producto'] === 'butacas') {
-                    $item['disponible'] = true;
+                    $item['motivo'] = $noDisponibles[$item['id_butaca'] . '-' . $item['id_funcion']] ?? null;
                 } else {
                     $stockActual = Carrito::obtenerStockActual($item['id_producto'], $item['tipo_producto']);
                     $item['stock_actual'] = $stockActual;
-                    $item['disponible'] = $stockActual >= $item['cantidad'];
+                    if ($stockActual < $item['cantidad']) {
+                        $item['motivo'] = 'sin_stock';
+                    }
                 }
+                $item['disponible'] = $item['motivo'] === null;
 
                 if ($item['disponible']) {
                     $item['subtotal'] = $item['precio'] * $item['cantidad'];
@@ -267,7 +279,8 @@ class CarritoController
                 'items' => $itemsValidos,
                 'estadisticas' => $estadisticas,
                 'total' => $total,
-                'usuario' => $_SESSION
+                'usuario' => $_SESSION,
+                'hayNoDisponibles' => in_array(false, array_column($itemsValidos, 'disponible'), true)
             ]);
         } catch (\Exception $e) {
             $_SESSION['error'] = 'Error al procesar el carrito';

@@ -8,20 +8,39 @@
         <!-- Resumen de productos -->
         <div class="checkout-items">
             <h2>Tu pedido</h2>
-            
+
+            <?php if (!empty($hayNoDisponibles)): ?>
+                <div class="aviso-no-disponibles">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Algunos productos de tu carrito ya no están disponibles. Quitalos para poder pagar.</p>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            $motivos = [
+                'vendida' => 'Esta butaca ya fue vendida',
+                'reservada' => 'Otro cliente está pagando esta butaca en este momento',
+                'sin_stock' => 'No hay stock suficiente',
+            ];
+            ?>
             <?php foreach ($items as $item): ?>
-                <?php if ($item['disponible']): ?>
-                <div class="checkout-item">
-                    <img src="<?php echo $item['imagen']; ?>" 
-                         alt="<?php echo $item['nombre']; ?>"
+                <div class="checkout-item<?php echo $item['disponible'] ? '' : ' no-disponible'; ?>">
+                    <img src="<?php echo s($item['imagen']); ?>"
+                         alt="<?php echo s($item['nombre']); ?>"
                          onerror="this.src='/assets/img/cart.png'">
                     <div class="item-info">
-                        <h3><?php echo htmlspecialchars($item['nombre']); ?></h3>
+                        <h3><?php echo s($item['nombre']); ?></h3>
                         <p class="item-cantidad">Cantidad: <?php echo $item['cantidad']; ?></p>
-                        <p class="item-precio">$<?php echo number_format($item['subtotal'], 0, ',', '.'); ?></p>
+                        <?php if ($item['disponible']): ?>
+                            <p class="item-precio">$<?php echo number_format($item['subtotal'], 0, ',', '.'); ?></p>
+                        <?php else: ?>
+                            <p class="item-motivo"><?php echo s($motivos[$item['motivo']] ?? 'No disponible'); ?></p>
+                            <button type="button" class="btn-quitar-item" data-id-item="<?php echo (int)$item['id']; ?>">
+                                <i class="fas fa-trash-alt"></i> Quitar
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <?php endif; ?>
             <?php endforeach; ?>
 
             <div class="checkout-total">
@@ -71,7 +90,7 @@
                     <a href="/menu" class="btn-volver">
                         <i class="fas fa-arrow-left"></i> Volver al inicio
                     </a>
-                    <button type="submit" class="btn-pagar">
+                    <button type="submit" class="btn-pagar" <?php echo !empty($hayNoDisponibles) ? 'disabled' : ''; ?>>
                         <i class="fas fa-credit-card"></i> Proceder al pago
                     </button>
                 </div>
@@ -81,6 +100,26 @@
 </div>
 
 <script>
+
+// Quitar del carrito un producto que ya no está disponible
+document.querySelectorAll('.btn-quitar-item').forEach((boton) => {
+    boton.addEventListener('click', async () => {
+        boton.disabled = true;
+        try {
+            const response = await fetch('/carrito/eliminar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_item: boton.dataset.idItem })
+            });
+            const data = await response.json();
+            if (!data.ok) throw new Error(data.mensaje || 'No se pudo quitar');
+            window.location.reload();
+        } catch (error) {
+            alert('No se pudo quitar el producto: ' + error.message);
+            boton.disabled = false;
+        }
+    });
+});
 
 document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -109,6 +148,11 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         
         if (data.ok && data.init_point) {
             window.location.href = data.init_point;
+        } else if (data.no_disponibles) {
+            // Algo se vendió o se reservó mientras el cliente estaba en esta pantalla:
+            // se avisa y se recarga para mostrar qué quitar
+            alert(data.mensaje);
+            window.location.reload();
         } else {
             alert(data.mensaje || 'Error desconocido al procesar el pago');
             btnPagar.disabled = false;
@@ -181,6 +225,57 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
     border-radius: 8px;
     margin-bottom: 1rem;
     border: 1px solid #4a5568;
+}
+
+/* Productos que ya no se pueden comprar (butaca vendida/reservada o sin stock) */
+.aviso-no-disponibles {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid #dc2626;
+    color: #fecaca;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.aviso-no-disponibles i {
+    color: #f87171;
+}
+
+.checkout-item.no-disponible {
+    border-color: #dc2626;
+    opacity: 0.85;
+}
+
+.checkout-item.no-disponible img {
+    filter: grayscale(1);
+}
+
+.item-motivo {
+    color: #f87171;
+    font-weight: 600;
+}
+
+.btn-quitar-item {
+    margin-top: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    background: transparent;
+    color: #fca5a5;
+    border: 1px solid #dc2626;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-quitar-item:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+.btn-pagar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .checkout-item img {

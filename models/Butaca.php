@@ -734,4 +734,107 @@ class Butaca extends ActiveRecord {
             return ['ok' => false, 'mensaje' => 'Error: ' . $e->getMessage()];
         }
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // DISPONIBILIDAD PARA LA VENTA (online y boletería)
+    // Una butaca de una función NO se puede vender si:
+    //   - ya está vendida (butacas_vendidas con entrada no cancelada), o
+    //   - otro cliente la está pagando (reserva 'temporal' vigente).
+    // Al agregar al carrito NO se reserva: la reserva nace al iniciar el pago.
+    // ═══════════════════════════════════════════════════════════
+
+    const MINUTOS_RESERVA_PAGO = 15;
+
+    /**
+     * Devuelve las butacas que no se pueden vender, con el motivo.
+     *
+     * @param array    $pares      [['id_butaca' => .., 'id_funcion' => ..], ...]
+     * @param int|null $idUsuario  sus propias reservas no le bloquean (null = bloquea cualquier reserva)
+     * @return array ["idButaca-idFuncion" => 'vendida'|'reservada']
+     */
+    public static function noDisponibles(array $pares, ?int $idUsuario = null): array
+    {
+        $db = self::getDB();
+        $usuario = $idUsuario ?? -1;
+        $resultado = [];
+
+        $stmtVendida = $db->prepare("SELECT 1 FROM butacas_vendidas bv
+                                     LEFT JOIN entradas e ON e.id_entrada = bv.id_entrada
+                                     WHERE bv.id_butaca = ? AND bv.id_funcion = ?
+                                       AND (e.id_entrada IS NULL OR e.estado != -1)");
+        $stmtReservada = $db->prepare("SELECT 1 FROM reservas_butacas
+                                       WHERE id_butaca = ? AND id_funcion = ?
+                                         AND estado_reserva = 'temporal' AND fecha_expiracion > NOW()
+                                         AND (id_usuario IS NULL OR id_usuario <> ?)");
+
+        foreach ($pares as $par) {
+            $idButaca = (int)$par['id_butaca'];
+            $idFuncion = (int)$par['id_funcion'];
+            $clave = "$idButaca-$idFuncion";
+
+            $stmtVendida->bind_param('ii', $idButaca, $idFuncion);
+            $stmtVendida->execute();
+            if ($stmtVendida->get_result()->num_rows > 0) {
+                $resultado[$clave] = 'vendida';
+                continue;
+            }
+
+            $stmtReservada->bind_param('iii', $idButaca, $idFuncion, $usuario);
+            $stmtReservada->execute();
+            if ($stmtReservada->get_result()->num_rows > 0) {
+                $resultado[$clave] = 'reservada';
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Bloquea las filas de las butacas hasta el fin de la transacción en curso, para que
+     * dos ventas simultáneas (online o boletería) de la misma butaca se atiendan de a una.
+     */
+    public static function bloquearParaVenta(array $idsButacas): void
+    {
+        $ids = array_filter(array_map('intval', $idsButacas));
+        if ($ids) {
+            self::getDB()->query("SELECT id_butaca FROM butacas WHERE id_butaca IN (" . implode(',', $ids) . ") FOR UPDATE");
+        }
+    }
+
+    /**
+     * Reserva las butacas para el usuario mientras paga. Devuelve el timestamp de vencimiento.
+     */
+    public static function reservarParaPago(array $pares, int $idUsuario): int
+    {
+        $db = self::getDB();
+        self::liberarReservasDeUsuario($pares, $idUsuario);
+
+        // El vencimiento lo calcula MySQL: se compara siempre contra su NOW(), sin depender de la zona horaria de PHP
+        $minutos = self::MINUTOS_RESERVA_PAGO;
+        $stmt = $db->prepare("INSERT INTO reservas_butacas (id_butaca, id_funcion, id_usuario, estado_reserva, fecha_reserva, fecha_expiracion)
+                              VALUES (?, ?, ?, 'temporal', NOW(), DATE_ADD(NOW(), INTERVAL $minutos MINUTE))");
+        foreach ($pares as $par) {
+            $idButaca = (int)$par['id_butaca'];
+            $idFuncion = (int)$par['id_funcion'];
+            $stmt->bind_param('iii', $idButaca, $idFuncion, $idUsuario);
+            $stmt->execute();
+        }
+
+        return time() + $minutos * 60;
+    }
+
+    /**
+     * Quita las reservas temporales del usuario sobre esas butacas (pago fallido, reintento o venta confirmada).
+     */
+    public static function liberarReservasDeUsuario(array $pares, int $idUsuario): void
+    {
+        $stmt = self::getDB()->prepare("DELETE FROM reservas_butacas
+                                        WHERE id_butaca = ? AND id_funcion = ? AND id_usuario = ? AND estado_reserva = 'temporal'");
+        foreach ($pares as $par) {
+            $idButaca = (int)$par['id_butaca'];
+            $idFuncion = (int)$par['id_funcion'];
+            $stmt->bind_param('iii', $idButaca, $idFuncion, $idUsuario);
+            $stmt->execute();
+        }
+    }
 }
