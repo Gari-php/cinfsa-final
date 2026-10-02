@@ -56,7 +56,8 @@
         <link rel="stylesheet" href="/assets/css/base.css">
     <?php endif; ?>
 
-    <?php if (isset($vista)): ?>
+    <?php // CSS propio de la vista (assets/css/<vista>.css), solo si existe ?>
+    <?php if (isset($vista) && is_file(__DIR__ . "/../public/assets/css/{$vista}.css")): ?>
         <link rel="stylesheet" href="/assets/css/<?php echo $vista; ?>.css">
     <?php endif; ?>
 
