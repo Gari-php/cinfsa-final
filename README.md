@@ -106,6 +106,7 @@ Cada archivo de tests recrea `cinfsa1_test` antes de empezar. Cubren:
 | `compra/entrada-cancelada.cy.js` | Cancelar una entrada libera la butaca en esa función; restaurar solo si sigue libre |
 | `turnos/crear-turnos.cy.js` | Formulario de alta de turnos |
 | `formularios/errores-un-modal.cy.js` | En todas las pantallas de crear/editar del admin, los errores se marcan en su campo y aparecen en un solo modal |
+| `control/auditoria.cy.js` | Registro de auditoría: qué acciones se registran, que nunca guarde contraseñas, acceso solo del admin, filtros y exportación |
 
 Usuarios de prueba (contraseña `Prueba123!`): `admin_test`, `vfunciones_test`,
 `vproductos_test`, `cliente_test`, `cliente2_test` (ver `cypress/fixtures/usuarios.json`).
@@ -128,11 +129,40 @@ scripts/                 Mantenimiento (cron), prueba rápida e instalador de ta
 tests/                   Base de prueba: preparador, servidor de pruebas y datos (tests/db/)
 cypress/                 Tests E2E
 logs/                    Logs locales (cron, errores en producción); no se versionan
+migraciones/             Cambios de estructura de la base, a aplicar una vez en cada base
 cinfsa1_schema.sql       Esquema de la base de datos (sin datos)
 ```
 
 Para el detalle de la arquitectura (flujo de request, control de acceso por
 módulos, convenciones de controladores/modelos/vistas), ver [`CLAUDE.md`](./CLAUDE.md).
+
+## Registro de auditoría (Control)
+
+El panel de administración tiene una pestaña **Control → Registro de auditoría**
+(`/administrador/auditoria/listado`) que muestra quién hizo cada acción sensible, cuándo y
+desde qué IP: inicios de sesión (incluidos los fallidos), cancelaciones y devoluciones,
+aperturas y cierres de caja (con la diferencia del arqueo), cambios de precios, altas/bajas/
+modificaciones de usuarios, películas y funciones, cambios de permisos y bloqueos de butacas.
+
+- Es de **solo lectura**: desde el sistema nadie puede editar ni borrar registros.
+- **Nunca guarda contraseñas** (de un cambio de contraseña solo queda que cambió) ni lo que se
+  escribió en un inicio de sesión fallido.
+- Se puede filtrar por usuario, acción, fechas y texto, y **exportar a CSV** lo filtrado.
+
+Para registrar una acción nueva: agregarla a `Classes\Auditoria::ACCIONES` y llamar a
+`Auditoria::registrar(...)` en el controlador **después** de que la acción se completó bien.
+
+## Migraciones de base de datos
+
+Los cambios de estructura de la base se guardan en `migraciones/`, con fecha en el nombre.
+Cada archivo se aplica **una vez** en cada base (la local y la del servidor):
+
+```bash
+mysql -u root cinfsa1 < migraciones/2026-10-02_auditoria.sql
+```
+
+Después de aplicar una migración en tu base local, regenerá `cinfsa1_schema.sql`
+(ver CLAUDE.md) para que la base de prueba también la tenga.
 
 ## Scripts de mantenimiento
 
@@ -203,6 +233,9 @@ y `USE` antes de importarlo.
 > borralo del servidor después de importarlo.
 >
 > ⚠️ No importes `cinfsa1_schema.sql` sobre esta base: hace `DROP TABLE` y la deja vacía.
+>
+> Si exportás tu base local actual, ya incluye todas las migraciones. Si la base del servidor
+> viene de una copia más vieja, aplicale los archivos de `migraciones/` que le falten.
 
 Las contraseñas se mudan cifradas (bcrypt) y siguen funcionando. Antes de exportar, conviene
 verificar que ningún usuario tenga la contraseña guardada sin cifrar (por ejemplo, editada a

@@ -177,7 +177,7 @@ class MovimientosWebController
             $db = ActiveRecord::getDB();
 
             // Verificar que la orden exista y no esté ya cancelada
-            $query = "SELECT estado FROM ordenes WHERE id_orden = ?";
+            $query = "SELECT estado, numero_orden, total FROM ordenes WHERE id_orden = ?";
             $stmt = $db->prepare($query);
             $stmt->bind_param('i', $idOrden);
             $stmt->execute();
@@ -205,6 +205,15 @@ class MovimientosWebController
                 if ($orden['estado'] === 'pagado') {
                     self::devolverStockOrden($idOrden);
                 }
+
+                \Classes\Auditoria::registrar(
+                    'orden.cancelar',
+                    "Canceló la compra online {$orden['numero_orden']} por $" . number_format((float)$orden['total'], 0, ',', '.'),
+                    'ordenes',
+                    $idOrden,
+                    ['estado' => $orden['estado']],
+                    ['estado' => 'cancelado']
+                );
 
                 echo json_encode(['ok' => true, 'mensaje' => 'Orden cancelada correctamente']);
             } else {

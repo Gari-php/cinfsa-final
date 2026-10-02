@@ -161,7 +161,7 @@ class ButacaController {
             $db = \Models\ActiveRecord::getDB();
             
             // Verificar que la butaca no esté reservada
-            $queryVerificar = "SELECT rela_estado_butaca FROM butacas WHERE id_butaca = '$idButaca'";
+            $queryVerificar = "SELECT rela_estado_butaca, fila_butaca, numero_butaca, rela_salas FROM butacas WHERE id_butaca = '$idButaca'";
             $resultado = $db->query($queryVerificar);
             
             if (!$resultado || $resultado->num_rows === 0) {
@@ -182,6 +182,19 @@ class ButacaController {
 
             if ($resultadoActualizar) {
                 $estadoTexto = $nuevoEstado == 1 ? 'disponible' : 'no disponible';
+
+                if ((int)$butaca['rela_estado_butaca'] !== (int)$nuevoEstado) {
+                    $textoEstado = fn($e) => (int)$e === 1 ? 'Disponible' : 'Bloqueada (mantenimiento)';
+                    \Classes\Auditoria::registrar(
+                        'butaca.estado',
+                        ($nuevoEstado == 1 ? 'Desbloqueó' : 'Bloqueó') . " la butaca F{$butaca['fila_butaca']}-C{$butaca['numero_butaca']} de la sala {$butaca['rela_salas']}",
+                        'butacas',
+                        $idButaca,
+                        ['estado' => $textoEstado($butaca['rela_estado_butaca'])],
+                        ['estado' => $textoEstado($nuevoEstado)]
+                    );
+                }
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => "Butaca marcada como $estadoTexto",

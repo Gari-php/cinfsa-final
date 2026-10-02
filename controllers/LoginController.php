@@ -5,6 +5,7 @@ namespace Controllers;
 use Models\Usuario;
 use Models\Funciones; // Agregar esta importación
 use MVC\Router;
+use Classes\Auditoria;
 use Classes\Email;
 
 
@@ -37,6 +38,18 @@ class LoginController
 
             // Mensaje genérico en ambos casos: no revelar si el usuario existe o no
             if (!$usuario || !password_verify($clave_input, $usuario->clave_usuario)) {
+                // Nunca se guarda lo que se escribió (podría ser una contraseña tipeada en el campo usuario)
+                Auditoria::registrar(
+                    'sesion.login_fallido',
+                    $usuario ? "Contraseña incorrecta para la cuenta {$usuario->nombre_usuario}" : 'Intento con un usuario inexistente',
+                    'usuarios',
+                    $usuario->id_usuario ?? null,
+                    null,
+                    null,
+                    $usuario
+                        ? ['id' => $usuario->id_usuario, 'nombre' => $usuario->nombre_usuario, 'perfil' => $usuario->rela_perfil]
+                        : ['id' => null, 'nombre' => null, 'perfil' => null]
+                );
                 echo json_encode(['error' => 'Usuario o contraseña incorrectos']);
                 return;
             }
@@ -60,6 +73,8 @@ class LoginController
             $_SESSION['email'] = $usuario->email;
             $_SESSION['perfil'] = (int)$usuario->rela_perfil;
             $_SESSION['login'] = true;
+
+            Auditoria::registrar('sesion.login', "Inició sesión", 'usuarios', $usuario->id_usuario);
 
             // Redirigir según tipo de usuario (ACTUALIZADO)
             $redirigir = match ($_SESSION['perfil']) {
@@ -266,6 +281,11 @@ class LoginController
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
+        }
+
+        // Antes de limpiar la sesión, para saber quién la cerró
+        if (!empty($_SESSION['login'])) {
+            Auditoria::registrar('sesion.logout', 'Cerró sesión', 'usuarios', $_SESSION['id_usuario'] ?? null);
         }
 
         // Limpiar todas las variables de sesión

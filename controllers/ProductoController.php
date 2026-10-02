@@ -149,6 +149,8 @@ class ProductoController
                 exit;
             }
 
+            $precioAnterior = $producto->precio_producto;
+
             $producto->nombre_producto_cantina = $_POST['nombre_producto_cantina'] ?? '';
             $producto->rela_estado_producto = $_POST['rela_estado_producto'] ?? '';
             $producto->precio_producto = $_POST['precio_producto'] ?? '';
@@ -185,6 +187,19 @@ class ProductoController
                     if (file_exists($rutaImagenAnterior)) {
                         unlink($rutaImagenAnterior);
                     }
+                }
+
+                if ((float)$precioAnterior !== (float)$producto->precio_producto) {
+                    \Classes\Auditoria::registrar(
+                        'precio.producto',
+                        "Cambió el precio de {$producto->nombre_producto_cantina}: $"
+                            . number_format((float)$precioAnterior, 0, ',', '.') . ' → $'
+                            . number_format((float)$producto->precio_producto, 0, ',', '.'),
+                        'productos_cantina',
+                        $producto->id_producto_cantina,
+                        ['precio' => (float)$precioAnterior],
+                        ['precio' => (float)$producto->precio_producto]
+                    );
                 }
 
                 echo json_encode([

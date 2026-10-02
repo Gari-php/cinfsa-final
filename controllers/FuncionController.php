@@ -19,6 +19,36 @@ class FuncionController
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
     }
 
+    // Datos de una función con nombres en vez de ids, para el registro de auditoría
+    private static function datosAuditoria($funcion): array
+    {
+        $db = \Models\ActiveRecord::getDB();
+        $buscar = function (string $sql, $id) use ($db) {
+            $id = (int)$id;
+            $stmt = $db->prepare($sql);
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_column() ?: null;
+        };
+
+        return [
+            'pelicula' => $buscar("SELECT titulo_pelicula FROM peliculas WHERE id_pelicula = ?", $funcion->rela_peliculas),
+            'fecha' => $funcion->fecha_hora,
+            'fecha_finalizacion' => $funcion->fecha_finalizacion,
+            'sala' => 'Sala ' . $funcion->rela_salas,
+            'turno' => substr((string)$buscar("SELECT turno_horario FROM turnos WHERE id_turnos = ?", $funcion->rela_turnos), 0, 5),
+            'tipo_entrada' => $buscar("SELECT tipo_entrada_desc FROM tipo_entradas WHERE id_tipo_entrada = ?", $funcion->rela_tipo_entrada),
+            'estado' => (int)$funcion->estado === 1 ? 'Activa' : 'Baja',
+        ];
+    }
+
+    // "función #12 (Duna III, 05/10/2026 21:00, Sala 1)"
+    private static function describirFuncion(array $d, $id): string
+    {
+        $fecha = $d['fecha'] ? date('d/m/Y', strtotime($d['fecha'])) : '';
+        return "función #$id ({$d['pelicula']}, $fecha {$d['turno']}, {$d['sala']})";
+    }
+
 
     public static function index(Router $router)
     {
@@ -155,6 +185,10 @@ class FuncionController
             $resultado = $funcion->crearFuncion();
 
             if ($resultado['resultado']) {
+                $idNueva = $resultado['id_insertado'] ?? null;
+                $datosNueva = self::datosAuditoria($funcion);
+                \Classes\Auditoria::registrar('funcion.crear', 'Creó la ' . self::describirFuncion($datosNueva, $idNueva), 'funciones', $idNueva, null, $datosNueva);
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Función creada correctamente',
@@ -241,6 +275,8 @@ class FuncionController
             exit;
         }
 
+        $datosAntes = self::datosAuditoria($funcion);
+
         // Actualizar propiedades
         $funcion->fecha_hora = $datos['fecha_hora'] ?? '';
         $funcion->fecha_finalizacion = $datos['fecha_finalizacion'] ?? '';
@@ -262,6 +298,19 @@ class FuncionController
         $resultado = $funcion->actualizar();
 
         if ($resultado) {
+            $datosDespues = self::datosAuditoria($funcion);
+            [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, $datosDespues, array_keys($datosDespues));
+            if ($antes) {
+                \Classes\Auditoria::registrar(
+                    'funcion.modificar',
+                    'Modificó la ' . self::describirFuncion($datosDespues, $funcion->id_funcion) . ' (' . implode(', ', array_keys($despues)) . ')',
+                    'funciones',
+                    $funcion->id_funcion,
+                    $antes,
+                    $despues
+                );
+            }
+
             echo json_encode([
                 'ok' => true,
                 'mensaje' => 'Función actualizada correctamente',
@@ -299,6 +348,7 @@ class FuncionController
         $resultado = $funcion->eliminarLogico();
 
         if ($resultado) {
+            \Classes\Auditoria::registrar('funcion.baja', 'Dio de baja la ' . self::describirFuncion(self::datosAuditoria($funcion), $id), 'funciones', $id);
             echo json_encode(['ok' => true, 'mensaje' => 'Función dada de baja correctamente']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al desactivar la Función']);
@@ -810,6 +860,22 @@ class FuncionController
             }
 
             $db->commit();
+
+            // Un solo registro de auditoría por tanda (no uno por función)
+            $stmtTitulo = $db->prepare("SELECT titulo_pelicula FROM peliculas WHERE id_pelicula = ?");
+            $idPeliculaInt = (int)$idPelicula;
+            $stmtTitulo->bind_param('i', $idPeliculaInt);
+            $stmtTitulo->execute();
+            $titulo = $stmtTitulo->get_result()->fetch_column() ?: "película #$idPelicula";
+            \Classes\Auditoria::registrar(
+                'funcion.crear',
+                "Creó {$funcionesCreadas} función(es) de $titulo, del " . date('d/m/Y', strtotime($fechaDesde)) . ' al ' . date('d/m/Y', strtotime($fechaHasta))
+                    . (!empty($conflictos) ? ' (' . count($conflictos) . ' omitida(s) por sala/turno ocupado)' : ''),
+                'peliculas',
+                $idPelicula,
+                null,
+                ['pelicula' => $titulo, 'desde' => $fechaDesde, 'hasta' => $fechaHasta, 'dias_semana' => $diasSemana, 'horarios' => count($horarios), 'funciones_creadas' => $funcionesCreadas]
+            );
 
             $mensaje = "Se crearon {$funcionesCreadas} función(es) correctamente";
             if (!empty($conflictos)) {

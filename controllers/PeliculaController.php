@@ -18,6 +18,31 @@ class PeliculaController
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
     }
 
+    // Datos de una película con nombres en vez de ids, para el registro de auditoría
+    private static function datosAuditoria($pelicula): array
+    {
+        $db = \Models\ActiveRecord::getDB();
+        $buscar = function (string $sql, $id) use ($db) {
+            $id = (int)$id;
+            $stmt = $db->prepare($sql);
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_column() ?: null;
+        };
+
+        return [
+            'titulo' => $pelicula->titulo_pelicula,
+            'anio' => $pelicula->anyo_pelicula,
+            'duracion_min' => $pelicula->duracion_pelicula,
+            'clasificacion' => $buscar("SELECT nombre_tipo_clasificacion FROM tipos_clasificaciones WHERE id_tipo_clasificacion = ?", $pelicula->rela_tipo_clasificacion),
+            'estado' => $buscar("SELECT nombre_estado_pelicula FROM estados_peliculas WHERE id_estado_pelicula = ?", $pelicula->rela_estado_pelicula),
+            'trailer' => $pelicula->trailer_url,
+            'imagen' => $pelicula->imagen_pelicula,
+            // La sinopsis es larga: solo interesa saber si cambió
+            'sinopsis' => md5((string)$pelicula->sinopsis_pelicula),
+        ];
+    }
+
     public static function index(Router $router)
     {
         if (!self::verificarAdmin()) {
@@ -187,6 +212,17 @@ class PeliculaController
                 $stmt->execute();
             }
 
+            $datosNueva = self::datosAuditoria($pelicula);
+            unset($datosNueva['sinopsis']);
+            \Classes\Auditoria::registrar(
+                'pelicula.crear',
+                "Creó la película {$pelicula->titulo_pelicula}" . ($pelicula->anyo_pelicula ? " ({$pelicula->anyo_pelicula})" : ''),
+                'peliculas',
+                $idPelicula,
+                null,
+                $datosNueva
+            );
+
             echo json_encode([
                 'ok' => true,
                 'mensaje' => 'Película guardada correctamente',
@@ -280,6 +316,8 @@ class PeliculaController
             exit;
         }
 
+        $datosAntes = self::datosAuditoria($pelicula);
+
         $pelicula->titulo_pelicula        = $_POST['titulo_pelicula'] ?? '';
         $pelicula->sinopsis_pelicula      = $_POST['sinopsis_pelicula'] ?? '';
         $pelicula->anyo_pelicula          = $_POST['anyo_pelicula'] ?? '';
@@ -344,6 +382,23 @@ class PeliculaController
                 $stmt->execute();
             }
 
+            [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, self::datosAuditoria($pelicula), array_keys($datosAntes));
+            if ($antes) {
+                // La sinopsis se compara por su huella: en el registro solo figura que cambió
+                if (isset($despues['sinopsis'])) {
+                    $antes['sinopsis'] = '(anterior)';
+                    $despues['sinopsis'] = '(modificada)';
+                }
+                \Classes\Auditoria::registrar(
+                    'pelicula.modificar',
+                    "Modificó la película {$pelicula->titulo_pelicula} (" . implode(', ', array_keys($despues)) . ')',
+                    'peliculas',
+                    $id_pelicula,
+                    $antes,
+                    $despues
+                );
+            }
+
             echo json_encode([
                 'ok'       => true,
                 'mensaje'  => 'Película actualizada correctamente',
@@ -369,8 +424,15 @@ class PeliculaController
             return;
         }
 
+        $peliculaBaja = Pelicula::find($id);
         $res = Pelicula::eliminarLogico($id);
         if ($res) {
+            \Classes\Auditoria::registrar(
+                'pelicula.baja',
+                'Dio de baja la película ' . ($peliculaBaja->titulo_pelicula ?? "#$id"),
+                'peliculas',
+                $id
+            );
             echo json_encode(['ok' => true, 'mensaje' => 'Película eliminada correctamente']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al eliminar']);

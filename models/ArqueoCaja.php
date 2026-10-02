@@ -316,4 +316,14 @@ class ArqueoCaja extends ActiveRecord
 
         return $cajas;
     }
+
+    // Nombre legible de una caja (ej. "Caja Principal Funciones") para el registro de auditoría
+    public static function nombreCaja($idCaja): string
+    {
+        $stmt = self::$db->prepare("SELECT nombre_caja FROM cajas WHERE id_caja = ?");
+        $idCaja = (int)$idCaja;
+        $stmt->bind_param('i', $idCaja);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_column() ?: "Caja #$idCaja";
+    }
 }

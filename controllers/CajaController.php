@@ -230,6 +230,15 @@ class CajaController {
 
                 $db->commit();
 
+                \Classes\Auditoria::registrar(
+                    'caja.abrir',
+                    'Abrió la ' . \Models\ArqueoCaja::nombreCaja($relaCaja) . ' con $' . number_format((float)$montoInicial, 0, ',', '.'),
+                    'arqueo_cajas',
+                    $idArqueo,
+                    null,
+                    ['caja' => (int)$relaCaja, 'monto_inicial' => (float)$montoInicial]
+                );
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Caja abierta correctamente',
@@ -336,6 +345,25 @@ class CajaController {
                 }
 
                 $db->commit();
+
+                \Classes\Auditoria::registrar(
+                    'caja.cerrar',
+                    'Cerró la ' . \Models\ArqueoCaja::nombreCaja($arqueo->rela_caja)
+                        . ' · esperado $' . number_format((float)$montoEsperadoEfectivo, 0, ',', '.')
+                        . ', declarado $' . number_format((float)$montoFinalDeclarado, 0, ',', '.')
+                        . ($diferencia != 0 ? ', diferencia ' . ($diferencia > 0 ? '+' : '-') . '$' . number_format(abs((float)$diferencia), 0, ',', '.') : ', sin diferencia'),
+                    'arqueo_cajas',
+                    $arqueo->id_arqueo_caja,
+                    null,
+                    [
+                        'caja' => (int)$arqueo->rela_caja,
+                        'monto_inicial' => (float)$arqueo->monto_inicial,
+                        'esperado_efectivo' => (float)$montoEsperadoEfectivo,
+                        'declarado' => (float)$montoFinalDeclarado,
+                        'diferencia' => (float)$diferencia,
+                        'total_ventas' => (float)$totalIngresos,
+                    ]
+                );
 
                 echo json_encode([
                     'ok' => true,

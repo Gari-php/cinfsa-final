@@ -43,6 +43,10 @@ Custom front-controller MVC, autoloaded via Composer PSR-4 (see `composer.json`)
 
 **Middlewares (`middlewares/`)**: currently just `ValidarModulo.php`, described above.
 
+**Audit log (`Classes\Auditoria`, admin tab "Control")**: sensitive actions are recorded in the `auditoria` table and listed read-only at `/administrador/auditoria/listado` (`AuditoriaController`, CSV export). When adding a sensitive action (money, prices, users/permissions, cancellations, CRUD of movies/functions), add its code to `Auditoria::ACCIONES` and call `Auditoria::registrar($accion, $descripcion, $entidad, $id, $antes, $despues)` **after** the action succeeded (after `commit()`), with human-readable values (names, not foreign-key ids). `Auditoria::cambios()` keeps only changed fields. It never throws, and it masks any key matching clave/password/contrase/token/secret — so don't name non-secret fields with those words. Never pass passwords or what a user typed in a failed login.
+
+**DB migrations**: schema changes go in `migraciones/AAAA-MM-DD_descripcion.sql` (applied once per database). After applying one locally, regenerate `cinfsa1_schema.sql` so the test DB matches.
+
 **Config**: read settings with the global `env('CLAVE', $defecto)` helper (`includes/funciones.php`), not `$_ENV` directly — `$_ENV` is empty under XAMPP's `variables_order`, so process-level overrides (like the test server's `DB_NAME`) would otherwise be ignored. `APP_ENV=production` hides errors and logs them to `logs/php_errors.log` (`includes/app.php`); `APP_URL` builds email links and MercadoPago back_urls. Unknown routes render `views/errores/404.php` (or JSON for AJAX/`/api/` requests).
 
 **Config/secrets**: `includes/config/mercadopago.php` and `api_keys/llave_cinfsa.php` hold hardcoded API keys/tokens checked into the repo (not `.env`-based) — treat any value in those files as already-committed and not fit for reuse; `.gitignore` only excludes `/vendor/` and `.env`. Some newer classes (`Email.php`, `Notificaciones.php`) read `$_ENV`/`getenv()` (via `vlucas/phpdotenv`) with fallbacks to the hardcoded XAMPP defaults (`root`/no password/`cinfsa1`) — there's no committed `.env.example`.

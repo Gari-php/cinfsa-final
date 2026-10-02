@@ -24,23 +24,6 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/ `cinfsa1` /*!40100 DEFAULT CHARACTER SE
 USE `cinfsa1`;
 
 --
--- Table structure for table `accesos`
---
-
-DROP TABLE IF EXISTS `accesos`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `accesos` (
-  `id_acceso` int(11) NOT NULL,
-  `fecha_acceso` varchar(45) DEFAULT NULL,
-  `rela_usuario` int(11) NOT NULL,
-  PRIMARY KEY (`id_acceso`),
-  KEY `fk_accesos_usuarios1_idx` (`rela_usuario`),
-  CONSTRAINT `fk_accesos_usuarios1` FOREIGN KEY (`rela_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `arqueo_cajas`
 --
 
@@ -66,6 +49,33 @@ CREATE TABLE `arqueo_cajas` (
   CONSTRAINT `arqueo_cajas_ibfk_1` FOREIGN KEY (`rela_usuario`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `arqueo_cajas_ibfk_2` FOREIGN KEY (`rela_caja`) REFERENCES `cajas` (`id_caja`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `auditoria`
+--
+
+DROP TABLE IF EXISTS `auditoria`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `auditoria` (
+  `id_auditoria` int(11) NOT NULL AUTO_INCREMENT,
+  `fecha` datetime NOT NULL DEFAULT current_timestamp(),
+  `id_usuario` int(11) DEFAULT NULL,
+  `nombre_usuario` varchar(45) DEFAULT NULL,
+  `perfil` varchar(45) DEFAULT NULL,
+  `accion` varchar(50) NOT NULL,
+  `entidad` varchar(50) DEFAULT NULL,
+  `id_entidad` int(11) DEFAULT NULL,
+  `descripcion` varchar(500) NOT NULL,
+  `datos_antes` text DEFAULT NULL,
+  `datos_despues` text DEFAULT NULL,
+  `ip` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id_auditoria`),
+  KEY `idx_auditoria_fecha` (`fecha`),
+  KEY `idx_auditoria_usuario` (`id_usuario`),
+  KEY `idx_auditoria_accion` (`accion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

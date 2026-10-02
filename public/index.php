@@ -44,6 +44,7 @@ use Controllers\ServicioController;
 USE Controllers\SoporteController;
 use Controllers\GastosController;
 use Controllers\ContactoController;
+use Controllers\AuditoriaController;
 use MVC\Router;
 
 $router= new Router();
@@ -486,6 +487,13 @@ $router->get('/administrador/movimientos-web/datos-grafico', [MovimientosWebCont
 $router->get('/administrador/movimientos-web/detalle', [MovimientosWebController::class, 'detalle']);
 $router->post('/administrador/movimientos-web/cancelar', [MovimientosWebController::class, 'cancelar']);
 $router->post('/administrador/movimientos-web/buscar', [MovimientosWebController::class, 'buscar']);
+
+// ==========================================
+// CONTROL - REGISTRO DE AUDITORÍA (solo lectura)
+// ==========================================
+$router->get('/administrador/auditoria/listado', [AuditoriaController::class, 'listado']);
+$router->get('/administrador/auditoria/exportar', [AuditoriaController::class, 'exportar']);
+
 //RUTAS DE PERFILES
 $router->get('/administrador/perfiles/listado', [PerfilController::class, 'index']);
 $router->get('/administrador/perfiles/crear', [PerfilController::class, 'crear']);

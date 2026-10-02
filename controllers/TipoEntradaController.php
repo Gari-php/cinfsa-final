@@ -127,6 +127,8 @@ class TipoEntradaController {
             exit;
         }
 
+        $precioAnterior = $tipos_entradas->precio_entrada;
+
         // Actualizar propiedades
         $tipos_entradas->tipo_entrada_desc = $datos['tipo_entrada_desc'] ?? '';
         $tipos_entradas->precio_entrada = $datos['precio_entrada'] ?? '';
@@ -144,9 +146,21 @@ class TipoEntradaController {
         $resultado = $tipos_entradas->actualizar();
 
         if ($resultado) {
+            if ((float)$precioAnterior !== (float)$tipos_entradas->precio_entrada) {
+                \Classes\Auditoria::registrar(
+                    'precio.tipo_entrada',
+                    "Cambió el precio de la entrada {$tipos_entradas->tipo_entrada_desc}: $"
+                        . number_format((float)$precioAnterior, 0, ',', '.') . ' → $'
+                        . number_format((float)$tipos_entradas->precio_entrada, 0, ',', '.'),
+                    'tipo_entradas',
+                    $tipos_entradas->id_tipo_entrada,
+                    ['precio' => (float)$precioAnterior],
+                    ['precio' => (float)$tipos_entradas->precio_entrada]
+                );
+            }
             echo json_encode([
-                'ok' => true, 
-                'mensaje' => 'Tipo de entrada actualizado correctamente', 
+                'ok' => true,
+                'mensaje' => 'Tipo de entrada actualizado correctamente',
                 'redirigir' => '/administrador/tipos_entradas/listado'
             ]);
         } else {

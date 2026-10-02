@@ -617,6 +617,15 @@ class VentasConsultaControllerP
 
                 $db->commit();
 
+                \Classes\Auditoria::registrar(
+                    'devolucion.productos',
+                    "Devolvió $" . number_format($montoTotalDevolucion, 0, ',', '.') . " de la venta de productos #{$idVenta} ({$itemsDevueltos} ítem(s))",
+                    'cabecera_fact_cantina',
+                    $idVenta,
+                    null,
+                    ['monto' => $montoTotalDevolucion, 'items' => $itemsDevueltos, 'motivo' => $motivo]
+                );
+
                 error_log("🎉 DEVOLUCIÓN EXITOSA - Venta #{$idVenta} - Monto: {$montoTotalDevolucion} - Items: {$itemsDevueltos}");
 
                 echo json_encode([

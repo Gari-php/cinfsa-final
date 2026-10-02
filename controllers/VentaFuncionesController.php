@@ -883,6 +883,15 @@ class VentaFuncionesController
 
             $db->commit();
 
+            \Classes\Auditoria::registrar(
+                'devolucion.entrada',
+                "Devolvió $" . number_format($monto, 0, ',', '.') . " ({$formaPagoDesc}) por la entrada #{$idEntrada} - {$entrada['titulo_pelicula']}",
+                'entradas',
+                $idEntrada,
+                null,
+                ['monto' => $monto, 'forma_pago' => $formaPagoDesc, 'caja_arqueo' => $idArqueo, 'observaciones' => $observaciones]
+            );
+
             $mensajeFinal = $esEfectivo
                 ? "✅ Devolución de \${$monto} procesada en efectivo"
                 : "⏳ Devolución de \${$monto} registrada como pendiente — procesala por transferencia desde administración";

@@ -4,6 +4,7 @@ namespace Controllers;
 
 use Models\Entrada;
 use MVC\Router;
+use Classes\Auditoria;
 use Classes\Paginador;
 use Classes\ExportadorDatos;
 
@@ -17,6 +18,30 @@ class EntradaController
             session_start();
         }
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
+    }
+
+    // "Entrada #242 (Duna III, 05/10/2026 21:00, butaca F3-C7)" para el registro de auditoría
+    private static function describirEntrada(int $idEntrada): string
+    {
+        $stmt = \Models\ActiveRecord::getDB()->prepare(
+            "SELECT p.titulo_pelicula, f.fecha_hora, t.turno_horario, b.fila_butaca, b.numero_butaca
+             FROM entradas e
+             INNER JOIN funciones f ON f.id_funcion = e.rela_funcion
+             INNER JOIN peliculas p ON p.id_pelicula = f.rela_peliculas
+             INNER JOIN turnos t ON t.id_turnos = f.rela_turnos
+             LEFT JOIN butacas_vendidas bv ON bv.id_entrada = e.id_entrada
+             LEFT JOIN butacas b ON b.id_butaca = bv.id_butaca
+             WHERE e.id_entrada = ?"
+        );
+        $stmt->bind_param('i', $idEntrada);
+        $stmt->execute();
+        $d = $stmt->get_result()->fetch_assoc();
+        if (!$d) {
+            return "Entrada #$idEntrada";
+        }
+        $funcion = date('d/m/Y', strtotime($d['fecha_hora'])) . ' ' . substr($d['turno_horario'], 0, 5);
+        $butaca = $d['fila_butaca'] ? ", butaca F{$d['fila_butaca']}-C{$d['numero_butaca']}" : '';
+        return "Entrada #$idEntrada ({$d['titulo_pelicula']}, $funcion$butaca)";
     }
 
 
@@ -244,6 +269,7 @@ class EntradaController
         $resultado = $entrada->eliminar();
 
         if ($resultado) {
+            Auditoria::registrar('entrada.cancelar', 'Canceló la ' . lcfirst(self::describirEntrada((int)$id)), 'entradas', $id);
             echo json_encode(['ok' => true, 'mensaje' => 'Entrada cancelada correctamente. La butaca quedó disponible para esta función.']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al cancelar la entrada']);
@@ -388,6 +414,7 @@ class EntradaController
             return;
         }
 
+        Auditoria::registrar('entrada.restaurar', 'Restauró la ' . lcfirst(self::describirEntrada((int)$id)), 'entradas', $id);
         echo json_encode(['ok' => true, 'mensaje' => 'Entrada restaurada correctamente']);
     }
 

@@ -43,9 +43,26 @@ class ModulosController {
             }
             
             $db = \Models\ActiveRecord::getDB();
-            
+
+            // Registro de auditoría del cambio de permiso (se llama solo si se guardó bien)
+            $registrarPermiso = function ($estadoAntes) use ($db, $idPerfil, $idModulo, $estado) {
+                $stmtNombre = $db->prepare("SELECT modulo_nombre FROM modulos WHERE id_modulo = ?");
+                $stmtNombre->bind_param('i', $idModulo);
+                $stmtNombre->execute();
+                $modulo = $stmtNombre->get_result()->fetch_column() ?: "módulo #$idModulo";
+                $perfil = \Classes\Auditoria::perfil($idPerfil);
+                \Classes\Auditoria::registrar(
+                    'permisos.modulos',
+                    $estado ? "Le dio el módulo $modulo al perfil $perfil" : "Le quitó el módulo $modulo al perfil $perfil",
+                    'modulo_x_tipos_de_usuarios',
+                    $idModulo,
+                    ['perfil' => $perfil, 'modulo' => $modulo, 'activo' => $estadoAntes === null ? 'sin asignar' : ($estadoAntes ? 'sí' : 'no')],
+                    ['perfil' => $perfil, 'modulo' => $modulo, 'activo' => $estado ? 'sí' : 'no']
+                );
+            };
+
             // Verificar si ya existe la relación
-            $query = "SELECT id_mod_x_tipo FROM modulo_x_tipos_de_usuarios 
+            $query = "SELECT id_mod_x_tipo, estado FROM modulo_x_tipos_de_usuarios
                       WHERE rela_tipos_de_usuarios = ? AND rela_modulo = ?";
             $stmt = $db->prepare($query);
             $stmt->bind_param("ii", $idPerfil, $idModulo);
@@ -63,6 +80,9 @@ class ModulosController {
                 $success = $stmtUpdate->execute();
                 
                 if ($success) {
+                    if ((int)$existe['estado'] !== (int)$estado) {
+                        $registrarPermiso((int)$existe['estado']);
+                    }
                     echo json_encode([
                         'ok' => true,
                         'mensaje' => $estado ? 'Módulo activado correctamente' : 'Módulo desactivado correctamente'
@@ -80,6 +100,7 @@ class ModulosController {
                 $success = $stmtInsert->execute();
                 
                 if ($success) {
+                    $registrarPermiso(null);
                     echo json_encode([
                         'ok' => true,
                         'mensaje' => 'Módulo asignado correctamente'

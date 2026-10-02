@@ -213,6 +213,18 @@
                     </ul>
                 </li>
             <?php endif; ?>
+
+            <?php if ($_SESSION['perfil'] == 3): // Solo administrador
+            ?>
+                <li class="modulo-nav dropdown">
+                    <a href="#" class="dropdown-toggle" aria-expanded="false">
+                        <i class="fa-solid fa-shield-halved"></i> Control
+                    </a>
+                    <ul class="dropdown-menu" aria-hidden="true">
+                        <li><a href="/administrador/auditoria/listado">Registro de auditoría</a></li>
+                    </ul>
+                </li>
+            <?php endif; ?>
         </ul>
     </nav>
     <div class="capa"></div>
@@ -311,7 +323,17 @@
                     </div>
                 <?php endif; ?>
 
-                <?php if ($_SESSION['perfil'] == 3): // Solo administrador 
+                <div class="menu-modulo">
+                    <a href="#" class="modulo-toggle" data-target="lateral-ventas-web">
+                        <i class="fa-solid fa-globe"></i> Ventas Web <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </a>
+                    <div class="submenu-lateral" id="lateral-ventas-web">
+                        <a href="/administrador/movimientos-web/listado">• Listado de Órdenes</a>
+                        <a href="/administrador/movimientos-web/reportes">• Reportes Estadísticos</a>
+                    </div>
+                </div>
+
+                <?php if ($_SESSION['perfil'] == 3): // Solo administrador
                 ?>
                     <div class="menu-modulo">
                         <a href="#" class="modulo-toggle" data-target="lateral-sistema">
@@ -320,6 +342,26 @@
                         <div class="submenu-lateral" id="lateral-sistema">
                             <a href="/administrador/modulos/asignar">• Gestionar Módulos</a>
                             <a href="/administrador/perfiles/listado">• Gestionar Perfiles</a>
+                        </div>
+                    </div>
+
+                    <div class="menu-modulo">
+                        <a href="#" class="modulo-toggle" data-target="lateral-proveedores">
+                            <i class="fa-solid fa-truck"></i> Proveedores <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </a>
+                        <div class="submenu-lateral" id="lateral-proveedores">
+                            <a href="/administrador/proveedores/listado">• Gestionar Proveedores</a>
+                            <a href="/administrador/servicios/listado">• Gestionar Servicios</a>
+                            <a href="/administrador/gastos/listado">• Realizar Gastos</a>
+                        </div>
+                    </div>
+
+                    <div class="menu-modulo">
+                        <a href="#" class="modulo-toggle" data-target="lateral-control">
+                            <i class="fa-solid fa-shield-halved"></i> Control <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </a>
+                        <div class="submenu-lateral" id="lateral-control">
+                            <a href="/administrador/auditoria/listado">• Registro de auditoría</a>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -943,6 +985,8 @@
             padding: 0;
             margin: 0;
             display: flex;
+            /* Si las pestañas no entran en una línea, pasan a la siguiente en vez de salirse de la barra */
+            flex-wrap: wrap;
             justify-content: space-around;
             align-items: center;
         }
@@ -964,6 +1008,12 @@
 
         .modulo-nav:hover>a {
             background-color: rgba(0, 0, 0, 0.12);
+        }
+
+        /* La agrega el script al abrir un menú que se saldría por la derecha de la pantalla */
+        .dropdown-menu.abre-izquierda {
+            left: auto;
+            right: 0;
         }
 
         .dropdown-menu {
@@ -1240,7 +1290,14 @@
 
                         if (this.classList.contains('dropdown-toggle')) {
                             this.setAttribute('aria-expanded', 'true');
-                            if (submenu) submenu.setAttribute('aria-hidden', 'false');
+                            if (submenu) {
+                                submenu.setAttribute('aria-hidden', 'false');
+                                // Si el menú se saldría por la derecha (pestaña contra el borde), se abre hacia la izquierda
+                                submenu.classList.remove('abre-izquierda');
+                                if (submenu.getBoundingClientRect().right > window.innerWidth - 8) {
+                                    submenu.classList.add('abre-izquierda');
+                                }
+                            }
                         }
                     }
                 });

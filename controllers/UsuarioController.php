@@ -137,6 +137,20 @@ class UsuarioController
         $resUsuario = $usuario->crear();
 
         if ($resUsuario['resultado']) {
+            \Classes\Auditoria::registrar(
+                'usuario.crear',
+                "Creó el usuario {$usuario->nombre_usuario} (" . \Classes\Auditoria::perfil($usuario->rela_perfil) . ")",
+                'usuarios',
+                $resUsuario['id'] ?? null,
+                null,
+                [
+                    'nombre_usuario' => $usuario->nombre_usuario,
+                    'email' => $usuario->email,
+                    'perfil' => \Classes\Auditoria::perfil($usuario->rela_perfil),
+                    'nombre' => trim("{$persona->nombre_persona} {$persona->apellido_persona}"),
+                ]
+            );
+
             // Enviar email de confirmación
             try {
                 $email = new \Classes\Email($usuario->email, $usuario->nombre_usuario, $usuario->token_verificacion);
@@ -233,6 +247,10 @@ class UsuarioController
             exit;
         }
 
+        // Foto de los datos antes de editar, para el registro de auditoría
+        $camposAuditados = ['nombre_persona', 'apellido_persona', 'fecha_nacimiento', 'rela_sexo', 'nombre_usuario', 'email', 'rela_perfil'];
+        $datosAntes = array_merge((array)$persona, (array)$usuario);
+
         // Actualizar datos de persona
         $persona->nombre_persona = $datos['nombre_persona'] ?? '';
         $persona->apellido_persona = $datos['apellido_persona'] ?? '';
@@ -298,6 +316,27 @@ class UsuarioController
         $resUsuario = $usuario->guardar();
 
         if ($resPersona['resultado'] && $resUsuario['resultado']) {
+            [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, array_merge((array)$persona, (array)$usuario), $camposAuditados);
+            foreach (['rela_perfil'] as $campo) {
+                if (isset($antes[$campo])) $antes[$campo] = \Classes\Auditoria::perfil($antes[$campo]);
+                if (isset($despues[$campo])) $despues[$campo] = \Classes\Auditoria::perfil($despues[$campo]);
+            }
+            // De la contraseña solo se registra que cambió, nunca su valor
+            $cambioClave = !empty($datos['clave_usuario']);
+            if ($antes || $cambioClave) {
+                $detalle = array_keys($despues);
+                if ($cambioClave) $detalle[] = 'contraseña';
+                \Classes\Auditoria::registrar(
+                    'usuario.modificar',
+                    "Modificó el usuario {$usuario->nombre_usuario} (" . implode(', ', $detalle) . ')',
+                    'usuarios',
+                    $usuario->id_usuario,
+                    $antes ?: null,
+                    // (la clave del aviso no puede contener "contraseña": Auditoria ocultaría su valor)
+                    $despues + ($cambioClave ? ['cambio_credenciales' => 'sí'] : [])
+                );
+            }
+
             echo json_encode([
                 'ok' => true,
                 'mensaje' => 'Usuario actualizado correctamente',
@@ -334,6 +373,7 @@ class UsuarioController
         $resultado = Usuario::eliminarLogico($id);
 
         if ($resultado) {
+            \Classes\Auditoria::registrar('usuario.baja', "Dio de baja al usuario {$usuario->nombre_usuario}", 'usuarios', $id);
             echo json_encode(['ok' => true, 'mensaje' => 'Usuario dado de baja correctamente']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al eliminar el usuario']);
