@@ -25,6 +25,10 @@ class Router {
 
     public function comprobarRutas()
     {
+        // Muchos controladores hacen `echo json_encode(...)` sin declarar el Content-Type:
+        // este filtro lo agrega al enviar la respuesta (también si el controlador termina con exit)
+        ob_start([$this, 'marcarRespuestaJson']);
+
         // Iniciar sesión si no está iniciada
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -72,6 +76,29 @@ class Router {
         } else {
             $this->mostrar404();
         }
+    }
+
+    /**
+     * Output handler: si la respuesta es JSON y el controlador no definió un Content-Type,
+     * la marca como application/json. Si ya hay uno (PDF, Excel, JSON) o es HTML, no la toca.
+     */
+    public function marcarRespuestaJson(string $salida): string
+    {
+        if (headers_sent()) {
+            return $salida;
+        }
+        foreach (headers_list() as $cabecera) {
+            if (stripos($cabecera, 'Content-Type:') === 0) {
+                return $salida;
+            }
+        }
+
+        $texto = trim($salida);
+        if ($texto !== '' && ($texto[0] === '{' || $texto[0] === '[') && json_decode($texto) !== null) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+
+        return $salida;
     }
 
     /**

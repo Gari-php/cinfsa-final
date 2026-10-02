@@ -7,11 +7,6 @@ const pedirSinSeguir = (url) =>
     status: r.status,
     destino: r.redirectedToUrl || '',
   }));
-
-// Algunas APIs responden JSON con Content-Type text/html: se parsea igual
-const jsonDe = (url) =>
-  cy.request(url).its('body').then((body) => (typeof body === 'string' ? JSON.parse(body) : body));
-
 describe('Login por rol', () => {
   beforeEach(() => {
     cy.clearCookies();
@@ -80,7 +75,8 @@ describe('Control de acceso', () => {
       expect(status).to.eq(302);
       expect(destino).to.match(/\/$/);
     });
-    jsonDe('/vendedorproductos/api/resumen-cierre').its('mensaje').should('eq', 'No autorizado');
+    // la API responde con Content-Type JSON, así Cypress la interpreta como objeto
+    cy.request('/vendedorproductos/api/resumen-cierre').its('body.mensaje').should('eq', 'No autorizado');
   });
 
   it('el vendedor de productos abre su caja pero no la de funciones', () => {
@@ -90,7 +86,7 @@ describe('Control de acceso', () => {
       expect(status).to.eq(302);
       expect(destino).to.match(/\/$/);
     });
-    jsonDe('/api/caja/verificar').its('mensaje').should('eq', 'No autorizado');
+    cy.request('/api/caja/verificar').its('body.mensaje').should('eq', 'No autorizado');
   });
 
   it('el administrador puede ver ambas cajas', () => {
