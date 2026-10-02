@@ -91,7 +91,7 @@ npm run test:servidor   # = php -S localhost:3000 -t public tests/servidor_prueb
 En otra:
 
 ```bash
-npm run test:e2e        # headless
+npm run test:e2e        # headless, en Chrome (Electron, el navegador por defecto de Cypress, se colgaba)
 npx cypress open        # modo interactivo
 ```
 

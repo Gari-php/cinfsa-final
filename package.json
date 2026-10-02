@@ -6,7 +6,7 @@
     "test:rapido": "php scripts/prueba_rapida.php",
     "test:preparar-base": "php tests/preparar_base_pruebas.php",
     "test:servidor": "php -S localhost:3000 -t public tests/servidor_pruebas.php",
-    "test:e2e": "cypress run"
+    "test:e2e": "cypress run --browser chrome --headless"
   },
   "repository": {
     "type": "git",
