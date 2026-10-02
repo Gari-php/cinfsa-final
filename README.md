@@ -155,3 +155,101 @@ por sí solo) y guarda la salida en `logs/cron.log`, donde se puede confirmar qu
 */15 * * * * php /ruta/al/proyecto/scripts/expirar_entradas_cron.php >> /ruta/al/proyecto/logs/cron.log 2>&1
 */15 * * * * php /ruta/al/proyecto/scripts/limpiar_reservas_expiradas.php >> /ruta/al/proyecto/logs/cron.log 2>&1
 ```
+
+## Pasar a producción
+
+Guía para mudar el sistema desde XAMPP a un servidor (hosting) **conservando todos los datos**.
+
+### Requisitos del servidor
+
+- PHP 8.1 o superior, con las extensiones `mysqli`, `curl`, `openssl`, `mbstring` y `json`
+  (casi todos los hostings las traen activadas)
+- MySQL o MariaDB
+- Composer (o subir la carpeta `vendor/` ya instalada)
+- HTTPS (MercadoPago lo exige para volver al sitio después del pago)
+- Poder programar tareas cada 15 minutos (cron)
+
+### 1. Subir el código
+
+```bash
+git clone https://github.com/Gari-php/cinfsa-final.git
+cd cinfsa-final
+composer install --no-dev
+```
+
+**El dominio tiene que apuntar a la carpeta `public/`**, no a la raíz del proyecto. Así no
+quedan accesibles desde internet `.env`, `vendor/`, los scripts ni el esquema de la base.
+En cPanel se configura en "Dominios" → raíz del documento.
+
+### 2. Llevar la base de datos
+
+En tu PC, exportá la base completa (estructura + datos):
+
+```bash
+C:\xampp\mysql\bin\mysqldump.exe -u root --routines --databases cinfsa1 > cinfsa1_completa.sql
+```
+
+(o desde phpMyAdmin: base `cinfsa1` → Exportar → Ejecutar).
+
+En el servidor, creá la base y el usuario desde el panel del hosting e importá el archivo
+(phpMyAdmin → Importar, o `mysql -u USUARIO -p NOMBRE_BASE < cinfsa1_completa.sql`).
+Si el hosting asigna otro nombre a la base, borrá del archivo las líneas `CREATE DATABASE`
+y `USE` antes de importarlo.
+
+> ⚠️ `cinfsa1_completa.sql` tiene datos personales de clientes: **no lo subas a GitHub** y
+> borralo del servidor después de importarlo.
+>
+> ⚠️ No importes `cinfsa1_schema.sql` sobre esta base: hace `DROP TABLE` y la deja vacía.
+
+Las contraseñas se mudan cifradas (bcrypt) y siguen funcionando. Antes de exportar, conviene
+verificar que ningún usuario tenga la contraseña guardada sin cifrar (por ejemplo, editada a
+mano en phpMyAdmin): esos usuarios no pueden iniciar sesión.
+
+### 3. Copiar las imágenes subidas
+
+No están ni en la base ni en GitHub. Copiá estas carpetas de tu PC al servidor, en la misma ruta:
+
+```
+public/assets/img/peliculas/
+public/assets/img/productos/
+public/assets/img/perfiles/
+public/assets/img/cantina/
+public/uploads/
+```
+
+El servidor web tiene que poder **escribir** en ellas (para nuevas subidas) y en `logs/`.
+
+### 4. Crear el `.env` del servidor
+
+Partí de `.env.example`. Diferencias con el de tu PC:
+
+```
+APP_ENV=production
+APP_URL=https://www.TU-DOMINIO.com
+
+DB_HOST=localhost
+DB_USER=USUARIO_DEL_HOSTING
+DB_PASSWORD=CONTRASEÑA_DE_ESA_BASE
+DB_NAME=NOMBRE_DE_LA_BASE
+
+MP_ACCESS_TOKEN=APP_USR-...   # credenciales de PRODUCCIÓN de MercadoPago, no las de prueba
+MP_PUBLIC_KEY=APP_USR-...
+```
+
+SendGrid y Pusher pueden usar las mismas claves de siempre. Con `APP_ENV=production` los
+errores no se muestran en pantalla y quedan en `logs/php_errors.log`.
+
+### 5. Programar las tareas
+
+Configurá en el cron del hosting las dos líneas de
+[Scripts de mantenimiento](#scripts-de-mantenimiento), con la ruta real del proyecto.
+Si `php` no es el comando correcto, el panel suele indicar la ruta (por ejemplo `/usr/local/bin/php`).
+
+### 6. Verificar
+
+- [ ] El sitio abre en `https://` y muestra la cartelera con imágenes
+- [ ] Los administradores y un vendedor pueden iniciar sesión
+- [ ] Una página inexistente muestra la página 404 (y no un error de PHP)
+- [ ] Llega el mail de "¿Olvidaste tu contraseña?" y su link abre el sitio (confirma `APP_URL` y SendGrid)
+- [ ] Una compra real de bajo monto: el pago vuelve al sitio, se asigna la entrada y llega el mail
+- [ ] Después de 15 minutos, `logs/cron.log` tiene líneas nuevas
