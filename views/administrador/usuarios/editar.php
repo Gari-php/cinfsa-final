@@ -56,7 +56,7 @@
             <label for="clave_usuario">Nueva Contraseña (opcional)</label>
             <div class="input-con-icono">
                 <input type="password" name="clave_usuario" id="clave_usuario" placeholder="Nueva contraseña">
-                <span class="icono" onclick="togglePassword('clave_usuario', this)">👁‍🗨</span>
+                <span class="icono" data-mostrar-password="clave_usuario" role="button" tabindex="0" aria-label="Mostrar contraseña" title="Mostrar contraseña"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
             </div>
         </div>
 
@@ -270,11 +270,4 @@
 
 <script type="module" src="/assets/js/formularios.js"></script>
 
-<script>
-    function togglePassword(id, icono) {
-        const input = document.getElementById(id);
-        const isPassword = input.type === "password";
-        input.type = isPassword ? "text" : "password";
-        icono.textContent = isPassword ? "🚫" : "👁‍🗨";
-    }
-</script>
+<script src="/assets/js/mostrar-password.js"></script>

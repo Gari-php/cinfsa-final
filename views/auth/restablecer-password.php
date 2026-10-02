@@ -20,7 +20,7 @@
                 <label for="password">Nueva contraseña</label>
                 <div class="input-con-icono">
                     <input type="password" id="password" name="password" placeholder="Nueva contraseña">
-                    <span class="icono" onclick="togglePassword('password', this)">👁‍🗨</span>
+                    <span class="icono" data-mostrar-password="password" role="button" tabindex="0" aria-label="Mostrar contraseña" title="Mostrar contraseña"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
                 </div>    
             </div>
 
@@ -28,7 +28,7 @@
                 <label for="confirm_password">Confirmar contraseña</label>
                 <div class="input-con-icono">
                     <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmar contraseña">
-                    <span class="icono" onclick="togglePassword('confirm_password', this)">👁‍🗨</span>
+                    <span class="icono" data-mostrar-password="confirm_password" role="button" tabindex="0" aria-label="Mostrar contraseña" title="Mostrar contraseña"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
                 </div>
             </div>
 
@@ -42,13 +42,6 @@
     </div>
 
     <script type="module" src="/assets/js/formularios.js"></script>
-    <script>
-    function togglePassword(id, icono) {
-        const input = document.getElementById(id);
-        const isPassword = input.type === "password";
-        input.type = isPassword ? "text" : "password";
-        icono.textContent = isPassword ? "🚫" : "👁‍🗨";
-    }
-    </script>
+    <script src="/assets/js/mostrar-password.js"></script>
 <?php endif; ?>
 

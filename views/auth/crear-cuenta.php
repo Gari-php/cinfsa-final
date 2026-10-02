@@ -39,14 +39,14 @@
             <label for="password">Contraseña</label>
             <div class="input-con-icono">
                 <input type="password" name="password" id="password" placeholder="Contraseña">
-                <span class="icono" onclick="togglePassword('password', this)">👁‍🗨</span>
+                <span class="icono" data-mostrar-password="password" role="button" tabindex="0" aria-label="Mostrar contraseña" title="Mostrar contraseña"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
             </div>
         </div>
         <div class="campo">     
             <label for="confirm_password">Repetir Contraseña</label>
             <div class="input-con-icono">
                 <input type="password" name="confirm_password" id="confirm_password" placeholder="Repite la contraseña">
-                <span class="icono" onclick="togglePassword('confirm_password', this)">👁‍🗨</span>
+                <span class="icono" data-mostrar-password="confirm_password" role="button" tabindex="0" aria-label="Mostrar contraseña" title="Mostrar contraseña"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
             </div>
         </div>
 
@@ -60,11 +60,4 @@
 </div>
 
 <script type="module" src="/assets/js/formularios.js"></script>
-<script>
-function togglePassword(id, icono) {
-    const input = document.getElementById(id);
-    const isPassword = input.type === "password";
-    input.type = isPassword ? "text" : "password";
-    icono.textContent = isPassword ? "🚫" : "👁‍🗨";
-}
-</script>
+<script src="/assets/js/mostrar-password.js"></script>
