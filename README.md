@@ -102,7 +102,10 @@ Cada archivo de tests recrea `cinfsa1_test` antes de empezar. Cubren:
 | `auth/login-roles.cy.js` | Login de cada rol, credenciales inválidas y acceso entre módulos |
 | `caja/caja-funciones.cy.js` | Apertura de caja, venta en boletería, cierre y arqueo (con y sin faltante) |
 | `compra/compra-online.cy.js` | Butacas → carrito → checkout (MercadoPago simulado) y butacas vendidas bloqueadas |
+| `compra/butaca-no-disponible.cy.js` | Una butaca del carrito vendida o reservada por otro: aviso en el checkout y pago rechazado |
+| `compra/entrada-cancelada.cy.js` | Cancelar una entrada libera la butaca en esa función; restaurar solo si sigue libre |
 | `turnos/crear-turnos.cy.js` | Formulario de alta de turnos |
+| `formularios/errores-un-modal.cy.js` | En todas las pantallas de crear/editar del admin, los errores se marcan en su campo y aparecen en un solo modal |
 
 Usuarios de prueba (contraseña `Prueba123!`): `admin_test`, `vfunciones_test`,
 `vproductos_test`, `cliente_test`, `cliente2_test` (ver `cypress/fixtures/usuarios.json`).

@@ -46,7 +46,7 @@
                             <td><?= $s->id_servicio ?></td>
                             <td style="font-size: 11px;">
                                 <strong><?= htmlspecialchars($s->razon_social) ?></strong><br>
-                                <span style="color: #a0aec0;"><?= htmlspecialchars($s->nombre_comercial) ?></span>
+                                <span style="color: #a0aec0;"><?= s($s->nombre_comercial) ?></span>
                             </td>
                             <td><?= htmlspecialchars($s->nombre_servicio) ?></td>
                             <td style="font-family: monospace; font-size: 11px;"><?= $s->codigo_servicio ?: '-' ?></td>

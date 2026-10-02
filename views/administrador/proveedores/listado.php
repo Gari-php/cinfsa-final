@@ -44,7 +44,7 @@
                         <tr>
                             <td><?= $p->id_proveedor ?></td>
                             <td><?= htmlspecialchars($p->razon_social) ?></td>
-                            <td><?= htmlspecialchars($p->nombre_comercial) ?></td>
+                            <td><?= s($p->nombre_comercial) ?></td>
                             <td style="font-family: monospace;"><?= $p->rut ?></td>
                             <td>
                                 <?php

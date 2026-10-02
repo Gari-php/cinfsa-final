@@ -130,7 +130,7 @@
                     <?php foreach ($proveedores as $proveedor): ?>
                         <option value="<?= $proveedor->id_proveedor ?>" <?= $gasto->rela_proveedor == $proveedor->id_proveedor ? 'selected' : '' ?>>
                             <?= htmlspecialchars($proveedor->razon_social) ?>
-                            (<?= htmlspecialchars($proveedor->nombre_comercial) ?>)
+                            (<?= s($proveedor->nombre_comercial) ?>)
                         </option>
                     <?php endforeach; ?>
                 <?php endif; ?>

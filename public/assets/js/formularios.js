@@ -111,13 +111,12 @@ function mostrarErrorCampo(input, mensaje) {
 }
 
 
+// Marca en rojo cada campo con su error. Devuelve los errores que no corresponden a ningún campo.
 function mostrarErroresEspecificos(formulario, errores) {
     limpiarErroresCampos(formulario);
+    const sinCampo = [];
 
-
-    errores.forEach((error, index) => {
-        console.log(`\n--- ERROR ${index + 1}: "${error}" ---`);
-
+    errores.forEach((error) => {
         const mapeoErrores = {
             // ==========================================
             // USUARIOS - FORMULARIO DE REGISTRO (PRIORIDAD ALTA)
@@ -524,91 +523,59 @@ function mostrarErroresEspecificos(formulario, errores) {
             ]
         };
 
-        // NUEVA LÓGICA DE BÚSQUEDA - PRIORIDAD POR ESPECIFICIDAD
-        let inputEncontrado = null;
-        let campoEncontrado = '';
+        // Un mismo mensaje puede figurar en varios campos (ej. "password" en crear cuenta y
+        // "clave_usuario" en editar usuario): solo se consideran los campos que existen en
+        // ESTE formulario. Gana la coincidencia exacta; si no hay, la parcial más larga.
         const errorLower = error.toLowerCase();
-
-        console.log(`🔎 Buscando coincidencias para: "${errorLower}"`);
-
-        // FASE 1: BUSCAR COINCIDENCIAS EXACTAS (más específicas)
-        let mejorCoincidencia = null;
-        let longitudMejorCoincidencia = 0;
+        let mejor = null; // { input, exacta, longitud }
 
         for (const [nombreCampo, palabrasClave] of Object.entries(mapeoErrores)) {
             for (const palabra of palabrasClave) {
                 const palabraLower = palabra.toLowerCase();
+                const exacta = errorLower === palabraLower;
+                if (!exacta && !errorLower.includes(palabraLower)) continue;
 
-                // COINCIDENCIA EXACTA - máxima prioridad
-                if (errorLower === palabraLower) {
-                    mejorCoincidencia = {
-                        campo: nombreCampo,
-                        tipo: 'EXACTA',
-                        palabra: palabra,
-                        longitud: palabra.length
-                    };
-                    console.log(`    ✅ COINCIDENCIA EXACTA: "${palabra}" === "${error}"`);
-                    break;
-                }
+                const esMejor = !mejor
+                    || (exacta && !mejor.exacta)
+                    || (exacta === mejor.exacta && palabraLower.length > mejor.longitud);
+                if (!esMejor) continue;
 
-                // COINCIDENCIA PARCIAL - menor prioridad, pero guardamos la más larga
-                if (errorLower.includes(palabraLower) && palabraLower.length > longitudMejorCoincidencia) {
-                    mejorCoincidencia = {
-                        campo: nombreCampo,
-                        tipo: 'PARCIAL',
-                        palabra: palabra,
-                        longitud: palabraLower.length
-                    };
-                }
-            }
-
-            // Si encontramos una coincidencia exacta, salir inmediatamente
-            if (mejorCoincidencia && mejorCoincidencia.tipo === 'EXACTA') {
-                break;
+                const input = buscarInputDeCampo(formulario, nombreCampo);
+                if (input) mejor = { input, exacta, longitud: palabraLower.length };
             }
         }
 
-        // FASE 2: USAR LA MEJOR COINCIDENCIA ENCONTRADA
-        if (mejorCoincidencia) {
-            campoEncontrado = mejorCoincidencia.campo;
-            console.log(`  ✅ Mejor coincidencia: ${mejorCoincidencia.tipo} - Campo: ${campoEncontrado} - Palabra: "${mejorCoincidencia.palabra}"`);
-
-            // ESTRATEGIAS DE BÚSQUEDA DE INPUT
-            const estrategiasBusqueda = [
-                () => formulario.querySelector(`[name="${campoEncontrado}"]`),
-                () => formulario.querySelector(`#${campoEncontrado}`),
-                () => formulario.querySelector(`[name*="${campoEncontrado}"]`),
-                () => formulario.querySelector(`[id*="${campoEncontrado}"]`),
-                () => campoEncontrado === 'generos' ? formulario.querySelector('[name="generos[]"]') : null,
-                () => campoEncontrado === 'generos' ? formulario.querySelector('#rela_genero_pelicula') : null,
-                () => campoEncontrado.startsWith('rela_') ? formulario.querySelector(`[name="${campoEncontrado}"], [id="${campoEncontrado}"]`) : null
-            ];
-
-            // Ejecutar estrategias hasta encontrar el input
-            for (let estrategia of estrategiasBusqueda) {
-                try {
-                    inputEncontrado = estrategia();
-                    if (inputEncontrado) {
-                        console.log(`    🎯 Input encontrado: ${campoEncontrado}`);
-                        break;
-                    }
-                } catch (e) {
-                    continue;
-                }
-            }
-        }
-
-        // FASE 3: MOSTRAR RESULTADO
-        if (inputEncontrado) {
-            console.log(`✅ ERROR "${error}" MAPEADO AL CAMPO: ${campoEncontrado}`);
-            mostrarErrorCampo(inputEncontrado, error);
+        if (mejor) {
+            mostrarErrorCampo(mejor.input, error);
         } else {
-            console.log(`⚠️ ERROR "${error}" NO MAPEADO - Mostrando como alerta modal`);
-            mostrarAlerta(error, 'error', '.form-container', false);
+            sinCampo.push(error);
         }
-
-        console.log(`--- FIN ERROR ${index + 1} ---\n`);
     });
+
+    // Los errores que no corresponden a ningún campo los muestra quien llama (en un solo modal)
+    return sinCampo;
+}
+
+// Busca en el formulario el input correspondiente a un nombre de campo del mapeo de errores
+function buscarInputDeCampo(formulario, campo) {
+    const estrategias = [
+        () => formulario.querySelector(`[name="${campo}"]`),
+        () => formulario.querySelector(`#${campo}`),
+        () => formulario.querySelector(`[name*="${campo}"]`),
+        () => formulario.querySelector(`[id*="${campo}"]`),
+        () => campo === 'generos' ? formulario.querySelector('[name="generos[]"]') : null,
+        () => campo === 'generos' ? formulario.querySelector('#rela_genero_pelicula') : null
+    ];
+
+    for (const estrategia of estrategias) {
+        try {
+            const input = estrategia();
+            if (input) return input;
+        } catch (e) {
+            // selector inválido para este nombre de campo: probar la siguiente estrategia
+        }
+    }
+    return null;
 }
 function limpiarErroresCampos(formulario) {
     formulario.querySelectorAll('.mensaje-error-campo').forEach(el => el.remove());
@@ -817,9 +784,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (erroresArray.length > 0) {
                     mostrarErroresEspecificos(formulario, erroresArray);
-                    // Mostrar también en modal flotante
-                    const mensajeErrores = erroresArray.join('<br>');
-                    mostrarAlerta(mensajeErrores, 'error', contenedor, false);
+                    // Un único modal con todos los errores (además de marcarlos en sus campos)
+                    mostrarAlerta(erroresArray.join('<br>'), 'error', contenedor, false);
                 }
 
             } else if (respuesta.alertas && typeof respuesta.alertas === 'object') {
@@ -827,7 +793,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (respuesta.alertas.error && Array.isArray(respuesta.alertas.error)) {
                     erroresArray = respuesta.alertas.error;
-                    mostrarErroresEspecificos(formulario, erroresArray);
+                    const sinCampo = mostrarErroresEspecificos(formulario, erroresArray);
+                    // Los que no tienen campo se muestran juntos en un único modal
+                    if (sinCampo.length > 0) {
+                        mostrarAlerta(sinCampo.join('<br>'), 'error', contenedor, false);
+                    }
                 } else {
                     Object.entries(respuesta.alertas).forEach(([tipo, mensajes]) => {
                         if (Array.isArray(mensajes)) mensajes.forEach(mensaje => {

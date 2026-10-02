@@ -9,7 +9,7 @@
             <!-- Imagen de la máquina -->
             <div class="card-imagen">
                 <?php if (!empty($maquina->imagen_maquina)): ?>
-                    <img src="../../assets/img/cantina/<?php echo htmlspecialchars($maquina->imagen_maquina); ?>"
+                    <img src="../../assets/img/cantina/<?php echo s($maquina->imagen_maquina); ?>"
                          alt="<?php echo htmlspecialchars($maquina->maquinas_nombre); ?>">
                 <?php else: ?>
                     <div class="imagen-placeholder">
@@ -24,7 +24,7 @@
                          data-id="<?php echo $maquina->id_maquinas; ?>"
                          data-nombre="<?php echo htmlspecialchars($maquina->maquinas_nombre); ?>"
                          data-precio="<?php echo $maquina->precio_ficha ?: 2000; ?>"
-                         data-imagen="../../assets/img/cantina/<?php echo htmlspecialchars($maquina->imagen_maquina); ?>"
+                         data-imagen="../../assets/img/cantina/<?php echo s($maquina->imagen_maquina); ?>"
                          data-stock="<?php echo $stockGlobalFichas ?? 500; ?>">
                         <i class="fas fa-shopping-cart"></i>
                         <span>Agregar Fichas</span>

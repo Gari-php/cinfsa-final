@@ -13,7 +13,7 @@
                 <option value="">-- Seleccionar Proveedor --</option>
                 <?php foreach ($proveedores as $proveedor): ?>
                     <option value="<?= $proveedor['id_proveedor'] ?>">
-                        <?= htmlspecialchars($proveedor['razon_social']) ?> - <?= htmlspecialchars($proveedor['nombre_comercial']) ?>
+                        <?= htmlspecialchars($proveedor['razon_social']) ?> - <?= s($proveedor['nombre_comercial']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

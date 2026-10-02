@@ -16,7 +16,7 @@
                 <?php foreach ($proveedores as $proveedor): ?>
                     <option value="<?= $proveedor['id_proveedor'] ?>"
                         <?= $servicio->rela_proveedor == $proveedor['id_proveedor'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($proveedor['razon_social']) ?> - <?= htmlspecialchars($proveedor['nombre_comercial']) ?>
+                        <?= htmlspecialchars($proveedor['razon_social']) ?> - <?= s($proveedor['nombre_comercial']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

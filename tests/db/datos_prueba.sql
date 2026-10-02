@@ -57,4 +57,17 @@ INSERT INTO `funciones` (`id_funcion`, `fecha_hora`, `fecha_finalizacion`, `rela
 (1, DATE_ADD(CURDATE(), INTERVAL 1 DAY), DATE_ADD(CURDATE(), INTERVAL 1 DAY), 1, 1, 3, 1, 1, 1),
 (2, DATE_ADD(CURDATE(), INTERVAL 1 DAY), DATE_ADD(CURDATE(), INTERVAL 1 DAY), 2, 1, 2, 1, 1, 1);
 
+-- Un registro por módulo que no trae catálogo, para poder abrir sus pantallas de editar
+INSERT INTO `maquinas` (`id_maquinas`, `maquinas_nombre`, `maquina_descripcion`, `imagen_maquina`, `estado`, `rela_fichas`) VALUES
+(1, 'Maquina de Prueba', 'Maquina usada por los tests automaticos.', NULL, 1, 1);
+
+INSERT INTO `proveedores` (`id_proveedor`, `razon_social`, `tipo_proveedor`) VALUES
+(1, 'Proveedor de Prueba', 'otros');
+
+INSERT INTO `servicios_proveedor` (`id_servicio`, `rela_proveedor`, `nombre_servicio`, `categoria_servicio`) VALUES
+(1, 1, 'Servicio de Prueba', 'otros');
+
+INSERT INTO `egresos` (`id_egreso`, `rela_usuario`, `concepto`, `monto`) VALUES
+(1, 1, 'Gasto de prueba', 100);
+
 SET FOREIGN_KEY_CHECKS=1;
