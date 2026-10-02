@@ -19,6 +19,25 @@ class StockController
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
     }
 
+    // Datos de un stock con nombres en vez de ids, para el registro de auditoría
+    private static function datosAuditoria($stock): array
+    {
+        $db = \Models\ActiveRecord::getDB();
+        $buscar = function (string $sql, $id) use ($db) {
+            $id = (int)$id;
+            $stmt = $db->prepare($sql);
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_column() ?: null;
+        };
+
+        return [
+            'producto' => $buscar("SELECT nombre_producto_cantina FROM productos_cantina WHERE id_producto_cantina = ?", $stock->rela_producto_cantina),
+            'cantina' => $buscar("SELECT nombre_cantina FROM cantina WHERE id_cantina = ?", $stock->rela_cantina),
+            'cantidad' => (int)$stock->stock_cantina,
+        ];
+    }
+
     public static function index(Router $router)
     {
         if (!self::verificarAdmin()) {
@@ -103,6 +122,23 @@ class StockController
             $resultado = $stock->crearStock();
 
             if ($resultado['resultado']) {
+                // crearStock() lee insert_id después de otra consulta: se busca el id por producto y cantina
+                $stmtId = \Models\ActiveRecord::getDB()->prepare("SELECT id_stock_cantina FROM stock_cantina WHERE rela_producto_cantina = ? AND rela_cantina = ?");
+                $idProducto = (int)$stock->rela_producto_cantina;
+                $idCantina = (int)$stock->rela_cantina;
+                $stmtId->bind_param('ii', $idProducto, $idCantina);
+                $stmtId->execute();
+                $idNuevo = $stmtId->get_result()->fetch_column() ?: null; // leerlo antes de otra consulta
+                $datosStock = self::datosAuditoria($stock);
+                \Classes\Auditoria::registrar(
+                    'stock.crear',
+                    "Cargó stock de {$datosStock['producto']} en {$datosStock['cantina']}: {$datosStock['cantidad']} unidad(es)",
+                    'stock_cantina',
+                    $idNuevo,
+                    null,
+                    $datosStock
+                );
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Stock creado correctamente. Estado del producto actualizado automáticamente.',
@@ -170,6 +206,8 @@ class StockController
             exit;
         }
 
+        $datosAntes = self::datosAuditoria($stock);
+
         $stock->stock_cantina = $datos['stock_cantina'] ?? '';
         $stock->rela_producto_cantina = $datos['rela_producto_cantina'] ?? '';
         $stock->rela_cantina = $datos['rela_cantina'] ?? '';
@@ -184,6 +222,19 @@ class StockController
         $resultado = $stock->actualizar();
 
         if ($resultado) {
+            $datosDespues = self::datosAuditoria($stock);
+            [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, $datosDespues, array_keys($datosAntes));
+            if ($antes) {
+                $descripcion = array_key_exists('cantidad', $despues)
+                    ? "Modificó el stock de {$datosDespues['producto']} en {$datosDespues['cantina']}: {$antes['cantidad']} → {$despues['cantidad']} unidad(es)"
+                    : "Modificó el stock de {$datosDespues['producto']} en {$datosDespues['cantina']}";
+                $otros = array_diff(array_keys($despues), ['cantidad']);
+                if ($otros) {
+                    $descripcion .= ' (' . implode(', ', $otros) . ')';
+                }
+                \Classes\Auditoria::registrar('stock.modificar', $descripcion, 'stock_cantina', $stock->id_stock_cantina, $antes, $despues);
+            }
+
             echo json_encode([
                 'ok' => true,
                 'mensaje' => 'Stock actualizado correctamente',
@@ -223,6 +274,15 @@ class StockController
         $resultado = $stock->eliminar();
 
         if ($resultado) {
+            $datosStock = self::datosAuditoria($stock);
+            \Classes\Auditoria::registrar(
+                'stock.baja',
+                "Dio de baja el stock de {$datosStock['producto']} en {$datosStock['cantina']} ({$datosStock['cantidad']} unidad(es))",
+                'stock_cantina',
+                $id,
+                $datosStock,
+                null
+            );
             echo json_encode(['ok' => true, 'mensaje' => 'Stock eliminado correctamente']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al eliminar el stock']);

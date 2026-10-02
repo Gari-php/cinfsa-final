@@ -142,7 +142,11 @@ El panel de administración tiene una pestaña **Control → Registro de auditor
 (`/administrador/auditoria/listado`) que muestra quién hizo cada acción sensible, cuándo y
 desde qué IP: inicios de sesión (incluidos los fallidos), cancelaciones y devoluciones,
 aperturas y cierres de caja (con la diferencia del arqueo), cambios de precios, altas/bajas/
-modificaciones de usuarios, películas y funciones, cambios de permisos y bloqueos de butacas.
+modificaciones de usuarios, películas, funciones y productos, cambios manuales de stock
+(Gestionar Stock), cambios de permisos y bloqueos de butacas.
+
+Los movimientos de stock que hacen solas las ventas no se registran uno por uno (llenarían el
+registro): quedan en los comprobantes de venta, y las devoluciones y cancelaciones sí se registran.
 
 - Es de **solo lectura**: desde el sistema nadie puede editar ni borrar registros.
 - **Nunca guarda contraseñas** (de un cambio de contraseña solo queda que cambió) ni lo que se

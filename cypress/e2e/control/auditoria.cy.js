@@ -135,6 +135,71 @@ describe('Registro de auditoría', () => {
       cy.postJson('/administrador/peliculas/eliminar', { id: 1 });
       ultimo('pelicula.baja').its('descripcion').should('eq', 'Dio de baja la película Pelicula de Prueba');
     });
+
+    it('alta, modificación y baja de un producto (un solo registro por guardado)', () => {
+      cy.loginComo('admin');
+      cy.visit('/administrador/productos/crear');
+      cy.get('#nombre_producto_cantina').type('Gaseosa de Prueba');
+      cy.get('#precio_producto').type('1500');
+      cy.get('#imagen_producto').selectFile('cypress/fixtures/producto-prueba.png');
+      cy.get('form[data-fetch="true"] [type="submit"]').click();
+      cy.get('.alerta-modal.exito').should('be.visible');
+
+      ultimo('producto.crear').then((alta) => {
+        expect(alta.descripcion).to.eq('Creó el producto Gaseosa de Prueba ($1.500)');
+        const id = Number(alta.id_entidad);
+        expect(id).to.be.greaterThan(0);
+
+        const editar = (cambios) => {
+          cy.visit(`/administrador/productos/editar?id=${id}`);
+          Object.entries(cambios).forEach(([campo, valor]) => cy.get(`#${campo}`).clear().type(valor));
+          cy.get('form[data-fetch="true"] [type="submit"]').click();
+          cy.get('.boton-modal.confirmar').click();
+          cy.get('.alerta-modal.exito').should('be.visible');
+        };
+
+        // Solo el nombre: "modificación de producto"
+        editar({ nombre_producto_cantina: 'Gaseosa Grande' });
+        ultimo('producto.modificar').then((r) => {
+          expect(r.descripcion).to.eq('Modificó el producto Gaseosa Grande (nombre)');
+          expect(JSON.parse(r.datos_antes)).to.deep.eq({ nombre: 'Gaseosa de Prueba' });
+        });
+
+        // Precio y nombre a la vez: un único registro, como "cambio de precio"
+        editar({ nombre_producto_cantina: 'Gaseosa XL', precio_producto: '1800' });
+        ultimo('precio.producto').then((r) => {
+          expect(r.descripcion).to.eq('Cambió el precio de Gaseosa XL: $1.500 → $1.800 (también: nombre)');
+          expect(JSON.parse(r.datos_despues)).to.deep.eq({ nombre: 'Gaseosa XL', precio: 1800 });
+        });
+        consultar(`SELECT COUNT(*) AS n FROM auditoria WHERE entidad = 'productos_cantina' AND id_entidad = ${id}`)
+          .its('0.n').should('eq', '3'); // alta + 2 guardados
+
+        cy.postJson('/administrador/productos/eliminar', { id_producto_cantina: id });
+        ultimo('producto.baja').its('descripcion').should('eq', 'Dio de baja (suspendió) el producto Gaseosa XL');
+      });
+    });
+
+    it('cambios de stock: alta, modificación de la cantidad y baja', () => {
+      cy.loginComo('admin');
+      // Pochoclo Chico (producto 1) todavía no tiene stock en la cantina 2
+      cy.postJson('/administrador/stock/guardar', { stock_cantina: 20, rela_producto_cantina: 1, rela_cantina: 2 })
+        .its('body').then((b) => expect(json(b).ok, JSON.stringify(json(b))).to.eq(true));
+      ultimo('stock.crear').then((alta) => {
+        expect(alta.descripcion).to.eq('Cargó stock de Pochoclo Chico en cantina 2: 20 unidad(es)');
+        const id = Number(alta.id_entidad);
+        expect(id).to.be.greaterThan(0);
+
+        cy.postJson('/administrador/stock/actualizar', { id_stock_cantina: id, stock_cantina: 35, rela_producto_cantina: 1, rela_cantina: 2 });
+        ultimo('stock.modificar').then((r) => {
+          expect(r.descripcion).to.eq('Modificó el stock de Pochoclo Chico en cantina 2: 20 → 35 unidad(es)');
+          expect(JSON.parse(r.datos_antes)).to.deep.eq({ cantidad: 20 });
+          expect(JSON.parse(r.datos_despues)).to.deep.eq({ cantidad: 35 });
+        });
+
+        cy.postJson('/administrador/stock/eliminar', { id_stock_cantina: id });
+        ultimo('stock.baja').its('descripcion').should('eq', 'Dio de baja el stock de Pochoclo Chico en cantina 2 (35 unidad(es))');
+      });
+    });
   });
 
   describe('Pantalla Control → Registro de auditoría', () => {

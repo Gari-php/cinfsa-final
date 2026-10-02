@@ -18,6 +18,23 @@ class ProductoController
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
     }
 
+    // Datos de un producto con nombres en vez de ids, para el registro de auditoría
+    private static function datosAuditoria($producto): array
+    {
+        $stmt = \Models\ActiveRecord::getDB()->prepare("SELECT nombre_estado_producto FROM estados_productos WHERE id_estado_producto = ?");
+        $idEstado = (int)$producto->rela_estado_producto;
+        $stmt->bind_param('i', $idEstado);
+        $stmt->execute();
+
+        return [
+            'nombre' => $producto->nombre_producto_cantina,
+            'codigo' => $producto->codigo ?? null,
+            'precio' => (float)$producto->precio_producto,
+            'estado' => $stmt->get_result()->fetch_column() ?: null,
+            'imagen' => $producto->imagen_producto,
+        ];
+    }
+
 
     public static function index(Router $router)
     {
@@ -94,6 +111,15 @@ class ProductoController
             $resultado = $producto->crearProducto();
 
             if ($resultado['resultado']) {
+                \Classes\Auditoria::registrar(
+                    'producto.crear',
+                    "Creó el producto {$producto->nombre_producto_cantina} ($" . number_format((float)$producto->precio_producto, 0, ',', '.') . ')',
+                    'productos_cantina',
+                    $resultado['id_insertado'] ?? null,
+                    null,
+                    self::datosAuditoria($producto)
+                );
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Producto creado correctamente',
@@ -149,7 +175,7 @@ class ProductoController
                 exit;
             }
 
-            $precioAnterior = $producto->precio_producto;
+            $datosAntes = self::datosAuditoria($producto);
 
             $producto->nombre_producto_cantina = $_POST['nombre_producto_cantina'] ?? '';
             $producto->rela_estado_producto = $_POST['rela_estado_producto'] ?? '';
@@ -189,16 +215,27 @@ class ProductoController
                     }
                 }
 
-                if ((float)$precioAnterior !== (float)$producto->precio_producto) {
+                // Un solo registro por guardado: si cambió el precio queda como "cambio de precio"
+                // (con el resto de los cambios incluidos); si no, como "modificación de producto"
+                [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, self::datosAuditoria($producto), array_keys($datosAntes));
+                if ($antes) {
+                    $cambioPrecio = array_key_exists('precio', $despues);
+                    $descripcion = $cambioPrecio
+                        ? "Cambió el precio de {$producto->nombre_producto_cantina}: $"
+                            . number_format((float)$antes['precio'], 0, ',', '.') . ' → $'
+                            . number_format((float)$despues['precio'], 0, ',', '.')
+                        : "Modificó el producto {$producto->nombre_producto_cantina}";
+                    $otros = array_diff(array_keys($despues), ['precio']);
+                    if ($otros) {
+                        $descripcion .= ($cambioPrecio ? ' (también: ' : ' (') . implode(', ', $otros) . ')';
+                    }
                     \Classes\Auditoria::registrar(
-                        'precio.producto',
-                        "Cambió el precio de {$producto->nombre_producto_cantina}: $"
-                            . number_format((float)$precioAnterior, 0, ',', '.') . ' → $'
-                            . number_format((float)$producto->precio_producto, 0, ',', '.'),
+                        $cambioPrecio ? 'precio.producto' : 'producto.modificar',
+                        $descripcion,
                         'productos_cantina',
                         $producto->id_producto_cantina,
-                        ['precio' => (float)$precioAnterior],
-                        ['precio' => (float)$producto->precio_producto]
+                        $antes,
+                        $despues
                     );
                 }
 
@@ -245,6 +282,12 @@ class ProductoController
         $resultado = $producto->darDeBaja();
 
         if ($resultado) {
+            \Classes\Auditoria::registrar(
+                'producto.baja',
+                "Dio de baja (suspendió) el producto {$producto->nombre_producto_cantina}",
+                'productos_cantina',
+                $id
+            );
             echo json_encode(['ok' => true, 'mensaje' => 'Producto suspendido correctamente']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al suspender el producto']);
