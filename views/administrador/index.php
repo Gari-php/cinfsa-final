@@ -7,7 +7,7 @@
                 <span class="bienvenida-saludo">¡Bienvenido,</span>
                 <span class="bienvenida-nombre"><?php echo htmlspecialchars(strtoupper($_SESSION['nombre'] ?? 'Administrador')); ?>!</span>
             </h1>
-            <p>Panel de Administración CINFSA — <?php echo date('l d \d\e F \d\e Y'); ?></p>
+            <p>Panel de Administración CINFSA — <?php echo s(fechaLarga()); ?></p>
         </div>
         <div class="bienvenida-logo">
             <img src="/assets/img/logo.png" alt="CINFSA">

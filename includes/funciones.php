@@ -16,6 +16,25 @@ function env(string $clave, $defecto = null) {
     return $valor !== false ? $valor : $defecto;
 }
 
+// Fecha larga en español de Argentina, ej. "Domingo 4 de octubre de 2026".
+// No depende de la extensión intl ni del locale del sistema (date() siempre da los nombres en inglés).
+function fechaLarga(?int $timestamp = null): string {
+    $timestamp ??= time();
+    $dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+              'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    $dia = $dias[(int)date('w', $timestamp)];
+    return mb_strtoupper(mb_substr($dia, 0, 1)) . mb_substr($dia, 1) . ' '
+        . date('j', $timestamp) . ' de ' . $meses[(int)date('n', $timestamp) - 1] . ' de ' . date('Y', $timestamp);
+}
+
+// Mes abreviado en español, en mayúsculas, ej. "AGO" (date('M') da "Aug")
+function mesCorto(?int $timestamp = null): string {
+    $meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    return $meses[(int)date('n', $timestamp ?? time()) - 1];
+}
+
 // Escapa / Sanitizar el HTML
 function s($html) : string {
     $s = htmlspecialchars($html ?? '', ENT_QUOTES, 'UTF-8');

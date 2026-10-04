@@ -104,7 +104,7 @@
                                             onclick="verButacasFuncion(<?php echo $funcion['id_funcion']; ?>, '<?php echo htmlspecialchars($pelicula['titulo_pelicula']); ?>')">
                                             <div class="funcion-item-fecha">
                                                 <span class="funcion-fecha-dia"><?php echo date('d', strtotime($funcion['fecha_hora'])); ?></span>
-                                                <span class="funcion-fecha-mes"><?php echo strtoupper(date('M', strtotime($funcion['fecha_hora']))); ?></span>
+                                                <span class="funcion-fecha-mes"><?php echo mesCorto(strtotime($funcion['fecha_hora'])); ?></span>
                                             </div>
                                             <div class="funcion-item-info">
                                                 <span class="funcion-hora">
