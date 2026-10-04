@@ -385,26 +385,14 @@ class PagoController
             // PASO 4: Procesar carrito (productos y fichas)
             $itemsOriginales = \Models\Carrito::obtenerCarritoCompleto($idUsuario);
 
-            // Día, hora y sala de cada función, para que el ticket del mail diga cuándo y dónde es
-            $stmtFuncion = $db->prepare("SELECT f.fecha_hora, t.turno_horario, f.rela_salas
-                FROM funciones f LEFT JOIN turnos t ON t.id_turnos = f.rela_turnos
-                WHERE f.id_funcion = ?");
-
             $items = [];
             $total = 0;
             foreach ($itemsOriginales as $item) {
-                if (($item['tipo_producto'] ?? '') === 'butacas' && !empty($item['id_funcion'])) {
-                    $idFuncion = (int)$item['id_funcion'];
-                    $stmtFuncion->bind_param('i', $idFuncion);
-                    $stmtFuncion->execute();
-                    $funcion = $stmtFuncion->get_result()->fetch_assoc();
-                    if ($funcion) {
-                        $hora = $funcion['turno_horario']
-                            ? substr($funcion['turno_horario'], 0, 5)
-                            : date('H:i', strtotime($funcion['fecha_hora']));
-                        $item['detalle'] = diaCorto(strtotime($funcion['fecha_hora'])) . ' '
-                            . date('d/m/Y', strtotime($funcion['fecha_hora'])) . ' · ' . $hora . ' h · Sala ' . $funcion['rela_salas'];
-                    }
+                // Cada butaca lleva al mail su entrada: película, función, ubicación y el código del QR
+                if (($item['tipo_producto'] ?? '') === 'butacas') {
+                    $item['entrada'] = in_array($item['id_butaca'], $butacasNoAsignadas)
+                        ? ['no_asignada' => true]
+                        : self::datosEntradaParaMail((int)$idOrden, (int)$item['id_butaca'], (int)$item['id_funcion']);
                 }
 
                 $precio = isset($item['precio']) ? (float)$item['precio'] : 0;
@@ -432,6 +420,41 @@ class PagoController
             'butacas_no_asignadas' => $butacasNoAsignadas
         ]);
     }
+    /**
+     * Datos de la entrada de una butaca de la orden, para el mail: película, cuándo y dónde,
+     * y el código de su QR. null si la entrada no se pudo crear.
+     */
+    private static function datosEntradaParaMail(int $idOrden, int $idButaca, int $idFuncion): ?array
+    {
+        $stmt = \Models\ActiveRecord::getDB()->prepare("SELECT e.id_entrada, p.titulo_pelicula, f.fecha_hora,
+                t.turno_horario, f.rela_salas, b.fila_butaca, b.numero_butaca
+            FROM butacas_vendidas bv
+            INNER JOIN entradas e ON e.id_entrada = bv.id_entrada
+            INNER JOIN funciones f ON f.id_funcion = bv.id_funcion
+            INNER JOIN peliculas p ON p.id_pelicula = f.rela_peliculas
+            LEFT JOIN turnos t ON t.id_turnos = f.rela_turnos
+            INNER JOIN butacas b ON b.id_butaca = bv.id_butaca
+            WHERE bv.id_orden = ? AND bv.id_butaca = ? AND bv.id_funcion = ?");
+        $stmt->bind_param('iii', $idOrden, $idButaca, $idFuncion);
+        $stmt->execute();
+        $fila = $stmt->get_result()->fetch_assoc();
+
+        if (!$fila) {
+            return null;
+        }
+
+        $hora = $fila['turno_horario']
+            ? substr($fila['turno_horario'], 0, 5)
+            : date('H:i', strtotime($fila['fecha_hora']));
+
+        return [
+            'pelicula' => $fila['titulo_pelicula'],
+            'cuando' => diaCorto(strtotime($fila['fecha_hora'])) . ' ' . date('d/m/Y', strtotime($fila['fecha_hora'])) . ' · ' . $hora . ' h',
+            'donde' => 'Sala ' . $fila['rela_salas'] . ' · Fila ' . $fila['fila_butaca'] . ' · Asiento ' . $fila['numero_butaca'],
+            'codigo_acceso' => \Models\Entrada::asegurarCodigoAcceso((int)$fila['id_entrada']),
+        ];
+    }
+
     public static function fallido(Router $router)
     {
         $numeroOrden = $_GET['orden'] ?? null;
