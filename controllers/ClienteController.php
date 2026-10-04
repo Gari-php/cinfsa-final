@@ -970,6 +970,18 @@ class ClienteController
         try {
             $entradas = \Models\Entrada::obtenerComprasWebPorUsuario($idUsuario);
 
+            // QR solo de las vigentes: es lo que se muestra en la puerta de la sala
+            foreach ($entradas as &$entrada) {
+                $entrada['qr'] = null;
+                if ($entrada['estado_vigencia'] === 'vigente') {
+                    $codigo = \Models\Entrada::asegurarCodigoAcceso((int)$entrada['id_entrada']);
+                    if ($codigo) {
+                        $entrada['qr'] = \Classes\CodigoQR::dataUri(\Classes\CodigoQR::textoEntrada($codigo), 8);
+                    }
+                }
+            }
+            unset($entrada);
+
             $db = \Models\ActiveRecord::getDB();
 
             $query = "SELECT 

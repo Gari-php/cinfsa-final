@@ -39,7 +39,7 @@ Custom front-controller MVC, autoloaded via Composer PSR-4 (see `composer.json`)
 
 **Views (`views/`)**: plain PHP templates, organized by role (`administrador/`, `cliente/`, `vendedor/`, `vendedorproductos/`, `auth/`, `carrito/`) plus the four `layout*.php` files described above. Escape all dynamic output with the global `s()` helper (`includes/funciones.php`) — it wraps `htmlspecialchars`.
 
-**Classes (`classes/`)**: cross-cutting services — `Email.php` (SendGrid), `Notificaciones.php`, `ExportadorDatos.php`, `GeneradorArqueoPDF.php` (TCPDF cash-register reports), `GeneradorGraficos.php`, `Paginador.php` (pagination helper used across admin `index()` listers).
+**Classes (`classes/`)**: cross-cutting services — `Email.php` (SendGrid), `Notificaciones.php`, `ExportadorDatos.php`, `GeneradorArqueoPDF.php` (TCPDF cash-register reports), `GeneradorGraficos.php`, `Paginador.php` (pagination helper used across admin `index()` listers), `CodigoQR.php` (QR PNGs via TCPDF + GD; entry QR text is `CINFSA-E-` + `entradas.codigo_acceso`).
 
 **Middlewares (`middlewares/`)**: currently just `ValidarModulo.php`, described above.
 

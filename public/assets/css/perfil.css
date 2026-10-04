@@ -789,6 +789,63 @@ textarea {
     text-align: right;
 }
 
+/* ===== QR DE LAS ENTRADAS VIGENTES ===== */
+#pagina-perfil-cliente .entrada-compra {
+    margin-bottom: 12px;
+}
+
+#pagina-perfil-cliente .entrada-compra .tarjeta-compra {
+    margin-bottom: 0;
+}
+
+#pagina-perfil-cliente .btn-ver-qr {
+    display: block;
+    margin: 8px 0 0 auto;
+    background: transparent;
+    color: #ed850f;
+    border: 1px solid #ed850f;
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#pagina-perfil-cliente .btn-ver-qr:hover {
+    background: #ed850f;
+    color: #fff;
+}
+
+#pagina-perfil-cliente .entrada-qr-panel {
+    text-align: center;
+    background: #232323;
+    border: 1px solid #4a5568;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+    margin: -6px 0 0;
+}
+
+#pagina-perfil-cliente .entrada-qr-panel[hidden] {
+    display: none;
+}
+
+#pagina-perfil-cliente .entrada-qr-panel img {
+    display: block;
+    width: min(240px, 100%);
+    height: auto;
+    margin: 0 auto 0.6rem;
+    border-radius: 8px;
+    image-rendering: pixelated;
+}
+
+#pagina-perfil-cliente .entrada-qr-panel p {
+    color: #a0aec0;
+    font-size: 13px;
+    margin: 0;
+}
+
 /* ===== BADGES DE ESTADO ===== */
 #pagina-perfil-cliente .badge-compra {
     display: inline-block;
@@ -856,6 +913,10 @@ textarea {
 
     #pagina-perfil-cliente .tarjeta-compra-estado {
         text-align: left;
+    }
+
+    #pagina-perfil-cliente .btn-ver-qr {
+        margin-left: 0;
     }
 
     #pagina-perfil-cliente .tabs-compras {

@@ -27,6 +27,12 @@ module.exports = defineConfig({
           const script = path.join(__dirname, 'tests', 'reservar_butaca_prueba.php');
           return execFileSync(php, [script, String(idButaca), String(idFuncion), String(idUsuario)], { encoding: 'utf8' });
         },
+        // Simula una compra web ya pagada de una butaca; devuelve el id de la entrada (sin código QR todavía)
+        venderButacaWeb({ idButaca, idFuncion, idUsuario }) {
+          const php = process.env.PHP_BIN || 'php';
+          const script = path.join(__dirname, 'tests', 'venta_web_prueba.php');
+          return Number(execFileSync(php, [script, String(idButaca), String(idFuncion), String(idUsuario)], { encoding: 'utf8' }));
+        },
       });
     },
     viewportWidth: 1280,

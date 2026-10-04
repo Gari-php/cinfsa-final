@@ -580,16 +580,49 @@ foreach ($perfil as $perfiles) {
                 timeStyle: 'short'
             });
 
+            const butaca = e.fila_butaca != null ? ` · Fila ${escaparHtml(e.fila_butaca)} · Asiento ${escaparHtml(e.numero_butaca)}` : '';
+            const ticket = e.numero_ticket_entrada ? `Ticket #${escaparHtml(e.numero_ticket_entrada)} · ` : '';
+
+            // Las vigentes traen su QR: se despliega debajo de la tarjeta con "Ver QR"
+            const botonQR = e.qr ? `
+                <button type="button" class="btn-ver-qr" aria-expanded="false" aria-controls="qr-entrada-${e.id_entrada}"
+                    onclick="alternarQREntrada(this, 'qr-entrada-${e.id_entrada}')">
+                    <i class="fa-solid fa-qrcode"></i> Ver QR
+                </button>` : '';
+            const panelQR = e.qr ? `
+                <div class="entrada-qr-panel" id="qr-entrada-${e.id_entrada}" hidden>
+                    <img src="${e.qr}" alt="Código QR de la entrada">
+                    <p>Mostrá este código en la entrada de la sala</p>
+                </div>` : '';
+
             return `
-        <div class="tarjeta-compra">
-            <div class="tarjeta-compra-info">
-                <h4>${e.titulo_pelicula}</h4>
-                <p>Sala ${e.id_sala} — ${fecha}</p>
-                <p>Ticket #${e.numero_ticket_entrada} · ${e.tipo_entrada_desc}</p>
+        <div class="entrada-compra">
+            <div class="tarjeta-compra">
+                <div class="tarjeta-compra-info">
+                    <h4>${escaparHtml(e.titulo_pelicula)}</h4>
+                    <p>Sala ${escaparHtml(e.id_sala)} — ${fecha}${butaca}</p>
+                    <p>${ticket}${escaparHtml(e.tipo_entrada_desc)}</p>
+                </div>
+                <div class="tarjeta-compra-estado">${badges[e.estado_vigencia] || ''}${botonQR}</div>
             </div>
-            <div class="tarjeta-compra-estado">${badges[e.estado_vigencia] || ''}</div>
+            ${panelQR}
         </div>
     `;
+        }
+
+        function alternarQREntrada(boton, idPanel) {
+            const panel = document.getElementById(idPanel);
+            panel.hidden = !panel.hidden;
+            boton.setAttribute('aria-expanded', String(!panel.hidden));
+            boton.innerHTML = panel.hidden
+                ? '<i class="fa-solid fa-qrcode"></i> Ver QR'
+                : '<i class="fa-solid fa-xmark"></i> Ocultar QR';
+        }
+
+        function escaparHtml(valor) {
+            const div = document.createElement('div');
+            div.textContent = valor ?? '';
+            return div.innerHTML;
         }
 
         function renderizarFichas(fichas) {

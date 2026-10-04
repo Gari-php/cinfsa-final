@@ -404,11 +404,12 @@ class VentaFuncionesController
                     \Models\Butaca::quitarVentaCancelada((int)$idButaca, (int)$idFuncion);
 
                     // 4.3 CREAR ENTRADA
-                    $queryInsertEntrada = "INSERT INTO entradas 
-                                      (rela_tipo_entrada, rela_funcion, estado)
-                                      VALUES (?, ?, 1)";
+                    $queryInsertEntrada = "INSERT INTO entradas
+                                      (rela_tipo_entrada, rela_funcion, estado, codigo_acceso)
+                                      VALUES (?, ?, 1, ?)";
+                    $codigoAcceso = \Models\Entrada::generarCodigoAcceso();
                     $stmtI = $db->prepare($queryInsertEntrada);
-                    $stmtI->bind_param("ii", $tipoEntrada, $idFuncion);
+                    $stmtI->bind_param("iis", $tipoEntrada, $idFuncion, $codigoAcceso);
 
                     if (!$stmtI->execute()) {
                         throw new \Exception("Error al crear entrada: " . $stmtI->error);
@@ -686,10 +687,36 @@ class VentaFuncionesController
             $totalEntradas += $row['cantidad'];
         }
 
+        // Un QR por entrada, para el control en la puerta. Las canceladas no llevan QR.
+        $stmtQR = $db->prepare("SELECT e.id_entrada, b.fila_butaca, b.numero_butaca
+            FROM detalle_fact_cine df
+            INNER JOIN entradas e ON df.rela_entrada = e.id_entrada
+            LEFT JOIN butacas_vendidas bv ON bv.id_entrada = e.id_entrada
+            LEFT JOIN butacas b ON bv.id_butaca = b.id_butaca
+            WHERE df.rela_cabecera_fact = ? AND e.estado <> ?
+            ORDER BY b.fila_butaca, b.numero_butaca");
+        $cancelada = \Models\Entrada::ESTADO_CANCELADA;
+        $stmtQR->bind_param("ii", $idVenta, $cancelada);
+        $stmtQR->execute();
+        $resultadoQR = $stmtQR->get_result();
+
+        $entradasQR = [];
+        while ($fila = $resultadoQR->fetch_assoc()) {
+            $codigo = \Models\Entrada::asegurarCodigoAcceso((int)$fila['id_entrada']);
+            if (!$codigo) continue;
+            $entradasQR[] = [
+                'butaca' => $fila['fila_butaca'] !== null
+                    ? 'FILA ' . str_pad($fila['fila_butaca'], 2, '0', STR_PAD_LEFT) . ' - COL ' . str_pad($fila['numero_butaca'], 2, '0', STR_PAD_LEFT)
+                    : 'ENTRADA',
+                'qr' => \Classes\CodigoQR::dataUri(\Classes\CodigoQR::textoEntrada($codigo), 4),
+            ];
+        }
+
         $router->render('vendedor/funciones/ticket', [
             'venta' => $venta,
             'detalles' => $detalles,
-            'total_entradas' => $totalEntradas
+            'total_entradas' => $totalEntradas,
+            'entradasQR' => $entradasQR
         ]);
     }
 

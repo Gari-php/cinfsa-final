@@ -164,6 +164,21 @@ $numeroCaja = $arqueo['numero_caja'] ?? '1';
 
                 <div class="separator">━━━━━━━━━━━━━━━━━━━━━━</div>
 
+                <!-- QR DE CADA ENTRADA (se escanea en la puerta) -->
+                <?php if (!empty($entradasQR)): ?>
+                    <div class="entradas-qr">
+                        <p class="entradas-qr-titulo">MOSTRAR EN LA ENTRADA DE LA SALA</p>
+                        <?php foreach ($entradasQR as $entradaQR): ?>
+                            <div class="entrada-qr">
+                                <img src="<?php echo s($entradaQR['qr']); ?>" alt="QR de la entrada <?php echo s($entradaQR['butaca']); ?>">
+                                <p><?php echo s($entradaQR['butaca']); ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="separator">━━━━━━━━━━━━━━━━━━━━━━</div>
+                <?php endif; ?>
+
                 <!-- PIE -->
                 <div class="ticket-footer">
                     <?php if ($tipoComprobante === 'TICKET'): ?>
@@ -398,6 +413,39 @@ body, .ticket-page {
     font-weight: bold;
     padding-top: 6px;
     border-top: 2px solid #000;
+}
+
+.entradas-qr {
+    text-align: center;
+}
+
+.entradas-qr-titulo {
+    font-size: 9px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.entrada-qr {
+    padding: 6px 0;
+    border-bottom: 1px dashed #ccc;
+    break-inside: avoid;
+}
+
+.entrada-qr:last-child {
+    border-bottom: none;
+}
+
+.entrada-qr img {
+    display: block;
+    width: 38mm;
+    height: 38mm;
+    margin: 0 auto 3px;
+    image-rendering: pixelated;
+}
+
+.entrada-qr p {
+    font-size: 10px;
+    font-weight: bold;
 }
 
 .ticket-footer {

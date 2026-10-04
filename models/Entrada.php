@@ -13,6 +13,7 @@ class Entrada extends ActiveRecord
     public $rela_tipo_entrada;
     public $rela_funcion;
     public $estado;
+    public $codigo_acceso; // lo que lleva el QR; no está en $columnasDB: se escribe solo al crear
 
 
     public $tipo_entrada_desc;
@@ -152,10 +153,12 @@ class Entrada extends ActiveRecord
             $this->numero_ticket_entrada = $this->generarNumeroTicket();
         }
 
+        $this->codigo_acceso = self::generarCodigoAcceso();
+
         $db = self::getDB();
 
-        $query = "INSERT INTO " . static::$table . " (numero_ticket_entrada, rela_tipo_entrada, rela_funcion, estado)
-                  VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO " . static::$table . " (numero_ticket_entrada, rela_tipo_entrada, rela_funcion, estado, codigo_acceso)
+                  VALUES (?, ?, ?, ?, ?)";
 
         $stmt = $db->prepare($query);
 
@@ -166,7 +169,7 @@ class Entrada extends ActiveRecord
             ];
         }
 
-        $stmt->bind_param('iiii', $this->numero_ticket_entrada, $this->rela_tipo_entrada, $this->rela_funcion, $this->estado);
+        $stmt->bind_param('iiiis', $this->numero_ticket_entrada, $this->rela_tipo_entrada, $this->rela_funcion, $this->estado, $this->codigo_acceso);
         $resultado = $stmt->execute();
 
         if ($resultado) {
@@ -281,6 +284,32 @@ class Entrada extends ActiveRecord
         return null;
     }
 
+    // Código aleatorio del QR: 32 caracteres hex (128 bits), imposible de adivinar
+    public static function generarCodigoAcceso(): string
+    {
+        return bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Devuelve el codigo_acceso de una entrada y, si todavía no tiene (entradas anteriores al QR),
+     * se lo asigna. El WHERE codigo_acceso IS NULL evita pisar uno ya asignado por otro pedido.
+     */
+    public static function asegurarCodigoAcceso(int $idEntrada): ?string
+    {
+        $db = self::getDB();
+
+        $stmt = $db->prepare("UPDATE entradas SET codigo_acceso = ? WHERE id_entrada = ? AND codigo_acceso IS NULL");
+        $codigo = self::generarCodigoAcceso();
+        $stmt->bind_param('si', $codigo, $idEntrada);
+        $stmt->execute();
+
+        $stmt = $db->prepare("SELECT codigo_acceso FROM entradas WHERE id_entrada = ?");
+        $stmt->bind_param('i', $idEntrada);
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_column() ?: null;
+    }
+
     private function generarNumeroTicket()
     {
         $numero = rand(100000, 999999);
@@ -393,7 +422,9 @@ class Entrada extends ActiveRecord
                 o.id_orden,
                 o.total,
                 bv.fecha_venta,
-                CASE 
+                b.fila_butaca,
+                b.numero_butaca,
+                CASE
                     WHEN e.estado = -1 THEN 'cancelada'
                     WHEN e.estado = 2 THEN 'usada'
                     WHEN TIMESTAMP(f.fecha_hora, t.turno_horario) > NOW() THEN 'vigente'
@@ -407,6 +438,7 @@ class Entrada extends ActiveRecord
               INNER JOIN turnos t ON f.rela_turnos = t.id_turnos
               INNER JOIN peliculas p ON f.rela_peliculas = p.id_pelicula
               INNER JOIN salas s ON f.rela_salas = s.id_sala
+              LEFT JOIN butacas b ON bv.id_butaca = b.id_butaca
               WHERE o.id_usuario = ?
               ORDER BY TIMESTAMP(f.fecha_hora, t.turno_horario) DESC";
 
