@@ -481,7 +481,7 @@ foreach ($perfil as $perfiles) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.ok) {
-                        renderizarMisCompras(data.entradas, data.cantina, data.fichas);
+                        renderizarMisCompras(data.entradas, data.pedidos);
                     } else {
                         mostrarErrorMisCompras(data.mensaje || 'Error al cargar tus compras');
                     }
@@ -501,7 +501,7 @@ foreach ($perfil as $perfiles) {
     `;
         }
 
-        function renderizarMisCompras(entradas, cantina, fichas) {
+        function renderizarMisCompras(entradas, pedidos) {
             const html = `
         <div class="perfil-container">
             <div class="perfil-header"><h2 class="nombre">Mis Compras</h2></div>
@@ -510,11 +510,8 @@ foreach ($perfil as $perfiles) {
                 <button type="button" class="tab-btn active" id="tabBtnEntradas" onclick="cambiarTabCompras('entradas')">
                     <i class="fa-solid fa-ticket"></i> Entradas
                 </button>
-                <button type="button" class="tab-btn" id="tabBtnCantina" onclick="cambiarTabCompras('cantina')">
-                    <i class="fa-solid fa-cookie-bite"></i> Cantina
-                </button>
-                <button type="button" class="tab-btn" id="tabBtnFichas" onclick="cambiarTabCompras('fichas')">
-                    <i class="fa-solid fa-dice"></i> Fichas
+                <button type="button" class="tab-btn" id="tabBtnPedidos" onclick="cambiarTabCompras('pedidos')">
+                    <i class="fa-solid fa-cookie-bite"></i> Cantina y fichas
                 </button>
             </div>
 
@@ -522,12 +519,8 @@ foreach ($perfil as $perfiles) {
                 ${renderizarEntradas(entradas)}
             </div>
 
-            <div id="tabCantina" class="tab-content-compras" style="display:none;">
-                ${renderizarCantina(cantina)}
-            </div>
-
-            <div id="tabFichas" class="tab-content-compras" style="display:none;">
-                ${renderizarFichas(fichas)}
+            <div id="tabPedidos" class="tab-content-compras" style="display:none;">
+                ${renderizarPedidos(pedidos)}
             </div>
         </div>
     `;
@@ -537,12 +530,10 @@ foreach ($perfil as $perfiles) {
 
         function cambiarTabCompras(tab) {
             document.getElementById('tabEntradas').style.display = tab === 'entradas' ? 'block' : 'none';
-            document.getElementById('tabCantina').style.display = tab === 'cantina' ? 'block' : 'none';
-            document.getElementById('tabFichas').style.display = tab === 'fichas' ? 'block' : 'none';
+            document.getElementById('tabPedidos').style.display = tab === 'pedidos' ? 'block' : 'none';
 
             document.getElementById('tabBtnEntradas').classList.toggle('active', tab === 'entradas');
-            document.getElementById('tabBtnCantina').classList.toggle('active', tab === 'cantina');
-            document.getElementById('tabBtnFichas').classList.toggle('active', tab === 'fichas');
+            document.getElementById('tabBtnPedidos').classList.toggle('active', tab === 'pedidos');
         }
 
         function renderizarEntradas(entradas) {
@@ -611,12 +602,12 @@ foreach ($perfil as $perfiles) {
     `;
         }
 
-        function alternarQREntrada(boton, idPanel) {
+        function alternarQREntrada(boton, idPanel, textoVer = 'Ver QR') {
             const panel = document.getElementById(idPanel);
             panel.hidden = !panel.hidden;
             boton.setAttribute('aria-expanded', String(!panel.hidden));
             boton.innerHTML = panel.hidden
-                ? '<i class="fa-solid fa-qrcode"></i> Ver QR'
+                ? `<i class="fa-solid fa-qrcode"></i> ${textoVer}`
                 : '<i class="fa-solid fa-xmark"></i> Ocultar QR';
         }
 
@@ -626,35 +617,68 @@ foreach ($perfil as $perfiles) {
             return div.innerHTML;
         }
 
-        function renderizarFichas(fichas) {
-            return renderizarCantina(fichas);
-        }
-
-        function renderizarCantina(ordenes) {
-            if (!ordenes || ordenes.length === 0) {
-                return '<p style="text-align:center; color:#a0aec0; padding: 30px 0;">Todavía no compraste nada en cantina.</p>';
+        // Productos y fichas comprados por la web: un pedido por compra, con su QR de retiro
+        // mientras quede algo por retirar en la cantina
+        function renderizarPedidos(pedidos) {
+            if (!pedidos || pedidos.length === 0) {
+                return '<p style="text-align:center; color:#a0aec0; padding: 30px 0;">Todavía no compraste productos ni fichas.</p>';
             }
 
-            return ordenes.map(orden => {
-                const fecha = new Date(orden.fecha).toLocaleString('es-AR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short'
-                });
-                const items = orden.productos.map(p => `<li>${p.cantidad}x ${p.nombre}</li>`).join('');
+            const pendientes = pedidos.filter(p => !p.retirado);
+            const retirados = pedidos.filter(p => p.retirado);
 
-                return `
+            let html = '';
+            if (pendientes.length > 0) {
+                html += '<h4 style="color:#ed850f; margin: 15px 0 10px;">Para retirar</h4>';
+                html += pendientes.map(tarjetaPedido).join('');
+            }
+            if (retirados.length > 0) {
+                html += '<h4 style="color:#a0aec0; margin: 25px 0 10px;">Retirados</h4>';
+                html += retirados.map(tarjetaPedido).join('');
+            }
+            return html;
+        }
+
+        function tarjetaPedido(p) {
+            const fecha = new Date(String(p.fecha).replace(' ', 'T')).toLocaleString('es-AR', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            });
+            const productos = p.productos.map(x => `
+                <li>${escaparHtml(x.nombre)} — compró ${x.comprado} · ${x.quedan === 0
+                    ? '<span class="pedido-retirado">✓ retirado</span>'
+                    : `retiró ${x.entregado} · <strong>quedan ${x.quedan}</strong>`}</li>`).join('');
+
+            const idPanel = `qr-pedido-${p.id_orden}`;
+            const botonQR = p.qr ? `
+                <button type="button" class="btn-ver-qr" aria-expanded="false" aria-controls="${idPanel}"
+                    onclick="alternarQREntrada(this, '${idPanel}', 'Ver QR de retiro')">
+                    <i class="fa-solid fa-qrcode"></i> Ver QR de retiro
+                </button>` : '';
+            const panelQR = p.qr ? `
+                <div class="entrada-qr-panel" id="${idPanel}" hidden>
+                    <img src="${p.qr}" alt="Código QR de retiro del pedido">
+                    <p>Mostralo en la cantina: podés retirar todo junto o de a poco</p>
+                    <p class="entrada-qr-codigo">Código: <strong>${escaparHtml(p.codigo_corto)}</strong></p>
+                </div>` : '';
+
+            return `
+        <div class="entrada-compra">
             <div class="tarjeta-compra">
                 <div class="tarjeta-compra-info">
-                    <h4>Pedido #${orden.numero_orden || orden.id_orden || 'N/A'}</h4>
+                    <h4>Pedido #${escaparHtml(p.numero_orden || p.id_orden)}</h4>
                     <p>${fecha}</p>
-                    <ul style="margin: 8px 0 0; padding-left: 18px; color:#e2e8f0; font-size:13px;">${items}</ul>
+                    <ul class="pedido-productos">${productos}</ul>
                 </div>
                 <div class="tarjeta-compra-estado">
-                    <strong style="color:#ed850f;">$${orden.total.toLocaleString('es-AR')}</strong>
+                    <strong style="color:#ed850f;">$${Number(p.total).toLocaleString('es-AR')}</strong>
+                    ${p.retirado ? '<span class="badge-compra badge-usada">Retirado</span>' : ''}
+                    ${botonQR}
                 </div>
             </div>
-        `;
-            }).join('');
+            ${panelQR}
+        </div>
+    `;
         }
     </script>
 

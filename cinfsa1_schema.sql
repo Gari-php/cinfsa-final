@@ -463,6 +463,25 @@ CREATE TABLE `entradas` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `entregas_orden`
+--
+
+DROP TABLE IF EXISTS `entregas_orden`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `entregas_orden` (
+  `id_entrega` int(11) NOT NULL AUTO_INCREMENT,
+  `id_detalle` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `fecha` datetime NOT NULL,
+  PRIMARY KEY (`id_entrega`),
+  KEY `idx_entregas_detalle` (`id_detalle`),
+  CONSTRAINT `fk_entregas_detalle` FOREIGN KEY (`id_detalle`) REFERENCES `detalle_orden` (`id_detalle`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `estados_butacas`
 --
 
@@ -795,8 +814,10 @@ CREATE TABLE `ordenes` (
   `fecha_creacion` datetime DEFAULT current_timestamp(),
   `fecha_pago` datetime DEFAULT NULL,
   `fecha_actualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `codigo_retiro` char(32) DEFAULT NULL COMMENT 'Codigo aleatorio del QR de retiro (hex)',
   PRIMARY KEY (`id_orden`),
   UNIQUE KEY `numero_orden` (`numero_orden`),
+  UNIQUE KEY `uq_ordenes_codigo_retiro` (`codigo_retiro`),
   KEY `idx_usuario` (`id_usuario`),
   KEY `idx_estado` (`estado`),
   KEY `idx_payment` (`payment_id`),

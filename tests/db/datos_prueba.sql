@@ -7,9 +7,9 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ─────────────────────────────────────────────────────────────
 -- Catálogos
 -- ─────────────────────────────────────────────────────────────
-INSERT INTO `perfiles` (`id_perfiles`, `nombre_perfil`, `permiso_perfil`, `estado`) VALUES (1,'CLIENTE','Cliente del sistema obtendra los servicios del complejo a su disposicion',1),(2,'VENDEDOR',NULL,0),(3,'ADMINISTRADOR','Administrara el sistema completo con Cargas de datos y baja de los mismos',1),(4,'VENDEDOR_FUNCIONES','Encargado de Ventas internas de Funciones ',1),(5,'VENDEDOR_PRODUCTOS','Encargado de Ventas Internas de Productos',1),(7,'CONTROL_ACCESO','Controla el ingreso a las salas escaneando el QR de las entradas',1);
-INSERT INTO `modulos` (`id_modulo`, `modulo_nombre`) VALUES (1,'VENTA_FUNCIONES'),(2,'DEVOLUCION_ENTRADAS'),(3,'CONSULTA_VENTAS_FUNCIONES'),(4,'VENTA_PRODUCTOS'),(5,'CONSULTA_VENTAS_PRODUCTOS'),(6,'GESTION_CAJA'),(7,'MOVIMIENTOS_CAJA'),(8,'DEVOLUCION_PRODUCTOS'),(9,'CONTROL_ENTRADAS');
-INSERT INTO `modulo_x_tipos_de_usuarios` (`id_mod_x_tipo`, `estado`, `rela_tipos_de_usuarios`, `rela_modulo`) VALUES (39,1,4,3),(40,1,4,1),(41,1,4,7),(42,1,4,2),(43,1,4,6),(44,1,5,5),(45,1,5,4),(46,1,5,7),(47,1,5,6),(48,0,5,8),(57,1,7,9);
+INSERT INTO `perfiles` (`id_perfiles`, `nombre_perfil`, `permiso_perfil`, `estado`) VALUES (1,'CLIENTE','Cliente del sistema obtendra los servicios del complejo a su disposicion',1),(2,'VENDEDOR',NULL,0),(3,'ADMINISTRADOR','Administrara el sistema completo con Cargas de datos y baja de los mismos',1),(4,'VENDEDOR_FUNCIONES','Encargado de Ventas internas de Funciones ',1),(5,'VENDEDOR_PRODUCTOS','Encargado de Ventas Internas de Productos',1),(7,'CONTROL_ACCESO','Controla el ingreso a las salas escaneando el QR de las entradas',1),(8,'ENTREGA_PRODUCTOS','Entrega en la cantina los productos y fichas comprados por la web',1);
+INSERT INTO `modulos` (`id_modulo`, `modulo_nombre`) VALUES (1,'VENTA_FUNCIONES'),(2,'DEVOLUCION_ENTRADAS'),(3,'CONSULTA_VENTAS_FUNCIONES'),(4,'VENTA_PRODUCTOS'),(5,'CONSULTA_VENTAS_PRODUCTOS'),(6,'GESTION_CAJA'),(7,'MOVIMIENTOS_CAJA'),(8,'DEVOLUCION_PRODUCTOS'),(9,'CONTROL_ENTRADAS'),(10,'ENTREGA_PRODUCTOS');
+INSERT INTO `modulo_x_tipos_de_usuarios` (`id_mod_x_tipo`, `estado`, `rela_tipos_de_usuarios`, `rela_modulo`) VALUES (39,1,4,3),(40,1,4,1),(41,1,4,7),(42,1,4,2),(43,1,4,6),(44,1,5,5),(45,1,5,4),(46,1,5,7),(47,1,5,6),(48,0,5,8),(57,1,7,9),(58,1,8,10);
 INSERT INTO `sexo` (`id_sexo`, `nombre_sexo`, `estado`) VALUES (1,'MASCULINO',1),(2,'FEMENINO',1),(3,'NO BINARIO',1),(4,'PREFIERO NO DECIR ',1);
 INSERT INTO `estados_peliculas` (`id_estado_pelicula`, `nombre_estado_pelicula`, `estado`) VALUES (1,'Emision',1),(2,'Proximamente',1),(3,'Finalizada',1);
 INSERT INTO `estados_butacas` (`id_estado_butaca`, `nombre_estado_butaca`) VALUES (1,'Disponible'),(2,'No disponible'),(3,'Reservado');
@@ -40,7 +40,8 @@ INSERT INTO `personas` (`id_persona`, `nombre_persona`, `apellido_persona`, `fec
 (3, 'Vendedor', 'Productos', '1990-01-01', NOW(), 1, 4),
 (4, 'Cliente', 'Uno', '1990-01-01', NOW(), 1, 4),
 (5, 'Cliente', 'Dos', '1990-01-01', NOW(), 1, 4),
-(6, 'Control', 'Acceso', '1990-01-01', NOW(), 1, 4);
+(6, 'Control', 'Acceso', '1990-01-01', NOW(), 1, 4),
+(7, 'Entrega', 'Productos', '1990-01-01', NOW(), 1, 4);
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `clave_usuario`, `rela_perfil`, `id_persona`, `verificado`, `email`, `estado`) VALUES
 (1, 'admin_test',      '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 3, 1, 1, 'admin@cinfsa.test', 1),
@@ -48,7 +49,8 @@ INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `clave_usuario`, `rela_p
 (3, 'vproductos_test', '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 5, 3, 1, 'vproductos@cinfsa.test', 1),
 (4, 'cliente_test',    '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 1, 4, 1, 'cliente@cinfsa.test', 1),
 (5, 'cliente2_test',   '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 1, 5, 1, 'cliente2@cinfsa.test', 1),
-(6, 'control_test',    '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 7, 6, 1, 'control@cinfsa.test', 1);
+(6, 'control_test',    '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 7, 6, 1, 'control@cinfsa.test', 1),
+(7, 'entrega_test',    '$2y$10$GIiN4qThNeR1YT/2qKjtsuxRiYepOyi99cC/0.ez1SGWez9Im1mm6', 8, 7, 1, 'entrega@cinfsa.test', 1);
 
 INSERT INTO `peliculas` (`id_pelicula`, `titulo_pelicula`, `sinopsis_pelicula`, `anyo_pelicula`, `duracion_pelicula`, `imagen_pelicula`, `rela_estado_pelicula`, `rela_tipo_clasificacion`, `rela_idioma_pelicula`) VALUES
 (1, 'Pelicula de Prueba', 'Pelicula usada por los tests automaticos.', 2026, 120, NULL, 1, 1, 1);

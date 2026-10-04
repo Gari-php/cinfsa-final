@@ -4,5 +4,6 @@
   "vproductos":  { "usuario": "vproductos_test", "clave": "Prueba123!", "inicio": "/vendedorproductos" },
   "cliente":     { "usuario": "cliente_test",    "clave": "Prueba123!", "inicio": "/menu" },
   "cliente2":    { "usuario": "cliente2_test",   "clave": "Prueba123!", "inicio": "/menu" },
-  "control":     { "usuario": "control_test",    "clave": "Prueba123!", "inicio": "/control/entradas" }
+  "control":     { "usuario": "control_test",    "clave": "Prueba123!", "inicio": "/control/entradas" },
+  "entrega":     { "usuario": "entrega_test",    "clave": "Prueba123!", "inicio": "/control/retiros" }
 }

@@ -25,7 +25,7 @@ $logErrores = "$tmp/php_errores.log";
 $problemas = [];
 
 $usuarios = json_decode(file_get_contents("$raiz/cypress/fixtures/usuarios.json"), true);
-$roles = ['anonimo' => null] + array_intersect_key($usuarios, array_flip(['admin', 'vfunciones', 'vproductos', 'cliente', 'control']));
+$roles = ['anonimo' => null] + array_intersect_key($usuarios, array_flip(['admin', 'vfunciones', 'vproductos', 'cliente', 'control', 'entrega']));
 
 // Rutas que no se piden: cierran la sesión o escriben en logs de pagos
 $excluidas = ['/logaut', '/carrito/retorno'];

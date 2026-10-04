@@ -13,11 +13,18 @@ class CodigoQR
 {
     // Prefijo del texto de cada tipo de QR, para que el escáner sepa qué está leyendo
     const PREFIJO_ENTRADA = 'CINFSA-E-';
+    const PREFIJO_ORDEN = 'CINFSA-O-';   // retiro de productos y fichas de una compra web
 
     // Texto que lleva el QR de una entrada a partir de su codigo_acceso
     public static function textoEntrada(string $codigoAcceso): string
     {
         return self::PREFIJO_ENTRADA . $codigoAcceso;
+    }
+
+    // Texto que lleva el QR de retiro de una orden a partir de su codigo_retiro
+    public static function textoOrden(string $codigoRetiro): string
+    {
+        return self::PREFIJO_ORDEN . $codigoRetiro;
     }
 
     /**

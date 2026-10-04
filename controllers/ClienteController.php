@@ -983,103 +983,43 @@ class ClienteController
             }
             unset($entrada);
 
-            $db = \Models\ActiveRecord::getDB();
+            // Cantina y fichas: un pedido por compra web, con su QR de retiro mientras quede algo
+            $pedidos = [];
+            foreach (\Models\RetiroOrden::pedidosDelCliente((int)$idUsuario) as $orden) {
+                $items = \Models\RetiroOrden::items((int)$orden['id_orden']);
+                $quedan = array_sum(array_column($items, 'quedan'));
 
-            $query = "SELECT 
-            ms.id_orden,
-            o.numero_orden,
-            ms.fecha,
-            ms.id_producto,
-            ms.cantidad,
-            pc.nombre_producto_cantina,
-            pc.precio_producto
-          FROM movimientos_stock ms
-          LEFT JOIN ordenes o ON ms.id_orden = o.id_orden
-          LEFT JOIN productos_cantina pc ON ms.id_producto = pc.id_producto_cantina
-          WHERE ms.id_usuario = ? 
-            AND ms.tipo_producto = 'cantina'
-            AND ms.tipo_movimiento = 'venta'
-            AND (o.estado IS NULL OR o.estado != 'cancelado')
-          ORDER BY ms.fecha DESC";
-
-            $stmt = $db->prepare($query);
-            $stmt->bind_param('i', $idUsuario);
-            $stmt->execute();
-            $resultado = $stmt->get_result();
-
-            // Agrupar por orden para mostrar una tarjeta por compra, no una por producto
-            $ordenesCantina = [];
-            while ($row = $resultado->fetch_assoc()) {
-                $clave = $row['id_orden'] ?? ('sin-orden-' . $row['fecha']);
-
-                if (!isset($ordenesCantina[$clave])) {
-                    $ordenesCantina[$clave] = [
-                        'id_orden' => $row['id_orden'],
-                        'numero_orden' => $row['numero_orden'],
-                        'fecha' => $row['fecha'],
-                        'productos' => [],
-                        'total' => 0
-                    ];
+                $qr = null;
+                $codigoCorto = null;
+                if ($quedan > 0) {
+                    $codigo = \Models\RetiroOrden::asegurarCodigoRetiro((int)$orden['id_orden']);
+                    if ($codigo) {
+                        $qr = \Classes\CodigoQR::dataUri(\Classes\CodigoQR::textoOrden($codigo), 8);
+                        $codigoCorto = \Models\RetiroOrden::codigoCorto($codigo);
+                    }
                 }
 
-                $precio = $row['precio_producto'] ?? 0;
-                $ordenesCantina[$clave]['productos'][] = [
-                    'nombre' => $row['nombre_producto_cantina'] ?? 'Producto',
-                    'cantidad' => $row['cantidad'],
+                $pedidos[] = [
+                    'id_orden' => (int)$orden['id_orden'],
+                    'numero_orden' => $orden['numero_orden'],
+                    'fecha' => $orden['fecha'],
+                    'total' => array_sum(array_map(fn($i) => (float)$i['subtotal'], $items)),
+                    'retirado' => $quedan === 0,
+                    'qr' => $qr,
+                    'codigo_corto' => $codigoCorto,
+                    'productos' => array_map(fn($i) => [
+                        'nombre' => $i['nombre_producto'],
+                        'comprado' => $i['comprado'],
+                        'entregado' => $i['entregado'],
+                        'quedan' => $i['quedan'],
+                    ], $items),
                 ];
-                $ordenesCantina[$clave]['total'] += $precio * $row['cantidad'];
-            }
-
-            $queryFichas = "SELECT 
-                ms.id_orden,
-                o.numero_orden,
-                ms.fecha,
-                ms.id_producto,
-                ms.cantidad,
-                m.maquinas_nombre,
-                f.precio_ficha
-              FROM movimientos_stock ms
-              LEFT JOIN ordenes o ON ms.id_orden = o.id_orden
-              LEFT JOIN maquinas m ON ms.id_producto = m.id_maquinas
-              LEFT JOIN fichas f ON m.rela_fichas = f.id_fichas
-              WHERE ms.id_usuario = ? 
-                AND ms.tipo_producto = 'fichas'
-                AND ms.tipo_movimiento = 'venta'
-                AND (o.estado IS NULL OR o.estado != 'cancelado')
-              ORDER BY ms.fecha DESC";
-
-            $stmtFichas = $db->prepare($queryFichas);
-            $stmtFichas->bind_param('i', $idUsuario);
-            $stmtFichas->execute();
-            $resultadoFichas = $stmtFichas->get_result();
-
-            $ordenesFichas = [];
-            while ($row = $resultadoFichas->fetch_assoc()) {
-                $clave = $row['id_orden'] ?? ('sin-orden-' . $row['fecha']);
-
-                if (!isset($ordenesFichas[$clave])) {
-                    $ordenesFichas[$clave] = [
-                        'id_orden' => $row['id_orden'],
-                        'numero_orden' => $row['numero_orden'],
-                        'fecha' => $row['fecha'],
-                        'productos' => [],
-                        'total' => 0
-                    ];
-                }
-
-                $precio = $row['precio_ficha'] ?? 0;
-                $ordenesFichas[$clave]['productos'][] = [
-                    'nombre' => $row['maquinas_nombre'] ?? 'Máquina',
-                    'cantidad' => $row['cantidad'],
-                ];
-                $ordenesFichas[$clave]['total'] += $precio * $row['cantidad'];
             }
 
             echo json_encode([
                 'ok' => true,
                 'entradas' => $entradas,
-                'cantina' => array_values($ordenesCantina),
-                'fichas' => array_values($ordenesFichas)
+                'pedidos' => $pedidos
             ]);
         } catch (\Exception $e) {
             error_log('Error en misCompras: ' . $e->getMessage());

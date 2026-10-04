@@ -285,6 +285,11 @@ class Router {
                 '/control/entradas',
             ],
 
+            // Retiro de pedidos web en la cantina (perfil ENTREGA_PRODUCTOS, o el que tenga el módulo)
+            'ENTREGA_PRODUCTOS' => [
+                '/control/retiros',
+            ],
+
             'VENTA_PRODUCTOS' => [
                 '/vendedorproductos',
                 '/vendedorproductos/',

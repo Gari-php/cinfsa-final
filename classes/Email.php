@@ -159,9 +159,9 @@ class Email
             return false;
         }
     }
-    public function enviarTicketCompra($numeroOrden, $items, $total, $paymentId)
+    public function enviarTicketCompra($numeroOrden, $items, $total, $paymentId, $codigoRetiro = null)
     {
-        $ticket = self::armarTicketCompra($this->nombre_usuario, $numeroOrden, $items, $total, $paymentId);
+        $ticket = self::armarTicketCompra($this->nombre_usuario, $numeroOrden, $items, $total, $paymentId, $codigoRetiro);
 
         $email = new Mail();
         $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA Cinema");
@@ -194,10 +194,11 @@ class Email
      *
      * Cada ítem de tipo 'butacas' puede traer 'entrada' (ver PagoController::datosEntradaParaMail):
      * ['pelicula', 'cuando', 'donde', 'codigo_acceso'], ['no_asignada' => true] o null.
+     * $codigoRetiro es el de la orden: con él, la sección de productos y fichas lleva el QR de retiro.
      *
      * @return array ['asunto' => string, 'html' => string, 'adjuntos' => [cid => png binario]]
      */
-    public static function armarTicketCompra($nombreCliente, $numeroOrden, $items, $total, $paymentId): array
+    public static function armarTicketCompra($nombreCliente, $numeroOrden, $items, $total, $paymentId, $codigoRetiro = null): array
     {
         date_default_timezone_set('America/Argentina/Buenos_Aires');
         $h = fn($v) => htmlspecialchars((string)($v ?? ''), ENT_QUOTES, 'UTF-8');
@@ -255,6 +256,21 @@ class Email
                 </tr>';
         }
 
+        // QR de retiro del pedido: uno solo para todos los productos y fichas
+        if ($otros && $codigoRetiro) {
+            $adjuntos['qr-retiro'] = CodigoQR::png(CodigoQR::textoOrden($codigoRetiro), 6);
+            $retiroHTML = '
+                    <div style="border: 2px dashed #ed850f; background: #fffaf3; padding: 14px 12px; margin-top: 12px; text-align: center;">
+                        <div style="font-size: 13px; font-weight: bold; color: #000;">QR DE RETIRO EN LA CANTINA</div>
+                        <img src="cid:qr-retiro" width="170" height="170" alt="QR de retiro" style="display: block; margin: 10px auto 6px; width: 170px; height: 170px;">
+                        <div style="font-size: 10px; color: #666;">Podés retirar todo junto o de a poco, hasta completar lo comprado</div>
+                        <div style="font-size: 11px; color: #333; margin-top: 4px; letter-spacing: 1px;">CÓDIGO: <strong>' . $h(\Models\RetiroOrden::codigoCorto($codigoRetiro)) . '</strong></div>
+                    </div>';
+        } else {
+            $retiroHTML = '
+                    <div style="font-size: 11px; color: #333; margin-top: 8px;">Retiralos en la cantina mostrando el número de orden.</div>';
+        }
+
         // ── Detalle de pago (todos los ítems) ──
         $detalleHTML = '';
         foreach ($items as $item) {
@@ -276,7 +292,9 @@ class Email
             $importante[] = 'También podés ver tus QR en "Mis compras" de la web';
         }
         if ($otros) {
-            $importante[] = 'Productos y fichas: retiralos en la cantina con el número de orden';
+            $importante[] = $codigoRetiro
+                ? 'Productos y fichas: retiralos en la cantina con el QR de retiro, todo junto o de a poco'
+                : 'Productos y fichas: retiralos en la cantina con el número de orden';
         }
         $importante[] = 'Conservá este mail hasta usar todo lo comprado';
 
@@ -318,8 +336,7 @@ class Email
                     . ($entradas ? $titulo('TUS ENTRADAS') . $entradasHTML : '')
 
                     . ($otros ? $titulo('PRODUCTOS Y FICHAS') . '
-                    <table style="width: 100%; border-collapse: collapse;">' . $otrosHTML . '</table>
-                    <div style="font-size: 11px; color: #333; margin-top: 8px;">Retiralos en la cantina mostrando el número de orden.</div>' : '')
+                    <table style="width: 100%; border-collapse: collapse;">' . $otrosHTML . '</table>' . $retiroHTML : '')
 
                     . $titulo('DETALLE DE PAGO') . '
                     <table style="width: 100%; border-collapse: collapse;">

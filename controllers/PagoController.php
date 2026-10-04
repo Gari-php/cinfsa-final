@@ -405,10 +405,14 @@ class PagoController
             \Models\Carrito::procesarVentaCarrito($idUsuario, $idOrden);
             \Models\Carrito::vaciarCarrito($idUsuario);
 
+            // Código del QR de retiro, si compró productos o fichas
+            $tieneRetiro = array_filter($items, fn($i) => in_array($i['tipo_producto'] ?? '', ['cantina', 'fichas']));
+            $codigoRetiro = $tieneRetiro ? \Models\RetiroOrden::asegurarCodigoRetiro((int)$idOrden) : null;
+
             // PASO 5: Enviar email
             try {
                 $email = new \Classes\Email($_SESSION['email'], $_SESSION['nombre_usuario'], null);
-                $email->enviarTicketCompra($numeroOrden, $items, $total, $paymentId);
+                $email->enviarTicketCompra($numeroOrden, $items, $total, $paymentId, $codigoRetiro);
             } catch (\Exception $e) {
                 error_log("Error email: " . $e->getMessage());
             }

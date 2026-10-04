@@ -40,6 +40,12 @@ module.exports = defineConfig({
           const script = path.join(__dirname, 'tests', 'funcion_prueba.php');
           return Number(execFileSync(php, [script, String(minutosDesdeAhora)], { encoding: 'utf8' }));
         },
+        // Crea un pedido web con 10 productos y 6 fichas; devuelve { id_orden, numero_orden, codigo }
+        crearPedidoWeb({ idUsuario, estado = 'pagado' }) {
+          const php = process.env.PHP_BIN || 'php';
+          const script = path.join(__dirname, 'tests', 'pedido_web_prueba.php');
+          return JSON.parse(execFileSync(php, [script, String(idUsuario), estado], { encoding: 'utf8' }));
+        },
       });
     },
     viewportWidth: 1280,

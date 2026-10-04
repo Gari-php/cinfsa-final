@@ -935,3 +935,27 @@ textarea {
         margin: 5px 0;
     }
 }
+/* ===== PEDIDOS DE CANTINA Y FICHAS ===== */
+#pagina-perfil-cliente .pedido-productos {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: #e2e8f0;
+    font-size: 13px;
+}
+
+#pagina-perfil-cliente .pedido-productos li {
+    margin-bottom: 2px;
+}
+
+#pagina-perfil-cliente .pedido-productos strong {
+    color: #ed850f;
+}
+
+#pagina-perfil-cliente .pedido-retirado {
+    color: #86efac;
+}
+
+#pagina-perfil-cliente .tarjeta-compra-estado .badge-compra {
+    display: block;
+    margin-top: 6px;
+}

@@ -55,6 +55,14 @@
             <small>Gestionar movimientos</small>
         </a>
 
+        <?php if (\Middlewares\ValidarModulo::tiene('ENTREGA_PRODUCTOS')): ?>
+        <a href="/control/retiros" class="btn-accion btn-retiros">
+            <i class="fas fa-bag-shopping"></i>
+            <span>Entregar Pedidos Web</span>
+            <small>Escanear QR de retiro</small>
+        </a>
+        <?php endif; ?>
+
         <button type="button" class="btn-accion btn-movimientos" onclick="verMovimientos()">
             <i class="fas fa-list"></i>
             <span>Ver Movimientos</span>
@@ -355,6 +363,7 @@
     .btn-vender i,
     .btn-consultar i,
     .btn-ingresos-egresos i,
+    .btn-retiros i,
     .btn-movimientos i {
         color: var(--color-principal);
     }
@@ -377,6 +386,7 @@
     .btn-vender:hover,
     .btn-movimientos:hover,
     .btn-ingresos-egresos:hover,
+    .btn-retiros:hover,
     .btn-consultar:hover {
         background: linear-gradient(135deg, var(--color-hover-gris) 0%, var(--color-hover-gris) 100%);
         border-color: var(--color-hover-gris);

@@ -46,6 +46,7 @@ use Controllers\GastosController;
 use Controllers\ContactoController;
 use Controllers\AuditoriaController;
 use Controllers\ControlEntradasController;
+use Controllers\ControlRetirosController;
 use MVC\Router;
 
 $router= new Router();
@@ -500,6 +501,12 @@ $router->get('/control/entradas', [ControlEntradasController::class, 'index']);
 $router->post('/control/entradas/validar', [ControlEntradasController::class, 'validar']);
 $router->post('/control/entradas/forzar', [ControlEntradasController::class, 'forzar']);
 $router->post('/control/entradas/deshacer', [ControlEntradasController::class, 'deshacer']);
+
+// Retiro en la cantina de productos y fichas comprados por la web (módulo ENTREGA_PRODUCTOS)
+$router->get('/control/retiros', [ControlRetirosController::class, 'index']);
+$router->post('/control/retiros/buscar', [ControlRetirosController::class, 'buscar']);
+$router->post('/control/retiros/entregar', [ControlRetirosController::class, 'entregar']);
+$router->post('/control/retiros/deshacer', [ControlRetirosController::class, 'deshacer']);
 
 //RUTAS DE PERFILES
 $router->get('/administrador/perfiles/listado', [PerfilController::class, 'index']);
