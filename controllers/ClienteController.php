@@ -977,6 +977,7 @@ class ClienteController
                     $codigo = \Models\Entrada::asegurarCodigoAcceso((int)$entrada['id_entrada']);
                     if ($codigo) {
                         $entrada['qr'] = \Classes\CodigoQR::dataUri(\Classes\CodigoQR::textoEntrada($codigo), 8);
+                        $entrada['codigo_corto'] = \Models\Entrada::codigoCorto($codigo);
                     }
                 }
             }

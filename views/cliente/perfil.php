@@ -593,6 +593,7 @@ foreach ($perfil as $perfiles) {
                 <div class="entrada-qr-panel" id="qr-entrada-${e.id_entrada}" hidden>
                     <img src="${e.qr}" alt="Código QR de la entrada">
                     <p>Mostrá este código en la entrada de la sala</p>
+                    <p class="entrada-qr-codigo">Código: <strong>${escaparHtml(e.codigo_corto)}</strong></p>
                 </div>` : '';
 
             return `

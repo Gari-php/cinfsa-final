@@ -846,6 +846,13 @@ textarea {
     margin: 0;
 }
 
+#pagina-perfil-cliente .entrada-qr-panel .entrada-qr-codigo {
+    margin-top: 6px;
+    color: #e2e8f0;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+}
+
 /* ===== BADGES DE ESTADO ===== */
 #pagina-perfil-cliente .badge-compra {
     display: inline-block;

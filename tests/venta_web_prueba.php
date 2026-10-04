@@ -3,10 +3,10 @@
  * Simula una compra web ya pagada de una butaca (orden pagada + entrada + butaca vendida), sin pasar
  * por MercadoPago. Lo usa la tarea `venderButacaWeb` de Cypress. Solo opera sobre la base de prueba.
  *
- * La entrada se crea SIN codigo_acceso, como las vendidas antes del QR: así se prueba que se le
- * asigna uno la primera vez que se muestra.
+ * Por defecto la entrada se crea SIN codigo_acceso, como las vendidas antes del QR: así se prueba
+ * que se le asigna uno la primera vez que se muestra. Con <con_codigo> = 1 se le genera uno.
  *
- * Uso: php tests/venta_web_prueba.php <id_butaca> <id_funcion> <id_usuario>
+ * Uso: php tests/venta_web_prueba.php <id_butaca> <id_funcion> <id_usuario> [con_codigo]
  * Devuelve el id de la entrada creada.
  */
 
@@ -21,7 +21,7 @@ if (!preg_match('/_test$/', $base)) {
     exit(1);
 }
 
-[, $idButaca, $idFuncion, $idUsuario] = array_map('intval', $argv + [0, 0, 0, 0]);
+[, $idButaca, $idFuncion, $idUsuario, $conCodigo] = array_map('intval', $argv + [0, 0, 0, 0, 0]);
 if (!$idButaca || !$idFuncion || !$idUsuario) {
     fwrite(STDERR, "Uso: php tests/venta_web_prueba.php <id_butaca> <id_funcion> <id_usuario>\n");
     exit(1);
@@ -40,9 +40,10 @@ $stmt->bind_param('is', $idUsuario, $numeroOrden);
 $stmt->execute();
 $idOrden = $db->insert_id;
 
-$stmt = $db->prepare("INSERT INTO entradas (rela_tipo_entrada, rela_funcion, estado)
-    SELECT rela_tipo_entrada, id_funcion, 1 FROM funciones WHERE id_funcion = ?");
-$stmt->bind_param('i', $idFuncion);
+$codigo = $conCodigo ? bin2hex(random_bytes(16)) : null;
+$stmt = $db->prepare("INSERT INTO entradas (rela_tipo_entrada, rela_funcion, estado, codigo_acceso)
+    SELECT rela_tipo_entrada, id_funcion, 1, ? FROM funciones WHERE id_funcion = ?");
+$stmt->bind_param('si', $codigo, $idFuncion);
 $stmt->execute();
 $idEntrada = $db->insert_id;
 

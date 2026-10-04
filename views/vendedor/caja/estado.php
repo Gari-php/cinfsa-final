@@ -56,6 +56,14 @@
             <small>Gestionar movimientos</small>
         </a>
 
+        <?php if (\Middlewares\ValidarModulo::tiene('CONTROL_ENTRADAS')): ?>
+        <a href="/control/entradas" class="btn-accion btn-control-entradas">
+            <i class="fas fa-qrcode"></i>
+            <span>Controlar Entradas</span>
+            <small>Escanear QR en la puerta</small>
+        </a>
+        <?php endif; ?>
+
         <button type="button" class="btn-accion btn-movimientos" onclick="verMovimientos()">
             <i class="fas fa-list"></i>
             <span>Ver Movimientos</span>
@@ -344,6 +352,7 @@
 .btn-vender,
 .btn-consultar,
 .btn-ingresos-egresos,
+.btn-control-entradas i,
 .btn-movimientos i { color: var(--color-principal); }
 .btn-cerrar-caja i { color: #dc2626; }
 
@@ -361,6 +370,7 @@
 .btn-vender:hover,
 .btn-movimientos:hover,
 .btn-ingresos-egresos:hover,
+.btn-control-entradas:hover,
 .btn-consultar:hover  {
     background: linear-gradient(135deg, var( --color-hover-gris) 0%, var( --color-hover-gris) 100%);
     border-color: var( --color-hover-gris);

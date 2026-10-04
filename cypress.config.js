@@ -27,11 +27,18 @@ module.exports = defineConfig({
           const script = path.join(__dirname, 'tests', 'reservar_butaca_prueba.php');
           return execFileSync(php, [script, String(idButaca), String(idFuncion), String(idUsuario)], { encoding: 'utf8' });
         },
-        // Simula una compra web ya pagada de una butaca; devuelve el id de la entrada (sin código QR todavía)
-        venderButacaWeb({ idButaca, idFuncion, idUsuario }) {
+        // Simula una compra web ya pagada de una butaca; devuelve el id de la entrada
+        // (sin código QR, salvo que se pida conCodigo)
+        venderButacaWeb({ idButaca, idFuncion, idUsuario, conCodigo = false }) {
           const php = process.env.PHP_BIN || 'php';
           const script = path.join(__dirname, 'tests', 'venta_web_prueba.php');
-          return Number(execFileSync(php, [script, String(idButaca), String(idFuncion), String(idUsuario)], { encoding: 'utf8' }));
+          return Number(execFileSync(php, [script, String(idButaca), String(idFuncion), String(idUsuario), conCodigo ? '1' : '0'], { encoding: 'utf8' }));
+        },
+        // Crea una función que empieza dentro de N minutos (negativo = ya empezó); devuelve su id
+        crearFuncion(minutosDesdeAhora) {
+          const php = process.env.PHP_BIN || 'php';
+          const script = path.join(__dirname, 'tests', 'funcion_prueba.php');
+          return Number(execFileSync(php, [script, String(minutosDesdeAhora)], { encoding: 'utf8' }));
         },
       });
     },

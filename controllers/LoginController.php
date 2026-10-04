@@ -83,7 +83,8 @@ class LoginController
                 3 => '/administrador',           // Administrador
                 4 => '/vendedor/caja',      // Vendedor de funciones
                 5 => '/vendedorproductos',              // Vendedor de productos
-                default => '/'
+                // Perfiles nuevos (como CONTROL_ACCESO): su id depende de la base, se resuelven por módulo
+                default => \Middlewares\ValidarModulo::tiene('CONTROL_ENTRADAS') ? '/control/entradas' : '/'
             };
 
             echo json_encode([

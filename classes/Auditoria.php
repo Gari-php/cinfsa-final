@@ -21,6 +21,8 @@ class Auditoria
         'sesion.logout'         => 'Cierre de sesión',
         'entrada.cancelar'      => 'Cancelación de entrada',
         'entrada.restaurar'     => 'Restauración de entrada',
+        'entrada.fuera_horario' => 'Ingreso fuera de horario',
+        'entrada.deshacer_ingreso' => 'Ingreso deshecho',
         'devolucion.entrada'    => 'Devolución de entrada',
         'devolucion.productos'  => 'Devolución de productos',
         'orden.cancelar'        => 'Cancelación de compra online',

@@ -222,6 +222,7 @@
                     </a>
                     <ul class="dropdown-menu" aria-hidden="true">
                         <li><a href="/administrador/auditoria/listado">Registro de auditoría</a></li>
+                        <li><a href="/control/entradas">Control de entradas (QR)</a></li>
                     </ul>
                 </li>
             <?php endif; ?>
@@ -362,6 +363,7 @@
                         </a>
                         <div class="submenu-lateral" id="lateral-control">
                             <a href="/administrador/auditoria/listado">• Registro de auditoría</a>
+                            <a href="/control/entradas">• Control de entradas (QR)</a>
                         </div>
                     </div>
                 <?php endif; ?>

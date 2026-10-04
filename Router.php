@@ -280,6 +280,11 @@ class Router {
                 '/vendedor/caja/resumen-cierre',
                 '/vendedorproductos/buscar-ficha'
             ],
+            // Control de entradas en la puerta (perfil CONTROL_ACCESO, o el que tenga el módulo)
+            'CONTROL_ENTRADAS' => [
+                '/control/entradas',
+            ],
+
             'VENTA_PRODUCTOS' => [
                 '/vendedorproductos',
                 '/vendedorproductos/',
@@ -362,6 +367,8 @@ class Router {
             include_once __DIR__ . '/views/layout_administrador.php';
         } elseif (strpos($view, 'vendedor/') === 0) {
             include_once __DIR__ . '/views/layout_vendedor.php';
+        } elseif (strpos($view, 'control/') === 0) {
+            include_once __DIR__ . '/views/layout_vendedor.php';  // pantalla simple, sin menú
         } elseif (strpos($view, 'vendedorproductos/') === 0) {
             include_once __DIR__ . '/views/layout_vendedor.php';  // Usa el mismo layout del vendedor por ahora
         } else {

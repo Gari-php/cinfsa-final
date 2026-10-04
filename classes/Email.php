@@ -241,6 +241,7 @@ class Email
                     <div style="font-size: 12px; color: #333; margin-top: 2px;">' . $h($entrada['donde']) . '</div>
                     <img src="cid:' . $cid . '" width="170" height="170" alt="QR de la entrada" style="display: block; margin: 10px auto 6px; width: 170px; height: 170px;">
                     <div style="font-size: 10px; color: #666;">Mostrá este QR en la entrada de la sala</div>
+                    <div style="font-size: 11px; color: #333; margin-top: 4px; letter-spacing: 1px;">CÓDIGO: <strong>' . $h(\Models\Entrada::codigoCorto($entrada['codigo_acceso'])) . '</strong></div>
                 </div>';
         }
 

@@ -310,6 +310,82 @@ class Entrada extends ActiveRecord
         return $stmt->get_result()->fetch_column() ?: null;
     }
 
+    // Largo del código corto que se muestra debajo del QR para cargarlo a mano en la puerta
+    const LARGO_CODIGO_CORTO = 8;
+
+    public static function codigoCorto(string $codigoAcceso): string
+    {
+        return strtoupper(substr($codigoAcceso, 0, self::LARGO_CODIGO_CORTO));
+    }
+
+    /**
+     * Busca una entrada para el control en la puerta por su código completo (32 hex, lo que trae
+     * el QR) o por el código corto (los primeros 8 o más). Trae película, función, butaca y quién
+     * la usó. Devuelve las entradas encontradas (más de una = código corto ambiguo).
+     */
+    public static function buscarParaControl(string $codigo): array
+    {
+        $exacto = strlen($codigo) === 32;
+        $db = self::getDB();
+
+        $stmt = $db->prepare("SELECT e.id_entrada, e.estado, e.codigo_acceso, e.usada_en,
+                u.nombre_usuario AS usada_por_nombre,
+                p.titulo_pelicula, te.tipo_entrada_desc, f.rela_salas AS sala,
+                b.fila_butaca, b.numero_butaca,
+                TIMESTAMP(f.fecha_hora, t.turno_horario) AS inicio,
+                DATE_ADD(TIMESTAMP(f.fecha_hora, t.turno_horario), INTERVAL COALESCE(p.duracion_pelicula, 180) MINUTE) AS fin
+            FROM entradas e
+            INNER JOIN funciones f ON f.id_funcion = e.rela_funcion
+            INNER JOIN turnos t ON t.id_turnos = f.rela_turnos
+            INNER JOIN peliculas p ON p.id_pelicula = f.rela_peliculas
+            LEFT JOIN tipo_entradas te ON te.id_tipo_entrada = e.rela_tipo_entrada
+            LEFT JOIN butacas_vendidas bv ON bv.id_entrada = e.id_entrada
+            LEFT JOIN butacas b ON b.id_butaca = bv.id_butaca
+            LEFT JOIN usuarios u ON u.id_usuario = e.usada_por
+            WHERE " . ($exacto ? "e.codigo_acceso = ?" : "e.codigo_acceso LIKE CONCAT(?, '%')") . "
+            LIMIT 5");
+        $stmt->bind_param('s', $codigo);
+        $stmt->execute();
+
+        // Una entrada puede repetirse si tiene más de una fila en butacas_vendidas: se agrupa por id
+        $entradas = [];
+        foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $fila) {
+            $entradas[$fila['id_entrada']] ??= $fila;
+        }
+        return array_values($entradas);
+    }
+
+    /**
+     * Marca la entrada como usada en la puerta. El WHERE estado = activa hace que, si dos
+     * controladores escanean la misma entrada a la vez, solo uno la acepte.
+     */
+    public static function marcarUsadaEnPuerta(int $idEntrada, int $idUsuario): bool
+    {
+        $stmt = self::getDB()->prepare("UPDATE entradas SET estado = ?, usada_en = ?, usada_por = ?
+            WHERE id_entrada = ? AND estado = ?");
+        $usada = self::ESTADO_USADA;
+        $activa = self::ESTADO_ACTIVA;
+        $ahora = date('Y-m-d H:i:s');
+        $stmt->bind_param('isiii', $usada, $ahora, $idUsuario, $idEntrada, $activa);
+        $stmt->execute();
+        return $stmt->affected_rows === 1;
+    }
+
+    // Segundos durante los que quien marcó una entrada puede deshacerlo (escaneó la equivocada)
+    const SEGUNDOS_PARA_DESHACER = 120;
+
+    public static function deshacerUsoEnPuerta(int $idEntrada, int $idUsuario): bool
+    {
+        $stmt = self::getDB()->prepare("UPDATE entradas SET estado = ?, usada_en = NULL, usada_por = NULL
+            WHERE id_entrada = ? AND estado = ? AND usada_por = ? AND usada_en >= ?");
+        $activa = self::ESTADO_ACTIVA;
+        $usada = self::ESTADO_USADA;
+        $limite = date('Y-m-d H:i:s', time() - self::SEGUNDOS_PARA_DESHACER);
+        $stmt->bind_param('iiiis', $activa, $idEntrada, $usada, $idUsuario, $limite);
+        $stmt->execute();
+        return $stmt->affected_rows === 1;
+    }
+
     private function generarNumeroTicket()
     {
         $numero = rand(100000, 999999);

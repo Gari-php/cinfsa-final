@@ -172,6 +172,7 @@ $numeroCaja = $arqueo['numero_caja'] ?? '1';
                             <div class="entrada-qr">
                                 <img src="<?php echo s($entradaQR['qr']); ?>" alt="QR de la entrada <?php echo s($entradaQR['butaca']); ?>">
                                 <p><?php echo s($entradaQR['butaca']); ?></p>
+                                <p class="entrada-qr-codigo">CÓDIGO: <?php echo s($entradaQR['codigo']); ?></p>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -446,6 +447,12 @@ body, .ticket-page {
 .entrada-qr p {
     font-size: 10px;
     font-weight: bold;
+}
+
+.entrada-qr .entrada-qr-codigo {
+    font-size: 9px;
+    font-weight: normal;
+    letter-spacing: 1px;
 }
 
 .ticket-footer {

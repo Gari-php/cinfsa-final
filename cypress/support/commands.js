@@ -77,7 +77,7 @@ Cypress.Commands.add('postJson', (url, body) => {
 
 /**
  * Inicia sesión por API con un usuario del fixture (sin pasar por la pantalla de login)
- * Uso: cy.loginComo('cliente')  → roles: admin, vfunciones, vproductos, cliente, cliente2
+ * Uso: cy.loginComo('cliente')  → roles: admin, vfunciones, vproductos, cliente, cliente2, control
  */
 Cypress.Commands.add('loginComo', (rol) => {
   cy.clearCookies();

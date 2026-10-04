@@ -709,6 +709,7 @@ class VentaFuncionesController
                     ? 'FILA ' . str_pad($fila['fila_butaca'], 2, '0', STR_PAD_LEFT) . ' - COL ' . str_pad($fila['numero_butaca'], 2, '0', STR_PAD_LEFT)
                     : 'ENTRADA',
                 'qr' => \Classes\CodigoQR::dataUri(\Classes\CodigoQR::textoEntrada($codigo), 4),
+                'codigo' => \Models\Entrada::codigoCorto($codigo),
             ];
         }
 

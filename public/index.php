@@ -45,6 +45,7 @@ USE Controllers\SoporteController;
 use Controllers\GastosController;
 use Controllers\ContactoController;
 use Controllers\AuditoriaController;
+use Controllers\ControlEntradasController;
 use MVC\Router;
 
 $router= new Router();
@@ -493,6 +494,12 @@ $router->post('/administrador/movimientos-web/buscar', [MovimientosWebController
 // ==========================================
 $router->get('/administrador/auditoria/listado', [AuditoriaController::class, 'listado']);
 $router->get('/administrador/auditoria/exportar', [AuditoriaController::class, 'exportar']);
+
+// Control de entradas en la puerta (módulo CONTROL_ENTRADAS)
+$router->get('/control/entradas', [ControlEntradasController::class, 'index']);
+$router->post('/control/entradas/validar', [ControlEntradasController::class, 'validar']);
+$router->post('/control/entradas/forzar', [ControlEntradasController::class, 'forzar']);
+$router->post('/control/entradas/deshacer', [ControlEntradasController::class, 'deshacer']);
 
 //RUTAS DE PERFILES
 $router->get('/administrador/perfiles/listado', [PerfilController::class, 'index']);

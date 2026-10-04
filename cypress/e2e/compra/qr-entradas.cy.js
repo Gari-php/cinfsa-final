@@ -41,7 +41,9 @@ describe('QR de las entradas', () => {
         cy.get('.entradas-qr').should('contain.text', 'MOSTRAR EN LA ENTRADA DE LA SALA');
         cy.get('.entrada-qr').should('have.length', 2).each(($e) => {
           cy.wrap($e).find('img').should('have.attr', 'src').and('match', /^data:image\/png;base64,/);
-          cy.wrap($e).find('p').invoke('text').should('match', /^FILA \d{2} - COL \d{2}$/);
+          cy.wrap($e).find('p').first().invoke('text').should('match', /^FILA \d{2} - COL \d{2}$/);
+          // Debajo, el código corto para cargarlo a mano en la puerta
+          cy.wrap($e).find('.entrada-qr-codigo').invoke('text').should('match', /^CÓDIGO: [0-9A-F]{8}$/);
         });
       });
     });
