@@ -30,6 +30,8 @@ $icono = function (string $accion): string {
         'butaca' => 'fa-chair',
         'funcion' => 'fa-clapperboard',
         'pelicula' => 'fa-film',
+        'maquina' => 'fa-gamepad',
+        'ficha' => 'fa-coins',
         default => 'fa-circle-info',
     };
 };
@@ -356,40 +358,64 @@ $icono = function (string $accion): string {
 <style>
 .auditoria-subtitulo {
     color: #a0aec0;
-    margin: -0.5rem 0 1.2rem;
+    max-width: 760px;
+    margin: -0.5rem auto 1.5rem;
+    line-height: 1.5;
 }
 
 .auditoria-exportar {
     background: #1d6f42 !important;
+    border-color: #1d6f42 !important;
 }
 
+.auditoria-exportar i {
+    color: #fff !important;
+}
+
+.auditoria-exportar:hover {
+    background: #238a52 !important;
+    border-color: #ed850f !important;
+}
+
+/* Barra de filtros: mismo panel que .nav-listado, centrada */
 .auditoria-filtros {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.8rem 1rem;
+    justify-content: center;
     align-items: flex-end;
-    background: #1a202c;
-    border: 1px solid #4a5568;
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 1.2rem;
+    gap: 1rem 1.2rem;
+    width: 100%;
+    max-width: 1400px;
+    box-sizing: border-box;
+    background: #232323;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin: 0 auto 20px;
 }
 
 .auditoria-filtros .campo-filtro {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    align-items: center;
+    gap: 0.4rem;
     min-width: 150px;
 }
 
+.auditoria-filtros .campo-filtro > * {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .auditoria-filtros .campo-busqueda {
-    flex: 1 1 220px;
+    flex: 0 1 260px;
 }
 
 .auditoria-filtros label {
-    color: #a0aec0;
+    color: #ed850f;
     font-size: 0.85rem;
     font-weight: 600;
+    text-align: center;
 }
 
 .auditoria-filtros select,
@@ -400,6 +426,18 @@ $icono = function (string $accion): string {
     border-radius: 8px;
     padding: 0.5rem 0.6rem;
     font-size: 0.9rem;
+    height: 38px;
+    color-scheme: dark;
+    transition: border-color 0.2s;
+}
+
+.auditoria-filtros input::placeholder {
+    color: #718096;
+}
+
+.auditoria-filtros select:hover,
+.auditoria-filtros input:hover {
+    border-color: #718096;
 }
 
 .auditoria-filtros select:focus,
@@ -431,6 +469,8 @@ $icono = function (string $accion): string {
     gap: 0.6rem;
     width: 100%;
     min-width: 220px;
+    height: 38px;
+    box-sizing: border-box;
     background: #2d3748;
     color: #e2e8f0;
     border: 1px solid #4a5568;
@@ -471,6 +511,7 @@ $icono = function (string $accion): string {
     margin: 0;
     padding: 0.3rem 0;
     list-style: none;
+    text-align: left;
     background: #2d3748;
     border: 1px solid #4a5568;
     border-radius: 8px;
@@ -511,6 +552,16 @@ $icono = function (string $accion): string {
     cursor: pointer;
     text-decoration: none;
     font-size: 0.9rem;
+    height: 38px;
+    box-sizing: border-box;
+}
+
+.auditoria-filtros button[type="submit"],
+.auditoria-filtros .limpiar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
 .auditoria-filtros button[type="submit"] {
@@ -518,17 +569,61 @@ $icono = function (string $accion): string {
     color: #fff;
 }
 
+.auditoria-filtros button[type="submit"]:hover {
+    background: #d67309;
+}
+
 .auditoria-filtros .limpiar {
-    background: #4a5568;
+    background: #2d3748;
     color: #fff;
+    border: 1px solid #4a5568;
 }
 
+.auditoria-filtros .limpiar:hover {
+    border-color: #ed850f;
+    background: #364154;
+}
+
+/* En pantallas angostas los filtros van uno abajo del otro, todos del mismo ancho */
+@media (max-width: 600px) {
+    .auditoria-filtros .campo-filtro,
+    .auditoria-filtros .campo-busqueda {
+        flex: 1 1 100%;
+        max-width: 320px;
+    }
+
+    .selector-boton {
+        min-width: 0;
+    }
+}
+
+/* Tabla: mismo ancho que los paneles de arriba, centrada */
 .auditoria-tabla-contenedor {
+    max-width: 1400px;
+    margin: 0 auto 20px;
     overflow-x: auto;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
 }
 
-.tabla-auditoria td {
+.listado .tabla-auditoria {
+    width: 100%;
+    margin: 0;
+}
+
+.listado .tabla-auditoria th {
+    padding: 12px 10px;
+    border-color: #3a3a3a;
+}
+
+.listado .tabla-auditoria td {
     vertical-align: middle;
+    border-color: #555;
+    transition: background-color 0.15s;
+}
+
+.listado .tabla-auditoria tbody tr:hover td {
+    background-color: #4d4d4d;
 }
 
 .tabla-auditoria .col-fecha {
@@ -566,6 +661,10 @@ $icono = function (string $accion): string {
 /* Más específico que ".listado .tabla-listado td" (listado.css), que fija el fondo gris de las celdas */
 .listado .tabla-auditoria tr.fila-destacada td {
     background-color: #4a2c2c;
+}
+
+.listado .tabla-auditoria tbody tr.fila-destacada:hover td {
+    background-color: #5a3434;
 }
 
 .icono-alerta {
@@ -616,9 +715,10 @@ $icono = function (string $accion): string {
 
 .auditoria-modal-contenido {
     position: relative;
-    background: #1a202c;
+    background: #232323;
     border: 1px solid #ed850f;
     border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     padding: 1.5rem;
     width: 100%;
     max-width: 620px;
@@ -629,7 +729,8 @@ $icono = function (string $accion): string {
 
 .auditoria-modal-contenido h2 {
     color: #ed850f;
-    margin: 0 2rem 0.5rem 0;
+    text-align: center;
+    margin: 0 2rem 0.5rem;
     font-size: 1.3rem;
 }
 
@@ -649,6 +750,7 @@ $icono = function (string $accion): string {
 }
 
 .auditoria-modal-descripcion {
+    text-align: center;
     margin-bottom: 1rem;
 }
 
@@ -657,6 +759,11 @@ $icono = function (string $accion): string {
     grid-template-columns: auto 1fr;
     gap: 0.3rem 1rem;
     margin: 0 0 1rem;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    background: #2d2d2d;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
 }
 
 .auditoria-modal-datos dt {
@@ -677,15 +784,15 @@ $icono = function (string $accion): string {
 
 .tabla-cambios th,
 .tabla-cambios td {
-    border: 1px solid #4a5568;
+    border: 1px solid #3a3a3a;
     padding: 0.45rem 0.6rem;
     text-align: left;
     word-break: break-word;
 }
 
 .tabla-cambios th {
-    background: #2d3748;
-    color: #a0aec0;
+    background: #000;
+    color: #ed850f;
 }
 
 .tabla-cambios .valor-antes {
