@@ -130,6 +130,11 @@ describe('Registro de auditoría', () => {
         expect(r.descripcion).to.contain('Pelicula de Prueba').and.contain('Sala 12');
         cy.postJson('/administrador/funciones/eliminar', { id_funcion: Number(r.id_entidad) });
         ultimo('funcion.baja').its('id_entidad').should('eq', r.id_entidad);
+
+        // Un pedido repetido no duplica el registro
+        cy.postJson('/administrador/funciones/eliminar', { id_funcion: Number(r.id_entidad) });
+        consultar(`SELECT COUNT(*) AS n FROM auditoria WHERE accion = 'funcion.baja' AND id_entidad = ${Number(r.id_entidad)}`)
+          .its('0.n').then(Number).should('eq', 1);
       });
 
       cy.postJson('/administrador/peliculas/eliminar', { id: 1 });

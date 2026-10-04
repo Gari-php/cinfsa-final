@@ -358,31 +358,7 @@
         });
     }
 
-    // Eliminar función
-    document.querySelectorAll('.eliminar-funcion').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const id = this.dataset.id;
-            const nombre = this.dataset.nombre;
-
-            try {
-                const res = await fetch('/administrador/funciones/eliminar', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id_funcion: id
-                    })
-                });
-                const data = await res.json();
-                if (data.ok) {
-                    this.closest('.funcion-row').remove();
-                } else {
-                    alert('Error: ' + data.mensaje);
-                }
-            } catch (err) {
-                alert('Error de conexión');
-            }
-        });
-    });
+    // La baja de una función (.eliminar-funcion) la maneja formularios.js con el modal de
+    // confirmación. No agregar otro listener acá: mandaba la baja sin confirmar y, al
+    // confirmar en el modal, se enviaba una segunda vez (quedaba duplicada en la auditoría).
 </script>

@@ -345,6 +345,12 @@ class FuncionController
             return;
         }
 
+        // Si ya estaba dada de baja (pedido repetido) no se vuelve a registrar en la auditoría
+        if ((int)$funcion->estado === 0) {
+            echo json_encode(['ok' => true, 'mensaje' => 'La función ya estaba dada de baja']);
+            return;
+        }
+
         $resultado = $funcion->eliminarLogico();
 
         if ($resultado) {
