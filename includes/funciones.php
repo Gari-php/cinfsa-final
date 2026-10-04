@@ -29,6 +29,12 @@ function fechaLarga(?int $timestamp = null): string {
         . date('j', $timestamp) . ' de ' . $meses[(int)date('n', $timestamp) - 1] . ' de ' . date('Y', $timestamp);
 }
 
+// Día de la semana abreviado en español, ej. "Sáb" (date('D') da "Sat")
+function diaCorto(?int $timestamp = null): string {
+    $dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return $dias[(int)date('w', $timestamp ?? time())];
+}
+
 // Mes abreviado en español, en mayúsculas, ej. "AGO" (date('M') da "Aug")
 function mesCorto(?int $timestamp = null): string {
     $meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];

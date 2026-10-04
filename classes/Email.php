@@ -174,7 +174,10 @@ class Email
         foreach ($items as $item) {
             $itemsHTML .= '
             <tr>
-                <td style="padding: 8px 4px; border-bottom: 1px dashed #ddd; font-size: 13px;">' . htmlspecialchars($item['nombre']) . '</td>
+                <td style="padding: 8px 4px; border-bottom: 1px dashed #ddd; font-size: 13px;">' . htmlspecialchars($item['nombre'])
+                    . (!empty($item['detalle'])
+                        ? '<div style="font-size: 11px; color: #ed850f; font-weight: bold; margin-top: 3px;">' . htmlspecialchars($item['detalle']) . '</div>'
+                        : '') . '</td>
                 <td style="padding: 8px 4px; border-bottom: 1px dashed #ddd; text-align: center; font-size: 13px;">' . $item['cantidad'] . '</td>
                 <td style="padding: 8px 4px; border-bottom: 1px dashed #ddd; text-align: right; font-size: 12px; color: #666;">$' . number_format($item['precio'], 0, ',', '.') . '</td>
                 <td style="padding: 8px 4px; border-bottom: 1px dashed #ddd; text-align: right; font-size: 13px; color: #ed850f; font-weight: 600;">$' . number_format($item['subtotal'], 0, ',', '.') . '</td>
@@ -202,7 +205,7 @@ class Email
                     <table style="width: 100%; margin-bottom: 15px; font-size: 12px; color: #000;">
                         <tr>
                             <td style="padding: 3px 0;">CLIENTE:</td>
-                            <td style="text-align: right; font-weight: bold;">' . strtoupper(htmlspecialchars($this->nombre_usuario)) . '</td>
+                            <td style="text-align: right; font-weight: bold;">' . htmlspecialchars(mb_strtoupper($this->nombre_usuario ?? '', 'UTF-8')) . '</td>
                         </tr>
                         <tr>
                             <td style="padding: 3px 0;">FECHA:</td>
@@ -240,7 +243,7 @@ class Email
 
                     <table style="width: 100%; margin: 10px 0;">
                         <tr>
-                            <td style="font-size: 18px; font-weight: bold; color: #000; padding: 10px 0;">TOTAL A PAGAR:</td>
+                            <td style="font-size: 18px; font-weight: bold; color: #000; padding: 10px 0;">TOTAL PAGADO:</td>
                             <td style="font-size: 24px; font-weight: bold; color: #ed850f; text-align: right; padding: 10px 0;">$' . number_format($total, 0, ',', '.') . '</td>
                         </tr>
                     </table>

@@ -385,9 +385,28 @@ class PagoController
             // PASO 4: Procesar carrito (productos y fichas)
             $itemsOriginales = \Models\Carrito::obtenerCarritoCompleto($idUsuario);
 
+            // Día, hora y sala de cada función, para que el ticket del mail diga cuándo y dónde es
+            $stmtFuncion = $db->prepare("SELECT f.fecha_hora, t.turno_horario, f.rela_salas
+                FROM funciones f LEFT JOIN turnos t ON t.id_turnos = f.rela_turnos
+                WHERE f.id_funcion = ?");
+
             $items = [];
             $total = 0;
             foreach ($itemsOriginales as $item) {
+                if (($item['tipo_producto'] ?? '') === 'butacas' && !empty($item['id_funcion'])) {
+                    $idFuncion = (int)$item['id_funcion'];
+                    $stmtFuncion->bind_param('i', $idFuncion);
+                    $stmtFuncion->execute();
+                    $funcion = $stmtFuncion->get_result()->fetch_assoc();
+                    if ($funcion) {
+                        $hora = $funcion['turno_horario']
+                            ? substr($funcion['turno_horario'], 0, 5)
+                            : date('H:i', strtotime($funcion['fecha_hora']));
+                        $item['detalle'] = diaCorto(strtotime($funcion['fecha_hora'])) . ' '
+                            . date('d/m/Y', strtotime($funcion['fecha_hora'])) . ' · ' . $hora . ' h · Sala ' . $funcion['rela_salas'];
+                    }
+                }
+
                 $precio = isset($item['precio']) ? (float)$item['precio'] : 0;
                 $cantidad = isset($item['cantidad']) ? (int)$item['cantidad'] : 1;
                 $item['subtotal'] = $precio * $cantidad;
