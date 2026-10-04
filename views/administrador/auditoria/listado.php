@@ -228,6 +228,129 @@ $icono = function (string $accion): string {
     modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) cerrar(); });
 })();
+
+// Desplegable propio para el filtro de acción: el <select> nativo se abre hacia arriba cuando
+// no tiene lugar abajo, y con tantas opciones queda mal. El <select> queda oculto y es el que
+// se envía con el formulario.
+(function () {
+    const select = document.getElementById('filtro-accion');
+    if (!select) return;
+
+    const contenedor = document.createElement('div');
+    contenedor.className = 'selector-desplegable';
+
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.id = 'filtro-accion-boton';
+    boton.className = 'selector-boton';
+    boton.setAttribute('aria-haspopup', 'listbox');
+    boton.setAttribute('aria-expanded', 'false');
+
+    const lista = document.createElement('ul');
+    lista.id = 'filtro-accion-lista';
+    lista.className = 'selector-lista';
+    lista.setAttribute('role', 'listbox');
+    lista.tabIndex = -1;
+    lista.hidden = true;
+    boton.setAttribute('aria-controls', lista.id);
+
+    const opciones = [...select.options].map((op, i) => {
+        const li = document.createElement('li');
+        li.id = `filtro-accion-op-${i}`;
+        li.setAttribute('role', 'option');
+        li.dataset.valor = op.value;
+        li.textContent = op.textContent;
+        lista.appendChild(li);
+        return li;
+    });
+
+    let activa = 0;
+
+    const marcarActiva = (i) => {
+        opciones[activa]?.classList.remove('activa');
+        activa = Math.max(0, Math.min(i, opciones.length - 1));
+        opciones[activa].classList.add('activa');
+        lista.setAttribute('aria-activedescendant', opciones[activa].id);
+        opciones[activa].scrollIntoView({ block: 'nearest' });
+    };
+
+    const mostrarSeleccion = () => {
+        const i = select.selectedIndex < 0 ? 0 : select.selectedIndex;
+        boton.innerHTML = `<span></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i>`;
+        boton.querySelector('span').textContent = select.options[i].textContent;
+        opciones.forEach((li, j) => li.setAttribute('aria-selected', j === i ? 'true' : 'false'));
+    };
+
+    const abrir = () => {
+        lista.hidden = false;
+        boton.setAttribute('aria-expanded', 'true');
+        marcarActiva(select.selectedIndex < 0 ? 0 : select.selectedIndex);
+        lista.focus();
+    };
+
+    const cerrar = (devolverFoco = true) => {
+        if (lista.hidden) return;
+        lista.hidden = true;
+        boton.setAttribute('aria-expanded', 'false');
+        if (devolverFoco) boton.focus();
+    };
+
+    const elegir = (i) => {
+        select.selectedIndex = i;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        mostrarSeleccion();
+        cerrar();
+    };
+
+    boton.addEventListener('click', () => (lista.hidden ? abrir() : cerrar()));
+    boton.addEventListener('keydown', (e) => {
+        if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
+            e.preventDefault();
+            abrir();
+        }
+    });
+
+    lista.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); marcarActiva(activa + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); marcarActiva(activa - 1); }
+        else if (e.key === 'Home') { e.preventDefault(); marcarActiva(0); }
+        else if (e.key === 'End') { e.preventDefault(); marcarActiva(opciones.length - 1); }
+        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir(activa); }
+        else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrar(); }
+        else if (e.key === 'Tab') { cerrar(false); }
+        else if (e.key.length === 1) {
+            // Saltar a la primera opción que empiece con la letra tecleada
+            const letra = e.key.toLowerCase();
+            const i = opciones.findIndex((li, j) => j > activa && li.textContent.trim().toLowerCase().startsWith(letra));
+            const k = i >= 0 ? i : opciones.findIndex((li) => li.textContent.trim().toLowerCase().startsWith(letra));
+            if (k >= 0) marcarActiva(k);
+        }
+    });
+
+    lista.addEventListener('click', (e) => {
+        const li = e.target.closest('li[role="option"]');
+        if (li) elegir(opciones.indexOf(li));
+    });
+    lista.addEventListener('mousemove', (e) => {
+        const li = e.target.closest('li[role="option"]');
+        if (li && opciones.indexOf(li) !== activa) marcarActiva(opciones.indexOf(li));
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!contenedor.contains(e.target)) cerrar(false);
+    });
+
+    // El label pasa a apuntar al botón y el <select> queda oculto (sigue enviándose con el form)
+    const label = document.querySelector('label[for="filtro-accion"]');
+    if (label) label.htmlFor = boton.id;
+    select.classList.add('selector-oculto');
+    select.tabIndex = -1;
+    select.setAttribute('aria-hidden', 'true');
+
+    select.parentNode.insertBefore(contenedor, select.nextSibling);
+    contenedor.append(boton, lista);
+    mostrarSeleccion();
+})();
 </script>
 
 <style>
@@ -285,12 +408,101 @@ $icono = function (string $accion): string {
     border-color: #ed850f;
 }
 
+/* Desplegable propio del filtro de acción: siempre se abre hacia abajo */
+.selector-oculto {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0 !important;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0 !important;
+}
+
+.selector-desplegable {
+    position: relative;
+}
+
+.selector-boton {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    width: 100%;
+    min-width: 220px;
+    background: #2d3748;
+    color: #e2e8f0;
+    border: 1px solid #4a5568;
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+}
+
+.selector-boton:focus,
+.selector-boton[aria-expanded="true"] {
+    outline: none;
+    border-color: #ed850f;
+}
+
+.selector-boton i {
+    font-size: 0.75rem;
+    color: #a0aec0;
+    transition: transform 0.15s;
+}
+
+.selector-boton[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.selector-lista {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 50;
+    min-width: 100%;
+    width: max-content;
+    max-width: 320px;
+    max-height: 18rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.3rem 0;
+    list-style: none;
+    background: #2d3748;
+    border: 1px solid #4a5568;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+}
+
+.selector-lista:focus {
+    outline: none;
+}
+
+.selector-lista li {
+    padding: 0.45rem 0.8rem;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.selector-lista li.activa {
+    background: #4a5568;
+}
+
+.selector-lista li[aria-selected="true"] {
+    color: #ed850f;
+    font-weight: 600;
+}
+
 .auditoria-filtros .acciones-filtro {
     display: flex;
     gap: 0.5rem;
 }
 
-.auditoria-filtros button,
+.auditoria-filtros button[type="submit"],
 .auditoria-filtros .limpiar {
     border: none;
     border-radius: 8px;
@@ -301,7 +513,7 @@ $icono = function (string $accion): string {
     font-size: 0.9rem;
 }
 
-.auditoria-filtros button {
+.auditoria-filtros button[type="submit"] {
     background: #ed850f;
     color: #fff;
 }

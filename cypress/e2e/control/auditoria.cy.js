@@ -222,8 +222,13 @@ describe('Registro de auditoría', () => {
       cy.get('.auditoria-modal-cerrar').click();
       cy.get('#auditoria-modal').should('not.be.visible');
 
-      // Filtro por acción
-      cy.get('#filtro-accion').select('precio.tipo_entrada');
+      // Filtro por acción (desplegable propio que se abre siempre hacia abajo)
+      cy.get('#filtro-accion-boton').click();
+      cy.get('#filtro-accion-lista').should('be.visible')
+        .then(($lista) => expect($lista[0].getBoundingClientRect().top).to.be.greaterThan(Cypress.$('#filtro-accion-boton')[0].getBoundingClientRect().bottom));
+      cy.contains('#filtro-accion-lista li', 'Cambio de precio de entrada').click();
+      cy.get('#filtro-accion-lista').should('not.be.visible');
+      cy.get('#filtro-accion').should('have.value', 'precio.tipo_entrada');
       cy.get('.auditoria-filtros [type="submit"]').click();
       cy.get('.tabla-auditoria tbody tr').should('have.length', 1);
 
