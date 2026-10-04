@@ -19,6 +19,22 @@ class MaquinaController
         return isset($_SESSION['login']) && $_SESSION['perfil'] === 3;
     }
 
+    // Datos de una máquina con nombres en vez de ids, para el registro de auditoría
+    private static function datosAuditoria($maquina): array
+    {
+        $ficha = $maquina->rela_fichas ? Ficha::find($maquina->rela_fichas) : null;
+
+        return [
+            'nombre' => $maquina->maquinas_nombre,
+            'descripcion' => $maquina->maquina_descripcion,
+            'ficha' => $ficha
+                ? "{$ficha->cantidad_ficha} ficha(s) por $" . number_format((float)$ficha->precio_ficha, 0, ',', '.')
+                : null,
+            'estado' => (int)$maquina->estado === 1 ? 'Activa' : 'Inactiva',
+            'imagen' => $maquina->imagen_maquina,
+        ];
+    }
+
     public static function index(Router $router)
     {
         if (!self::verificarAdmin()) {
@@ -115,6 +131,15 @@ class MaquinaController
             $resultado = $maquina->crearMaquina();
 
             if ($resultado['resultado']) {
+                \Classes\Auditoria::registrar(
+                    'maquina.crear',
+                    "Creó la máquina {$maquina->maquinas_nombre}",
+                    'maquinas',
+                    $resultado['id_insertado'] ?? null,
+                    null,
+                    self::datosAuditoria($maquina)
+                );
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Máquina creada correctamente',
@@ -175,6 +200,8 @@ class MaquinaController
                 exit;
             }
 
+            $datosAntes = self::datosAuditoria($maquina);
+
             $maquina->maquinas_nombre = $_POST['maquinas_nombre'] ?? '';
             $maquina->maquina_descripcion = $_POST['maquina_descripcion'] ?? '';
             $maquina->rela_fichas = $_POST['rela_fichas'] ?? 1;
@@ -219,6 +246,18 @@ class MaquinaController
             $resultado = $maquina->actualizar();
 
             if ($resultado) {
+                [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, self::datosAuditoria($maquina), array_keys($datosAntes));
+                if ($antes) {
+                    \Classes\Auditoria::registrar(
+                        'maquina.modificar',
+                        "Modificó la máquina {$maquina->maquinas_nombre} (" . implode(', ', array_keys($despues)) . ')',
+                        'maquinas',
+                        $maquina->id_maquinas,
+                        $antes,
+                        $despues
+                    );
+                }
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Máquina actualizada correctamente',
@@ -257,6 +296,12 @@ class MaquinaController
         $resultado = $maquina->darDeBaja();
 
         if ($resultado) {
+            \Classes\Auditoria::registrar(
+                'maquina.baja',
+                "Dio de baja (desactivó) la máquina {$maquina->maquinas_nombre}",
+                'maquinas',
+                $id
+            );
             echo json_encode(['ok' => true, 'mensaje' => 'Máquina desactivada correctamente']);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al desactivar la máquina']);

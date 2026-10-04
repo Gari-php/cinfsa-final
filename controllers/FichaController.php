@@ -60,6 +60,15 @@ class FichaController {
 
             $resultado = $ficha->crearFicha();
             if ($resultado['resultado']) {
+                \Classes\Auditoria::registrar(
+                    'ficha.crear',
+                    "Creó la ficha: {$ficha->cantidad_ficha} ficha(s) por $" . number_format((float)$ficha->precio_ficha, 0, ',', '.'),
+                    'fichas',
+                    $resultado['id_insertado'] ?? null,
+                    null,
+                    ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha]
+                );
+
                 echo json_encode([
                     'ok' => true,
                     'mensaje' => 'Ficha creada correctamente',
@@ -124,11 +133,36 @@ class FichaController {
             return;
         }
 
+        $datosAntes = ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha];
+
         $ficha->precio_ficha = $precio;
         $ficha->cantidad_ficha = $cantidad;
         $resultado = $ficha->actualizar();
 
         if ($resultado) {
+            // Igual que en productos: si cambió el precio queda como "cambio de precio"
+            $datosDespues = ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha];
+            [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, $datosDespues, array_keys($datosAntes));
+            if ($antes) {
+                $cambioPrecio = array_key_exists('precio', $despues);
+                $descripcion = $cambioPrecio
+                    ? "Cambió el precio de la ficha #{$ficha->id_fichas}: $"
+                        . number_format((float)$antes['precio'], 0, ',', '.') . ' → $'
+                        . number_format((float)$despues['precio'], 0, ',', '.')
+                    : "Modificó la ficha #{$ficha->id_fichas}";
+                if (array_key_exists('cantidad', $despues)) {
+                    $descripcion .= " (cantidad: {$antes['cantidad']} → {$despues['cantidad']})";
+                }
+                \Classes\Auditoria::registrar(
+                    $cambioPrecio ? 'precio.ficha' : 'ficha.modificar',
+                    $descripcion,
+                    'fichas',
+                    $ficha->id_fichas,
+                    $antes,
+                    $despues
+                );
+            }
+
             echo json_encode([
                 'ok' => true,
                 'mensaje' => 'Ficha actualizada correctamente',
