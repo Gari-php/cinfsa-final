@@ -149,6 +149,9 @@ describe('Registro de auditoría', () => {
       cy.get('#imagen_producto').selectFile('cypress/fixtures/producto-prueba.png');
       cy.get('form[data-fetch="true"] [type="submit"]').click();
       cy.get('.alerta-modal.exito').should('be.visible');
+      // Después del éxito la página redirige sola al listado (con una demora): se espera a que
+      // llegue, o esa redirección tardía puede pisar la visita a "editar" que sigue
+      cy.location('pathname', { timeout: 10000 }).should('eq', '/administrador/productos/listado');
 
       ultimo('producto.crear').then((alta) => {
         expect(alta.descripcion).to.eq('Creó el producto Gaseosa de Prueba ($1.500)');
@@ -161,6 +164,7 @@ describe('Registro de auditoría', () => {
           cy.get('form[data-fetch="true"] [type="submit"]').click();
           cy.get('.boton-modal.confirmar').click();
           cy.get('.alerta-modal.exito').should('be.visible');
+          cy.location('pathname', { timeout: 10000 }).should('eq', '/administrador/productos/listado');
         };
 
         // Solo el nombre: "modificación de producto"

@@ -361,7 +361,7 @@ class MovimientosWebController
                 ELSE do.nombre_producto
             END as producto_nombre,
             CASE
-                WHEN do.tipo_producto = 'butacas' THEN CONCAT('Fila ', b.fila_butaca, ' - Butaca ', b.numero_butaca)
+                WHEN do.tipo_producto = 'butacas' THEN CONCAT('Fila ', b.fila_butaca, ' · Asiento ', b.numero_butaca)
                 ELSE NULL
             END as info_butaca,
             CASE

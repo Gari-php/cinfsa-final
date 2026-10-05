@@ -151,7 +151,7 @@ class Carrito extends ActiveRecord
                 CASE 
                     WHEN ct.tipo_producto = 'cantina' THEN pc.nombre_producto_cantina
                     WHEN ct.tipo_producto = 'fichas' THEN CONCAT('Fichas - ', m.maquinas_nombre)
-                    WHEN ct.tipo_producto = 'butacas' THEN CONCAT(p.titulo_pelicula, ' - Butaca ', b.fila_butaca, '-', b.numero_butaca)
+                    WHEN ct.tipo_producto = 'butacas' THEN CONCAT(p.titulo_pelicula, ' - Fila ', b.fila_butaca, ' · Asiento ', b.numero_butaca)
                     ELSE 'Producto'
                 END as nombre,
                 CASE 

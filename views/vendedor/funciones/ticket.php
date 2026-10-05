@@ -85,7 +85,7 @@ $numeroCaja = $arqueo['numero_caja'] ?? '1';
                         </tr>
                         <tr>
                             <td>Horario:</td>
-                            <td class="right"><?php echo $venta['turno_horario']; ?></td>
+                            <td class="right"><?php echo s(substr((string)$venta['turno_horario'], 0, 5)); ?></td>
                         </tr>
                         <tr>
                             <td>Sala:</td>
