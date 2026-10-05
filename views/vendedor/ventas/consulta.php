@@ -486,6 +486,8 @@
 </style>
 
 <script>
+    // Devolver entradas requiere el módulo DEVOLUCION_ENTRADAS
+    const PUEDE_DEVOLVER = <?php echo \Middlewares\ValidarModulo::tiene('DEVOLUCION_ENTRADAS') ? 'true' : 'false'; ?>;
     // Cargar vendedores al iniciar
     document.addEventListener('DOMContentLoaded', async function() {
         await cargarVendedores();
@@ -598,7 +600,7 @@
         ventas.forEach(v => {
             const tieneActivas = v.entradas_activas > 0;
 
-            const btnDevolver = tieneActivas ?
+            const btnDevolver = !PUEDE_DEVOLVER ? '<span class="sin-permiso" title="Sin permiso de devoluciones">—</span>' : tieneActivas ?
                 `<button class="btn-devolver" id="btn-devolver-${v.id_pagos}" onclick='abrirModalDevolucion(${JSON.stringify(v)})'>
                     <i class="fas fa-undo"></i>
                </button>` :

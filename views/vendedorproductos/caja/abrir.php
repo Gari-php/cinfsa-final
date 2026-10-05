@@ -80,7 +80,58 @@
             </div>
         </form>
     </div>
+
+    <?php
+    // Tareas que no necesitan caja abierta (por ejemplo, un vendedor que solo controla la puerta)
+    $tareasSinCaja = array_filter([
+        \Middlewares\ValidarModulo::tiene('CONTROL_ENTRADAS') ? ['/control/entradas', 'fa-qrcode', 'Controlar Entradas'] : null,
+        \Middlewares\ValidarModulo::tiene('ENTREGA_PRODUCTOS') ? ['/control/retiros', 'fa-bag-shopping', 'Entregar Pedidos Web'] : null,
+    ]);
+    ?>
+    <?php if ($tareasSinCaja): ?>
+        <div class="tareas-sin-caja">
+            <p>Sin abrir caja también podés:</p>
+            <?php foreach ($tareasSinCaja as [$url, $icono, $texto]): ?>
+                <a href="<?php echo $url; ?>" class="tarea-sin-caja"><i class="fas <?php echo $icono; ?>"></i> <?php echo $texto; ?></a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>
+
+<style>
+.tareas-sin-caja {
+    max-width: 500px;
+    margin: 20px auto 0;
+    text-align: center;
+}
+
+.tareas-sin-caja p {
+    color: #a0aec0;
+    margin-bottom: 10px;
+}
+
+.tarea-sin-caja {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #2d3748;
+    border: 1px solid #4a5568;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.tarea-sin-caja i {
+    color: #ed850f;
+}
+
+.tarea-sin-caja:hover {
+    border-color: #ed850f;
+}
+</style>
 
 <style>
 
@@ -88,6 +139,7 @@
     min-height: 100vh;
     background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
     display: flex;
+    flex-direction: column; /* la tarjeta y, debajo, las tareas sin caja */
     align-items: center;
     justify-content: center;
     padding: 2rem;

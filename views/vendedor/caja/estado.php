@@ -37,24 +37,31 @@
         </div>
     </div>
 
+    <!-- Cada botón aparece solo si el perfil tiene su módulo (Usuarios → Permisos) -->
     <div class="acciones-principales">
+        <?php if (\Middlewares\ValidarModulo::tiene('VENTA_FUNCIONES')): ?>
         <a href="/vendedor/funciones/listado" class="btn-accion btn-vender">
             <i class="fas fa-ticket-alt"></i>
             <span>Vender Entradas</span>
             <small>Seleccionar función y butacas</small>
         </a>
+        <?php endif; ?>
 
+        <?php if (\Middlewares\ValidarModulo::tiene('CONSULTA_VENTAS_FUNCIONES')): ?>
         <a href="/vendedor/ventas/consulta" class="btn-accion btn-consultar">
             <i class="fas fa-search-dollar"></i>
             <span>Consultar Ventas</span>
             <small>Ver historial completo</small>
         </a>
+        <?php endif; ?>
 
+        <?php if (\Middlewares\ValidarModulo::tiene('MOVIMIENTOS_CAJA')): ?>
         <a href="/vendedor/movimientos" class="btn-accion btn-ingresos-egresos">
             <i class="fas fa-exchange-alt"></i>
             <span>Ingresos/Egresos</span>
             <small>Gestionar movimientos</small>
         </a>
+        <?php endif; ?>
 
         <?php if (\Middlewares\ValidarModulo::tiene('CONTROL_ENTRADAS')): ?>
         <a href="/control/entradas" class="btn-accion btn-control-entradas">

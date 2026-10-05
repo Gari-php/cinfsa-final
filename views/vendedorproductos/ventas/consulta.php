@@ -871,6 +871,8 @@
 </style>
 
 <script>
+    // Devolver productos requiere el módulo DEVOLUCION_PRODUCTOS
+    const PUEDE_DEVOLVER = <?php echo \Middlewares\ValidarModulo::tiene('DEVOLUCION_PRODUCTOS') ? 'true' : 'false'; ?>;
     let ventasActuales = [];
     let ventaSeleccionada = null;
     let itemsParaDevolver = [];
@@ -1055,14 +1057,13 @@
                 <td><span class="badge-pago">${v.forma_pago}</span></td>
                 <td><strong style="color: var(--color-exito);">${new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2 }).format(v.monto_total)}</strong></td>
                 <td>
-                    <button 
+                    ${!PUEDE_DEVOLVER ? '<span class="sin-permiso" title="Sin permiso de devoluciones">—</span>' : `<button 
                         class="btn-devolucion" 
                         onclick="abrirModalDevolucion(${v.id_venta})"
                         ${yaDevuelto || v.estado === 'devuelto' ? 'disabled title="Ya fue devuelto"' : ''}
                     >
                         <i class="fas fa-undo-alt"></i>
-                        ${yaDevuelto || v.estado === 'devuelto' ? '' : ''}
-                    </button>
+                    </button>`}
                 </td>
             `;
             tbody.appendChild(tr);
