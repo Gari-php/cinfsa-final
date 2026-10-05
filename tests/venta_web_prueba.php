@@ -47,6 +47,12 @@ $stmt->bind_param('si', $codigo, $idFuncion);
 $stmt->execute();
 $idEntrada = $db->insert_id;
 
+// Como en una compra real: la butaca también figura en el detalle de la orden
+$stmt = $db->prepare("INSERT INTO detalle_orden (id_orden, id_producto, tipo_producto, id_butaca, id_funcion, nombre_producto, cantidad, precio_unitario, subtotal)
+    VALUES (?, ?, 'butacas', ?, ?, 'Butaca de prueba', 1, 3000, 3000)");
+$stmt->bind_param('iiii', $idOrden, $idButaca, $idButaca, $idFuncion);
+$stmt->execute();
+
 $stmt = $db->prepare("INSERT INTO butacas_vendidas (id_butaca, id_funcion, id_entrada, id_orden) VALUES (?, ?, ?, ?)");
 $stmt->bind_param('iiii', $idButaca, $idFuncion, $idEntrada, $idOrden);
 $stmt->execute();

@@ -179,6 +179,55 @@ describe('Retiro de pedidos web en la cantina', () => {
     });
   });
 
+  it('cancelar una compra con entregas devuelve al stock solo lo que no se retiró', () => {
+    const stockPochoclo = () =>
+      consultar('SELECT stock_cantina AS n FROM stock_cantina WHERE rela_producto_cantina = 1 AND rela_cantina = 1').its('0.n').then(Number);
+    const stockFichas = () =>
+      consultar('SELECT f.cantidad_ficha AS n FROM fichas f JOIN maquinas m ON m.rela_fichas = f.id_fichas WHERE m.id_maquinas = 1').its('0.n').then(Number);
+
+    pedido().then((p) => {
+      cy.loginComo('entrega');
+      pedir('entregar', { codigo: p.qr, items: { [p.cantina]: 4, [p.fichas]: 6 } });
+
+      stockPochoclo().then((pochocloAntes) => stockFichas().then((fichasAntes) => {
+        cy.loginComo('admin');
+        cy.postJson('/administrador/movimientos-web/cancelar', { id_orden: p.id_orden }).its('body').then(json).then((r) => {
+          expect(r.ok).to.eq(true);
+          expect(r.mensaje).to.contain('no vuelve al stock').and.contain('4 × Pochoclo Chico').and.contain('6 × Fichas - Maquina de Prueba');
+        });
+
+        // De 10 pochoclos se retiraron 4: vuelven 6. Las 6 fichas se retiraron todas: no vuelve ninguna
+        stockPochoclo().should('eq', pochocloAntes + 6);
+        stockFichas().should('eq', fichasAntes);
+
+        consultar(`SELECT descripcion FROM auditoria WHERE accion = 'orden.cancelar' AND id_entidad = ${p.id_orden}`)
+          .its('0.descripcion').should('contain', 'ya se había entregado: 4 × Pochoclo Chico');
+
+        // Y el pedido ya no se entrega
+        cy.loginComo('entrega');
+        pedir('buscar', { codigo: p.qr }).its('titulo').should('eq', 'Pedido cancelado');
+      }));
+    });
+  });
+
+  it('cancelar una compra con entradas libera la butaca de esa función pero respeta el bloqueo del administrador', () => {
+    consultar('SELECT MIN(id_butaca) AS id FROM butacas WHERE rela_salas = 1 AND rela_estado_butaca = 1').then(([{ id }]) => {
+      const butaca = Number(id);
+      cy.task('venderButacaWeb', { idButaca: butaca, idFuncion: 1, idUsuario: ID_CLIENTE }).then((idEntrada) => {
+        consultar(`SELECT id_orden FROM butacas_vendidas WHERE id_entrada = ${idEntrada}`).then(([{ id_orden: idOrden }]) => {
+          cy.loginComo('admin');
+          // El administrador la bloquea por mantenimiento (estado 2 = No disponible)
+          cy.postJson('/administrador/butacas/cambiar-estado', { id_butaca: butaca, estado: 2 });
+          cy.postJson('/administrador/movimientos-web/cancelar', { id_orden: Number(idOrden) }).its('body').then(json).its('ok').should('eq', true);
+
+          consultar(`SELECT COUNT(*) AS n FROM butacas_vendidas WHERE id_butaca = ${butaca} AND id_funcion = 1`).its('0.n').then(Number).should('eq', 0);
+          consultar(`SELECT estado FROM entradas WHERE id_entrada = ${idEntrada}`).its('0.estado').then(Number).should('eq', -1);
+          consultar(`SELECT rela_estado_butaca AS e FROM butacas WHERE id_butaca = ${butaca}`).its('0.e').then(Number).should('eq', 2);
+        });
+      });
+    });
+  });
+
   it('el vendedor de productos accede solo si le dan el módulo, y ve el botón en su panel', () => {
     cy.loginComo('vproductos');
     cy.request('/control/retiros').its('redirects').should('have.length.greaterThan', 0);

@@ -201,21 +201,28 @@ class MovimientosWebController
             $stmt->bind_param('i', $idOrden);
 
             if ($stmt->execute()) {
-                // Si era pagada, devolver stock
+                // Si era pagada, devolver stock (menos lo que ya se entregó en la cantina)
+                $entregado = [];
                 if ($orden['estado'] === 'pagado') {
-                    self::devolverStockOrden($idOrden);
+                    $entregado = self::devolverStockOrden($idOrden);
                 }
+                $textoEntregado = implode(', ', array_map(fn($n, $c) => "$c × $n", array_keys($entregado), $entregado));
 
                 \Classes\Auditoria::registrar(
                     'orden.cancelar',
-                    "Canceló la compra online {$orden['numero_orden']} por $" . number_format((float)$orden['total'], 0, ',', '.'),
+                    "Canceló la compra online {$orden['numero_orden']} por $" . number_format((float)$orden['total'], 0, ',', '.')
+                        . ($entregado ? " (ya se había entregado: $textoEntregado; eso no volvió al stock)" : ''),
                     'ordenes',
                     $idOrden,
                     ['estado' => $orden['estado']],
-                    ['estado' => 'cancelado']
+                    ['estado' => 'cancelado'] + ($entregado ? ['ya_entregado' => $textoEntregado] : [])
                 );
 
-                echo json_encode(['ok' => true, 'mensaje' => 'Orden cancelada correctamente']);
+                echo json_encode([
+                    'ok' => true,
+                    'mensaje' => 'Orden cancelada correctamente'
+                        . ($entregado ? ". Lo que ya se había entregado no vuelve al stock: $textoEntregado" : '')
+                ]);
             } else {
                 echo json_encode(['ok' => false, 'mensaje' => 'Error al cancelar la orden']);
             }
@@ -384,12 +391,20 @@ class MovimientosWebController
         return $orden;
     }
 
+    /**
+     * Devuelve al stock lo de una orden cancelada. De productos y fichas vuelve solo lo que el
+     * cliente todavía no retiró en la cantina: lo entregado ya no está.
+     *
+     * @return array lo que ya se había entregado y por eso no volvió: [nombre => cantidad]
+     */
     private static function devolverStockOrden($idOrden)
     {
         $db = ActiveRecord::getDB();
+        $yaEntregado = [];
 
-        // Obtener detalles de la orden
-        $query = "SELECT * FROM detalle_orden WHERE id_orden = ?";
+        // Detalles de la orden, con lo que ya se entregó de cada uno
+        $query = "SELECT d.*, COALESCE((SELECT SUM(eo.cantidad) FROM entregas_orden eo WHERE eo.id_detalle = d.id_detalle), 0) AS entregado
+                  FROM detalle_orden d WHERE d.id_orden = ?";
         $stmt = $db->prepare($query);
         $stmt->bind_param('i', $idOrden);
         $stmt->execute();
@@ -398,7 +413,18 @@ class MovimientosWebController
         while ($detalle = $resultado->fetch_assoc()) {
             $tipo = $detalle['tipo_producto'];
             $idProducto = $detalle['id_producto'];
-            $cantidad = $detalle['cantidad'];
+            $cantidad = (int)$detalle['cantidad'];
+
+            if ($tipo === 'cantina' || $tipo === 'fichas') {
+                $entregado = (int)$detalle['entregado'];
+                if ($entregado > 0) {
+                    $yaEntregado[$detalle['nombre_producto']] = $entregado;
+                }
+                $cantidad -= $entregado;
+                if ($cantidad <= 0) {
+                    continue; // se retiró todo: no hay nada para devolver
+                }
+            }
 
             // Devolver stock según tipo
             if ($tipo === 'cantina') {
@@ -467,13 +493,13 @@ class MovimientosWebController
                     $stmt2->execute();
                 }
 
-                // Liberar la butaca: vuelve a "Disponible"
-                $query = "UPDATE butacas SET rela_estado_butaca = 1 WHERE id_butaca = ?";
-                $stmt2 = $db->prepare($query);
-                $stmt2->bind_param('i', $idButaca);
-                $stmt2->execute();
+                // Al borrar la venta la butaca ya queda libre para esa función. No se toca
+                // rela_estado_butaca: es el bloqueo manual del administrador (mantenimiento) y
+                // vale para todas las funciones; ponerlo en "Disponible" borraba ese bloqueo.
             }
         }
+
+        return $yaEntregado;
     }
 
     public static function exportar()
