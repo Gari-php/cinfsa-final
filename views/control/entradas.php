@@ -88,7 +88,12 @@
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({ codigo })
         });
-        return res.json();
+        // Si el servidor no responde JSON (error de PHP, sesión vencida, proxy) se muestra un mensaje entendible
+        try {
+            return JSON.parse(await res.text());
+        } catch (e) {
+            throw new Error('El servidor respondió algo inesperado. Recargá la página y probá de nuevo.');
+        }
     }
 
     function mostrar(r, codigo) {

@@ -166,6 +166,9 @@ class ControlEntradasController
         $datos = json_decode(file_get_contents('php://input'), true) ?: [];
         $texto = trim((string)($datos['codigo'] ?? ''));
 
+        if (stripos($texto, CodigoQR::PREFIJO_ORDEN) === 0) {
+            return ['respuesta' => self::respuesta('rojo', 'Es un retiro de productos', 'Ese QR es para retirar productos o fichas en la cantina, no para entrar a la sala')];
+        }
         if (stripos($texto, CodigoQR::PREFIJO_ENTRADA) === 0) {
             $texto = substr($texto, strlen(CodigoQR::PREFIJO_ENTRADA));
         }
