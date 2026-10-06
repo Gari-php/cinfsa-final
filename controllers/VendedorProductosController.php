@@ -134,11 +134,13 @@ class VendedorProductosController
         $query = "SELECT c.*,
                 ac.id_arqueo_caja,
                 ac.rela_usuario as usuario_usando,
-                u.nombre_usuario as usuario_usando_nombre
+                u.nombre_usuario as usuario_usando_nombre,
+                cant.nombre_cantina
                 FROM cajas c
                 LEFT JOIN arqueo_cajas ac ON c.id_caja = ac.rela_caja 
                     AND ac.estado_arqueo = 'abierto'
                 LEFT JOIN usuarios u ON ac.rela_usuario = u.id_usuario
+                LEFT JOIN cantina cant ON cant.id_cantina = c.rela_cantina AND cant.estado = 1
                 WHERE c.activo = 1 AND c.id_caja IN (3, 4)
                 ORDER BY c.numero_caja";
 
@@ -183,6 +185,20 @@ class VendedorProductosController
             }
 
             $db = \Models\ActiveRecord::getDB();
+
+            // La caja vende el stock de su cantina: sin una cantina activa asignada no se puede abrir
+            $stmtCantina = $db->prepare("SELECT 1 FROM cajas c
+                                         INNER JOIN cantina cant ON cant.id_cantina = c.rela_cantina AND cant.estado = 1
+                                         WHERE c.id_caja = ?");
+            $stmtCantina->execute([(int) $relaCaja]);
+            if (!$stmtCantina->get_result()->fetch_row()) {
+                echo json_encode([
+                    'ok' => false,
+                    'mensaje' => 'Esta caja no tiene una cantina activa asignada. Pedile al administrador que la asigne en Cantina → Editar.'
+                ]);
+                return;
+            }
+
             $db->begin_transaction();
 
             try {
@@ -556,6 +572,14 @@ class VendedorProductosController
             return;
         }
 
+        // Solo el stock de la cantina de la caja abierta
+        $arqueo = ArqueoCaja::obtenerArqueoAbiertoUsuario($_SESSION['id']);
+        if (!$arqueo || !$arqueo->rela_cantina) {
+            echo json_encode(['ok' => false, 'productos' => [], 'mensaje' => 'Tu caja no tiene una cantina asignada']);
+            return;
+        }
+        $idCantina = (int) $arqueo->rela_cantina;
+
         $db = \Models\ActiveRecord::getDB();
 
         // Buscar productos CON STOCK disponible
@@ -571,6 +595,7 @@ class VendedorProductosController
               INNER JOIN stock_cantina s ON p.id_producto_cantina = s.rela_producto_cantina
               INNER JOIN estados_productos e ON p.rela_estado_producto = e.id_estado_producto
               WHERE s.stock_cantina > 0
+              AND s.rela_cantina = ?
               AND p.rela_estado_producto IN (1, 2)
               AND (p.nombre_producto_cantina LIKE ? OR p.codigo LIKE ?)
               ORDER BY p.nombre_producto_cantina ASC
@@ -579,7 +604,7 @@ class VendedorProductosController
         try {
             $stmt = $db->prepare($query);
             $terminoBusqueda = "%{$termino}%";
-            $stmt->bind_param("ss", $terminoBusqueda, $terminoBusqueda);
+            $stmt->bind_param("iss", $idCantina, $terminoBusqueda, $terminoBusqueda);
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -1443,16 +1468,12 @@ class VendedorProductosController
             $stmt->bind_param("isi", $numeroTicket, $codigoComprobante, $puntoVenta);
             $stmt->execute();
 
-            // PASO 4: Obtener cantina
-            $queryCantina = "SELECT id_cantina FROM cantina WHERE estado = 1 ORDER BY id_cantina LIMIT 1";
-            $result = $db->query($queryCantina);
-            $cantina = $result->fetch_assoc();
-
-            if (!$cantina) {
-                throw new \Exception('No hay ninguna cantina activa en el sistema');
+            // PASO 4: La cantina es la de la caja abierta (solo se vende su stock)
+            if (!$arqueo->rela_cantina) {
+                throw new \Exception('Tu caja no tiene una cantina asignada');
             }
 
-            $idCantina = $cantina['id_cantina'];
+            $idCantina = (int) $arqueo->rela_cantina;
 
             // PASO 5: Insertar cabecera de venta
             $observaciones = $datos['observaciones'] ?? '';
@@ -1492,16 +1513,18 @@ class VendedorProductosController
                     $cantidad = $producto['cantidad'];
                     $precioUnitario = $producto['precio'];
 
-                    // Verificar stock disponible
-                    $queryStock = "SELECT stock_cantina FROM stock_cantina WHERE id_stock_cantina = ?";
+                    // Verificar stock disponible: tiene que ser de este producto y de la cantina de la caja
+                    $queryStock = "SELECT stock_cantina FROM stock_cantina
+                                   WHERE id_stock_cantina = ? AND rela_producto_cantina = ? AND rela_cantina = ?
+                                   FOR UPDATE";
                     $stmt = $db->prepare($queryStock);
-                    $stmt->bind_param("i", $idStock);
+                    $stmt->bind_param("iii", $idStock, $idProducto, $idCantina);
                     $stmt->execute();
                     $result = $stmt->get_result();
                     $stockActual = $result->fetch_assoc();
 
                     if (!$stockActual) {
-                        throw new \Exception("No se encontró stock para el producto ID: {$idProducto}");
+                        throw new \Exception("El producto ID {$idProducto} no tiene stock en la cantina de esta caja");
                     }
 
                     if ($stockActual['stock_cantina'] < $cantidad) {

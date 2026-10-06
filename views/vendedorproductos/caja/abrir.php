@@ -41,17 +41,22 @@
                     <?php foreach ($cajas as $caja): ?>
                         <option 
                             value="<?php echo $caja['id_caja']; ?>"
-                            <?php echo $caja['usuario_usando'] ? 'disabled' : ''; ?>
+                            <?php echo $caja['usuario_usando'] || !$caja['nombre_cantina'] ? 'disabled' : ''; ?>
                             data-ocupada="<?php echo $caja['usuario_usando'] ? 'true' : 'false'; ?>"
                         >
-                            <?php echo $caja['codigo_caja']; ?> - <?php echo $caja['nombre_caja']; ?>
+                            <?php echo s($caja['codigo_caja']); ?> - <?php echo s($caja['nombre_caja']); ?>
+                            <?php if ($caja['nombre_cantina']): ?>
+                                — <?php echo s($caja['nombre_cantina']); ?>
+                            <?php else: ?>
+                                (SIN CANTINA ASIGNADA)
+                            <?php endif; ?>
                             <?php if ($caja['usuario_usando']): ?>
-                                (EN USO - <?php echo $caja['usuario_usando_nombre']; ?>)
+                                (EN USO - <?php echo s($caja['usuario_usando_nombre']); ?>)
                             <?php endif; ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small>Cajas asignadas para venta de productos (3 y 4)</small>
+                <small>Cada caja vende solo el stock de su cantina</small>
             </div>
 
             <div class="campo form-group">

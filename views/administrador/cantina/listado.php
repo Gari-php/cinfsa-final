@@ -19,6 +19,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Nombre Cantina</th>
+                    <th>Cajas</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
@@ -28,6 +29,7 @@
                 <tr>
                     <td><?php echo $c->id_cantina; ?></td>
                     <td><?php echo s($c->nombre_cantina); ?></td>
+                    <td><?php echo $c->cajas ? s($c->cajas) : 'Sin cajas'; ?></td>
                     <td>
                         <?php echo $c->estado == 1
                             ? '<span class="estado-con-icono activo">ACTIVA</span>'

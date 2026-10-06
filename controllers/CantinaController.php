@@ -90,7 +90,8 @@ class CantinaController {
         }
 
         $router->render('administrador/cantina/editar', [
-            'cantina' => $cantina
+            'cantina' => $cantina,
+            'cajas' => Cantina::obtenerCajasProductos()
         ]);
     }
 
@@ -141,16 +142,61 @@ class CantinaController {
             return;
         }
 
-        $antes = ['nombre' => $cantina->nombre_cantina, 'estado' => self::nombreEstado($cantina->estado)];
+        // Cajas de productos: cada checkbox marcado (caja_<id>) queda asignado a esta cantina.
+        // Si el formulario no trae la sección de cajas, quedan como están.
+        $cajas = Cantina::obtenerCajasProductos();
+        $cajasAntes = [];
+        $cajasDespues = [];
+        $cambiosCajas = [];
+        foreach ($cajas as $caja) {
+            $tenia = (int) $caja['rela_cantina'] === (int) $id;
+            $tendra = isset($datos['cajas_enviadas']) ? !empty($datos['caja_' . $caja['id_caja']]) : $tenia;
+            if ($tenia) $cajasAntes[] = $caja['nombre_caja'];
+            if ($tendra) $cajasDespues[] = $caja['nombre_caja'];
+            if ($tenia !== $tendra) {
+                if ($caja['abierta']) {
+                    echo json_encode(['errores' => ["La {$caja['nombre_caja']} está abierta: cerrala antes de cambiarla de cantina"]]);
+                    return;
+                }
+                $cambiosCajas[$caja['id_caja']] = $tendra ? (int) $id : null;
+            }
+        }
+
+        if ($estado === 0 && $cajasDespues) {
+            echo json_encode(['errores' => ['Una cantina inactiva no puede tener cajas: pasalas a otra cantina antes de desactivarla']]);
+            return;
+        }
+
+        $antes = [
+            'nombre' => $cantina->nombre_cantina,
+            'estado' => self::nombreEstado($cantina->estado),
+            'cajas' => implode(', ', $cajasAntes) ?: 'Ninguna'
+        ];
 
         $cantina->nombre_cantina = $nombre_cantina;
         $cantina->estado = $estado;
 
-        $resultado = $cantina->actualizar();
+        $db = Cantina::getDB();
+        $db->begin_transaction();
+        try {
+            $resultado = $cantina->actualizar();
+            foreach ($cambiosCajas as $idCaja => $idCantinaCaja) {
+                $resultado = $resultado && Cantina::asignarCaja($idCaja, $idCantinaCaja);
+            }
+            $resultado ? $db->commit() : $db->rollback();
+        } catch (\Throwable $e) {
+            $db->rollback();
+            error_log('Error al actualizar la cantina: ' . $e->getMessage());
+            $resultado = false;
+        }
 
         if ($resultado) {
-            $despues = ['nombre' => $cantina->nombre_cantina, 'estado' => self::nombreEstado($cantina->estado)];
-            [$antes, $despues] = \Classes\Auditoria::cambios($antes, $despues, ['nombre', 'estado']);
+            $despues = [
+                'nombre' => $cantina->nombre_cantina,
+                'estado' => self::nombreEstado($cantina->estado),
+                'cajas' => implode(', ', $cajasDespues) ?: 'Ninguna'
+            ];
+            [$antes, $despues] = \Classes\Auditoria::cambios($antes, $despues, ['nombre', 'estado', 'cajas']);
             if ($despues) {
                 \Classes\Auditoria::registrar(
                     'cantina.modificar',
@@ -200,6 +246,13 @@ class CantinaController {
 
         if (Cantina::contarActivasExcepto($id) === 0) {
             echo json_encode(['ok' => false, 'mensaje' => 'No podés dar de baja la única cantina activa']);
+            return;
+        }
+
+        $cajasAsignadas = array_filter(Cantina::obtenerCajasProductos(), fn($c) => (int) $c['rela_cantina'] === (int) $id);
+        if ($cajasAsignadas) {
+            $nombres = implode(', ', array_column($cajasAsignadas, 'nombre_caja'));
+            echo json_encode(['ok' => false, 'mensaje' => "La cantina tiene cajas asignadas ($nombres): pasalas a otra cantina desde Editar antes de darla de baja"]);
             return;
         }
 

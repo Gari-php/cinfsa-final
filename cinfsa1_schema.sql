@@ -203,8 +203,11 @@ CREATE TABLE `cajas` (
   `nombre_caja` varchar(50) NOT NULL,
   `folio` varchar(30) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT 1,
+  `rela_cantina` int(11) DEFAULT NULL,
   PRIMARY KEY (`id_caja`),
-  UNIQUE KEY `uk_numero_caja` (`numero_caja`)
+  UNIQUE KEY `uk_numero_caja` (`numero_caja`),
+  KEY `fk_cajas_cantina_idx` (`rela_cantina`),
+  CONSTRAINT `fk_cajas_cantina` FOREIGN KEY (`rela_cantina`) REFERENCES `cantina` (`id_cantina`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

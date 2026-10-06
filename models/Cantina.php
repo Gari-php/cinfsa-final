@@ -5,9 +5,13 @@ class Cantina extends ActiveRecord {
     protected static $tabla = 'cantina';
     protected static $columnasDB = ['id_cantina', 'nombre_cantina', 'estado'];
 
+    // Cajas de venta de productos (las de funciones son la 1 y la 2)
+    const CAJAS_PRODUCTOS = [3, 4];
+
     public $id_cantina;
     public $nombre_cantina;
     public $estado;
+    public $cajas = ''; // nombres de las cajas asignadas, para el listado
 
     public function __construct($args = []) {
         $this->id_cantina = $args['id_cantina'] ?? null;
@@ -27,14 +31,19 @@ class Cantina extends ActiveRecord {
 
     public static function obtenerTodas() {
         $db = self::getDB();
-        // Traer todas las cantinas
-        $resultado = $db->query("SELECT * FROM cantina");
+        // Traer todas las cantinas, con los nombres de sus cajas
+        $resultado = $db->query("SELECT cant.*, GROUP_CONCAT(c.nombre_caja ORDER BY c.numero_caja SEPARATOR ', ') AS cajas
+                                 FROM cantina cant
+                                 LEFT JOIN cajas c ON c.rela_cantina = cant.id_cantina AND c.activo = 1
+                                 GROUP BY cant.id_cantina
+                                 ORDER BY cant.id_cantina");
         $cantinas = [];
         while($row = $resultado->fetch_assoc()) {
             $cantina = new self;
             $cantina->id_cantina = $row['id_cantina'];
             $cantina->nombre_cantina = $row['nombre_cantina'];
             $cantina->estado = $row['estado'];
+            $cantina->cajas = $row['cajas'] ?? '';
             $cantinas[] = $cantina;
         }
         return $cantinas;
@@ -80,6 +89,26 @@ class Cantina extends ActiveRecord {
     public function darDeBaja() {
         $stmt = self::$db->prepare("UPDATE cantina SET estado = 0 WHERE id_cantina = ?");
         return $stmt->execute([$this->id_cantina]);
+    }
+
+    // Cajas de productos con la cantina a la que pertenecen y si están abiertas ahora
+    public static function obtenerCajasProductos() {
+        $ids = implode(',', self::CAJAS_PRODUCTOS);
+        $resultado = self::getDB()->query("SELECT c.id_caja, c.codigo_caja, c.nombre_caja, c.rela_cantina,
+                                                  cant.nombre_cantina,
+                                                  EXISTS(SELECT 1 FROM arqueo_cajas ac
+                                                         WHERE ac.rela_caja = c.id_caja AND ac.estado_arqueo = 'abierto') AS abierta
+                                           FROM cajas c
+                                           LEFT JOIN cantina cant ON cant.id_cantina = c.rela_cantina
+                                           WHERE c.activo = 1 AND c.id_caja IN ($ids)
+                                           ORDER BY c.numero_caja");
+        return $resultado->fetch_all(MYSQLI_ASSOC);
+    }
+
+    // Asigna una caja a una cantina (null = sin cantina, no se puede abrir)
+    public static function asignarCaja($idCaja, $idCantina) {
+        $stmt = self::getDB()->prepare("UPDATE cajas SET rela_cantina = ? WHERE id_caja = ?");
+        return $stmt->execute([$idCantina, $idCaja]);
     }
 
     // Cuántas cantinas activas hay sin contar la indicada (para no dejar el sistema sin ninguna)

@@ -34,6 +34,8 @@ class ArqueoCaja extends ActiveRecord
     public $numero_caja;
     public $codigo_caja;
     public $id_caja;
+    public $rela_cantina;    // cantina de la caja (solo cajas de productos)
+    public $nombre_cantina;
     public function __construct($args = [])
     {
         $this->id_arqueo_caja = $args['id_arqueo_caja'] ?? null;
@@ -51,6 +53,8 @@ class ArqueoCaja extends ActiveRecord
         $this->numero_caja = $args['numero_caja'] ?? 0;
         $this->codigo_caja = $args['codigo_caja'] ?? '';
         $this->id_caja = $args['id_caja'] ?? null;
+        $this->rela_cantina = $args['rela_cantina'] ?? null;
+        $this->nombre_cantina = $args['nombre_cantina'] ?? '';
     }
 
 
@@ -63,10 +67,13 @@ class ArqueoCaja extends ActiveRecord
                 c.nombre_caja, 
                 c.numero_caja,
                 c.codigo_caja,      
-                c.folio
+                c.folio,
+                c.rela_cantina,
+                cant.nombre_cantina
                 FROM arqueo_cajas ac
                 INNER JOIN usuarios u ON ac.rela_usuario = u.id_usuario
                 INNER JOIN cajas c ON ac.rela_caja = c.id_caja
+                LEFT JOIN cantina cant ON cant.id_cantina = c.rela_cantina
                 WHERE ac.rela_usuario = ? 
                 AND ac.estado_arqueo = 'abierto'
                 LIMIT 1";

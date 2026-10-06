@@ -7,7 +7,7 @@
             <div class="datos-caja">
                 <h1>VENTA DE PRODUCTOS Y FICHAS</h1>
                 <p class="nombre-caja"><?php echo $arqueo->nombre_caja ?? 'Caja Productos'; ?></p>
-                <p class="numero-caja">Caja #<?php echo $arqueo->numero_caja ?? 'N/A'; ?></p>
+                <p class="numero-caja">Caja #<?php echo $arqueo->numero_caja ?? 'N/A'; ?><?php if ($arqueo->nombre_cantina): ?> · <?php echo s($arqueo->nombre_cantina); ?><?php endif; ?></p>
             </div>
         </div>
 

@@ -357,6 +357,7 @@ class VentasConsultaControllerP
                 cc.numero_comprobante,
                 cc.fecha_hora_pago_cantina,
                 cc.observaciones,
+                cc.rela_cantina,
                 ac.estado_arqueo,
                 ac.rela_usuario
             FROM cabecera_fact_cantina cc
@@ -456,15 +457,26 @@ class VentasConsultaControllerP
                     if (!empty($detalleEncontrado['rela_producto_cantina'])) {
                         $idProducto = $detalleEncontrado['rela_producto_cantina'];
 
+                        // El stock vuelve solo a la cantina que hizo la venta
+                        $idCantinaVenta = (int)$venta['rela_cantina'];
                         $queryStock = "UPDATE stock_cantina 
                               SET stock_cantina = stock_cantina + ?
-                              WHERE rela_producto_cantina = ?";
+                              WHERE rela_producto_cantina = ? AND rela_cantina = ?";
 
                         $stmt = $db->prepare($queryStock);
-                        $stmt->bind_param("ii", $cantidad, $idProducto);
+                        $stmt->bind_param("iii", $cantidad, $idProducto, $idCantinaVenta);
 
                         if (!$stmt->execute()) {
                             throw new \Exception("Error al devolver stock del producto ID: {$idProducto}");
+                        }
+
+                        // Si esa cantina ya no tenía fila de stock del producto, se crea
+                        if ($stmt->affected_rows === 0) {
+                            $stmt = $db->prepare("INSERT INTO stock_cantina (stock_cantina, rela_producto_cantina, rela_cantina) VALUES (?, ?, ?)");
+                            $stmt->bind_param("iii", $cantidad, $idProducto, $idCantinaVenta);
+                            if (!$stmt->execute()) {
+                                throw new \Exception("Error al devolver stock del producto ID: {$idProducto}");
+                            }
                         }
 
                         $queryEstado = "UPDATE productos_cantina 
