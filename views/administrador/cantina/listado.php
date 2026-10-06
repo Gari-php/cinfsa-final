@@ -19,6 +19,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Nombre Cantina</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -26,11 +27,23 @@
             <?php foreach($cantinas as $c): ?>
                 <tr>
                     <td><?php echo $c->id_cantina; ?></td>
-                    <td><?php echo $c->nombre_cantina; ?></td>
+                    <td><?php echo s($c->nombre_cantina); ?></td>
+                    <td>
+                        <?php echo $c->estado == 1
+                            ? '<span class="estado-con-icono activo">ACTIVA</span>'
+                            : '<span class="estado-con-icono inactivo">INACTIVA</span>'; ?>
+                    </td>
                     <td>
                         <div class="acciones">
                             <a class="boton" href="/administrador/cantina/contenido?id=<?php echo $c->id_cantina; ?>">Ver Contenido</a>
                             <a class="boton" href="/administrador/cantina/editar?id=<?php echo $c->id_cantina; ?>">Editar</a>
+                            <?php if ($c->estado == 1): ?>
+                                <button class="boton eliminar-cantina"
+                                    data-id="<?php echo $c->id_cantina; ?>"
+                                    data-nombre="<?php echo s($c->nombre_cantina); ?>">
+                                    Dar de baja
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>

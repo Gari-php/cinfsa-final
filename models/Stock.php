@@ -411,13 +411,17 @@ class Stock extends ActiveRecord {
         return $row ? $row['id_estado_producto'] : null;
     }
   
-    public static function obtenerCantinasDisponibles() {
+    // Cantinas activas; $incluirId suma la cantina actual de un stock aunque esté inactiva
+    public static function obtenerCantinasDisponibles($incluirId = null) {
         $db = self::getDB();
-        $query = "SELECT id_cantina, nombre_cantina 
+        $query = "SELECT id_cantina, nombre_cantina, estado 
                   FROM cantina 
+                  WHERE estado = 1 OR id_cantina = ?
                   ORDER BY nombre_cantina";
         
-        $resultado = $db->query($query);
+        $stmt = $db->prepare($query);
+        $stmt->execute([(int) $incluirId]);
+        $resultado = $stmt->get_result();
         $cantinas = [];
         
         while ($row = $resultado->fetch_assoc()) {

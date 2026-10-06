@@ -843,6 +843,12 @@ window.confirmarAccionModal = async function ({
 
         const data = await response.json();
 
+        // Si el servidor rechaza la acción (ok: false), se muestra como error y no se recarga
+        if (data.ok === false) {
+            mostrarAlerta(data.mensaje || mensajeError, 'error');
+            return;
+        }
+
         mostrarAlerta(data.mensaje || mensajeExito, 'exito');
         setTimeout(() => location.reload(), 1500);
     } catch (err) {
@@ -965,6 +971,18 @@ document.body.addEventListener('click', function (e) {
             dataKey: 'id_maquinas',
             mensajeExito: 'La maquina fue dada de baja Correctamente',
             mensajeError: 'Error al dar de baja la maquina'
+        });
+    }
+    if (e.target.classList.contains('eliminar-cantina')) {
+        e.preventDefault();
+        confirmarAccionModal({
+            id: e.target.dataset.id,
+            nombre: e.target.dataset.nombre,
+            mensajeConfirmacion: '¿Deseas dar de baja la cantina {nombre}? Quedará inactiva y podrás reactivarla desde Editar.',
+            url: '/administrador/cantina/eliminar',
+            dataKey: 'id_cantina',
+            mensajeExito: 'La cantina fue dada de baja correctamente',
+            mensajeError: 'Error al dar de baja la cantina'
         });
     }
     if (e.target.classList.contains('eliminar-genero')) {

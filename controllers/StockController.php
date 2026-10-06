@@ -173,7 +173,7 @@ class StockController
         }
 
         $productos = Stock::obtenerTodosLosProductosDisponibles();
-        $cantinas = Stock::obtenerCantinasDisponibles();
+        $cantinas = Stock::obtenerCantinasDisponibles($stock->rela_cantina);
 
         $router->render('administrador/stock/editar', [
             'stock' => $stock,

@@ -40,6 +40,8 @@ class Auditoria
         'maquina.crear'         => 'Alta de máquina',
         'maquina.modificar'     => 'Modificación de máquina',
         'maquina.baja'          => 'Baja de máquina',
+        'cantina.modificar'     => 'Modificación de cantina',
+        'cantina.baja'          => 'Baja de cantina',
         'ficha.crear'           => 'Alta de ficha',
         'ficha.modificar'       => 'Modificación de ficha',
         'usuario.crear'         => 'Alta de usuario',

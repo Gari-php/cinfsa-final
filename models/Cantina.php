@@ -3,14 +3,16 @@ namespace Models;
 
 class Cantina extends ActiveRecord {
     protected static $tabla = 'cantina';
-    protected static $columnasDB = ['id_cantina', 'nombre_cantina'];
+    protected static $columnasDB = ['id_cantina', 'nombre_cantina', 'estado'];
 
     public $id_cantina;
     public $nombre_cantina;
+    public $estado;
 
     public function __construct($args = []) {
         $this->id_cantina = $args['id_cantina'] ?? null;
         $this->nombre_cantina = $args['nombre_cantina'] ?? '';
+        $this->estado = $args['estado'] ?? 1;
     }
 
     public function validar() {
@@ -32,6 +34,7 @@ class Cantina extends ActiveRecord {
             $cantina = new self;
             $cantina->id_cantina = $row['id_cantina'];
             $cantina->nombre_cantina = $row['nombre_cantina'];
+            $cantina->estado = $row['estado'];
             $cantinas[] = $cantina;
         }
         return $cantinas;
@@ -64,12 +67,26 @@ class Cantina extends ActiveRecord {
     }
 
     public function actualizar(){
-        $query = "UPDATE cantina SET nombre_cantina = ? WHERE id_cantina = ?";
+        $query = "UPDATE cantina SET nombre_cantina = ?, estado = ? WHERE id_cantina = ?";
         $stmt = self::$db->prepare($query);
         return $stmt->execute([
             $this->nombre_cantina,
+            (int) $this->estado,
             $this->id_cantina
         ]);
+    }
+
+    // Baja lógica: la cantina queda inactiva, no se borra
+    public function darDeBaja() {
+        $stmt = self::$db->prepare("UPDATE cantina SET estado = 0 WHERE id_cantina = ?");
+        return $stmt->execute([$this->id_cantina]);
+    }
+
+    // Cuántas cantinas activas hay sin contar la indicada (para no dejar el sistema sin ninguna)
+    public static function contarActivasExcepto($id_cantina) {
+        $stmt = self::getDB()->prepare("SELECT COUNT(*) AS total FROM cantina WHERE estado = 1 AND id_cantina <> ?");
+        $stmt->execute([$id_cantina]);
+        return (int) $stmt->get_result()->fetch_assoc()['total'];
     }
 
     // Obtener productos con stock de una cantina específica

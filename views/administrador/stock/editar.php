@@ -30,7 +30,7 @@
                 <?php foreach ($cantinas as $cantina) { ?>
                     <option value="<?php echo $cantina['id_cantina']; ?>"
                             <?= $stock->rela_cantina == $cantina['id_cantina'] ? 'selected' : '' ?>>
-                        <?php echo htmlspecialchars($cantina['nombre_cantina']); ?>
+                        <?php echo htmlspecialchars($cantina['nombre_cantina']); ?><?= (int) $cantina['estado'] === 0 ? ' (inactiva)' : '' ?>
                     </option>
                 <?php } ?>
             </select>

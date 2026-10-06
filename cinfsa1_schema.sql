@@ -218,6 +218,7 @@ DROP TABLE IF EXISTS `cantina`;
 CREATE TABLE `cantina` (
   `id_cantina` int(11) NOT NULL AUTO_INCREMENT,
   `nombre_cantina` varchar(45) NOT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_cantina`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

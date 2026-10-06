@@ -1444,12 +1444,12 @@ class VendedorProductosController
             $stmt->execute();
 
             // PASO 4: Obtener cantina
-            $queryCantina = "SELECT id_cantina FROM cantina LIMIT 1";
+            $queryCantina = "SELECT id_cantina FROM cantina WHERE estado = 1 ORDER BY id_cantina LIMIT 1";
             $result = $db->query($queryCantina);
             $cantina = $result->fetch_assoc();
 
             if (!$cantina) {
-                throw new \Exception('No hay cantina configurada en el sistema');
+                throw new \Exception('No hay ninguna cantina activa en el sistema');
             }
 
             $idCantina = $cantina['id_cantina'];

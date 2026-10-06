@@ -12,7 +12,15 @@
 
         <div class="campo">
             <label for="nombre_cantina">Nombre de la Cantina</label>
-            <input type="text" name="nombre_cantina" id="nombre_cantina" value="<?= $cantina->nombre_cantina ?>">
+            <input type="text" name="nombre_cantina" id="nombre_cantina" value="<?= s($cantina->nombre_cantina) ?>">
+        </div>
+
+        <div class="campo">
+            <label for="estado">Estado</label>
+            <select name="estado" id="estado">
+                <option value="1" <?= $cantina->estado == 1 ? 'selected' : '' ?>>Activa</option>
+                <option value="0" <?= $cantina->estado == 0 ? 'selected' : '' ?>>Inactiva</option>
+            </select>
         </div>
 
         <div class="contenedor-alertas"></div>

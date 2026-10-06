@@ -344,6 +344,7 @@ $router->get('/administrador/cantina/crear', [CantinaController::class, 'crear']
 $router->post('/administrador/cantina/guardar', [CantinaController::class, 'guardar']);
 $router->get('/administrador/cantina/editar', [CantinaController::class, 'editar']);
 $router->post('/administrador/cantina/actualizar', [CantinaController::class, 'actualizar']);
+$router->post('/administrador/cantina/eliminar', [CantinaController::class, 'eliminar']);
 $router->post('/administrador/cantina/buscar', [CantinaController::class, 'buscar']);
 $router->get('/administrador/cantina/contenido', [CantinaController::class, 'verContenido']);
 //reportes graficos de la cantina
