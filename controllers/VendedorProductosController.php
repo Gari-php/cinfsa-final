@@ -1553,7 +1553,7 @@ class VendedorProductosController
                     $stmt->execute();
 
                     // Verificar stock resultante + datos para notificación
-                    $queryVerificar = "SELECT sc.stock_cantina, pc.nombre_producto_cantina, pc.stock_minimo, c.nombre_cantina
+                    $queryVerificar = "SELECT sc.stock_cantina, pc.nombre_producto_cantina, c.nombre_cantina
                                     FROM stock_cantina sc
                                     INNER JOIN productos_cantina pc ON sc.rela_producto_cantina = pc.id_producto_cantina
                                     INNER JOIN cantina c ON sc.rela_cantina = c.id_cantina
@@ -1566,7 +1566,7 @@ class VendedorProductosController
 
                     if ($infoStock) {
                         $nuevoStock = (int) $infoStock['stock_cantina'];
-                        $stockMinimo = (int) $infoStock['stock_minimo'];
+                        $umbral = \Models\Stock::UMBRAL_STOCK_BAJO;
                         $stockAntesDeVenta = $nuevoStock + $cantidad;
 
                         // Marcar sin stock si llegó a 0 (lógica que ya tenías)
@@ -1577,8 +1577,9 @@ class VendedorProductosController
                             $stmt->execute();
                         }
 
-                        // Notificar SOLO en el momento en que cruza el umbral hacia abajo
-                        if ($stockAntesDeVenta > $stockMinimo && $nuevoStock <= $stockMinimo) {
+                        // Notificar SOLO en el momento en que cruza el umbral de stock bajo hacia abajo
+                        // (el mismo que usa el administrador al cargar o editar stock)
+                        if ($stockAntesDeVenta > $umbral && $nuevoStock <= $umbral) {
                             \Classes\Notificaciones::notificarStockBajo(
                                 $infoStock['nombre_producto_cantina'],
                                 $nuevoStock,

@@ -3,6 +3,9 @@ namespace Models;
 
 class Stock extends ActiveRecord {
     
+    // Con esta cantidad o menos, el stock se considera bajo y se avisa al administrador
+    const UMBRAL_STOCK_BAJO = 15;
+
     protected static $tabla = 'stock_cantina';
     protected static $columnasDB = ['id_stock_cantina', 'stock_cantina', 'rela_producto_cantina', 'rela_cantina'];
     
@@ -358,7 +361,7 @@ class Stock extends ActiveRecord {
         $resultado = $stmt->execute([$nuevo_estado_id, $producto_id]);
         
         // NUEVA FUNCIONALIDAD: Notificar stock bajo
-        if ($resultado && $nuevo_stock <= 15 && $nuevo_stock > 0) {
+        if ($resultado && $nuevo_stock <= self::UMBRAL_STOCK_BAJO && $nuevo_stock > 0) {
             self::notificarStockBajo($producto_id, $nuevo_stock);
         }
         
@@ -641,7 +644,7 @@ class Stock extends ActiveRecord {
                    INNER JOIN estados_productos ep ON pc.rela_estado_producto = ep.id_estado_producto
                    WHERE ep.nombre_estado_producto = 'Disponible'
                      AND sc.stock_cantina > 0 
-                     AND sc.stock_cantina <= 15";
+                     AND sc.stock_cantina <= " . self::UMBRAL_STOCK_BAJO;
         
         $resultado3 = $db->query($query3);
         $stock_bajo = $resultado3->fetch_assoc();
