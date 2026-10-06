@@ -358,7 +358,7 @@ class Stock extends ActiveRecord {
         $resultado = $stmt->execute([$nuevo_estado_id, $producto_id]);
         
         // NUEVA FUNCIONALIDAD: Notificar stock bajo
-        if ($resultado && $nuevo_stock <= 10 && $nuevo_stock > 0) {
+        if ($resultado && $nuevo_stock <= 15 && $nuevo_stock > 0) {
             self::notificarStockBajo($producto_id, $nuevo_stock);
         }
         
@@ -641,7 +641,7 @@ class Stock extends ActiveRecord {
                    INNER JOIN estados_productos ep ON pc.rela_estado_producto = ep.id_estado_producto
                    WHERE ep.nombre_estado_producto = 'Disponible'
                      AND sc.stock_cantina > 0 
-                     AND sc.stock_cantina <= 10";
+                     AND sc.stock_cantina <= 15";
         
         $resultado3 = $db->query($query3);
         $stock_bajo = $resultado3->fetch_assoc();

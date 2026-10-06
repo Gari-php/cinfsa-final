@@ -649,7 +649,7 @@ class GeneradorGraficos
                 e.nombre_estado_producto,
                 CASE 
                     WHEN s.stock_cantina = 0 THEN 'Sin Stock'
-                    WHEN s.stock_cantina < 10 THEN 'Bajo'
+                    WHEN s.stock_cantina <= 15 THEN 'Bajo'
                     WHEN s.stock_cantina < 30 THEN 'Medio'
                     ELSE 'Alto'
                 END as nivel_stock

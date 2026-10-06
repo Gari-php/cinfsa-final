@@ -48,7 +48,7 @@
                         <td><?php echo htmlspecialchars($stock->nombre_producto_cantina); ?></td>
                         <td><?php echo htmlspecialchars($stock->nombre_cantina); ?></td>
                         <td class="stock-celda">
-                            <span class="stock-cantidad <?php echo $stock->stock_cantina <= 10 ? ($stock->stock_cantina == 0 ? 'stock-agotado' : 'stock-bajo') : ''; ?>">
+                            <span class="stock-cantidad <?php echo $stock->stock_cantina <= 15 ? ($stock->stock_cantina == 0 ? 'stock-agotado' : 'stock-bajo') : ''; ?>">
                                 <?php echo htmlspecialchars($stock->stock_cantina); ?>
                                 <?php if ($stock->stock_cantina == 0) echo ' (AGOTADO)'; ?>
                             </span>
@@ -109,7 +109,7 @@
                 const stock = parseInt(s.stock_cantina);
                 let claseStock = '';
                 let sufijo = '';
-                if (stock <= 10) {
+                if (stock <= 15) {
                     claseStock = stock === 0 ? 'stock-agotado' : 'stock-bajo';
                     if (stock === 0) sufijo = ' (AGOTADO)';
                 }

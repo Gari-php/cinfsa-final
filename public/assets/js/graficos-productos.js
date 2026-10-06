@@ -412,7 +412,7 @@ function crearGraficoStock(ctx, datos) {
                 data: datosLimitados.map(d => d.stock_actual),
                 backgroundColor: datosLimitados.map(d => {
                     if (d.stock_actual === 0) return COLORES.peligro;
-                    if (d.stock_actual < 10) return COLORES.peligro;
+                    if (d.stock_actual <= 15) return COLORES.peligro;
                     if (d.stock_actual < 30) return COLORES.advertencia;
                     return COLORES.exito;
                 }),
@@ -755,7 +755,7 @@ function generarResumen(datos, tipo) {
             break;
 
         case 'stock-productos':
-            const stockBajo = datos.filter(d => d.stock_actual < 10 && d.stock_actual > 0).length;
+            const stockBajo = datos.filter(d => d.stock_actual <= 15 && d.stock_actual > 0).length;
             const stockCero = datos.filter(d => d.stock_actual === 0).length;
             const stockMedio = datos.filter(d => d.stock_actual >= 10 && d.stock_actual < 30).length;
             const stockAlto = datos.filter(d => d.stock_actual >= 30).length;
