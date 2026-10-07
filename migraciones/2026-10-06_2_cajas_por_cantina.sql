@@ -3,8 +3,8 @@
 -- Las cajas de productos (3 y 4) quedan en la primera cantina activa, que es la que usaba la venta
 -- hasta ahora, así nada cambia hasta que se reasignen.
 --
--- Aplicar UNA vez en cada base (local y servidor), después de 2026-10-06_estado_cantina.sql:
---   mysql -u USUARIO -p NOMBRE_BASE < migraciones/2026-10-06_cajas_por_cantina.sql
+-- Aplicar UNA vez en cada base (local y servidor), después de 2026-10-06_1_estado_cantina.sql:
+--   mysql -u USUARIO -p NOMBRE_BASE < migraciones/2026-10-06_2_cajas_por_cantina.sql
 
 ALTER TABLE `cajas`
   ADD COLUMN `rela_cantina` INT(11) DEFAULT NULL AFTER `activo`,
