@@ -584,12 +584,33 @@ class ClienteController
             return;
         }
 
+        // Solo ids enteros positivos: estos valores terminan en SQL y en el carrito
+        $idFuncion = filter_var($idFuncion, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $idsValidos = is_array($butacasIds)
+            ? array_map(fn($id) => filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]), $butacasIds)
+            : [false];
+        if ($idFuncion === false || in_array(false, $idsValidos, true)) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Datos inválidos']);
+            return;
+        }
+        $butacasIds = array_values(array_unique($idsValidos));
+
         try {
             $db = \Models\ActiveRecord::getDB();
 
-            // ⭐ VERIFICAR QUE LAS BUTACAS NO ESTÉN VENDIDAS NI SIENDO PAGADAS POR OTRO CLIENTE
-            $idsButacas = implode(',', array_map('intval', $butacasIds));
+            $idsButacas = implode(',', $butacasIds);
             $pares = array_map(fn($id) => ['id_butaca' => $id, 'id_funcion' => $idFuncion], $butacasIds);
+
+            // ⭐ VERIFICAR QUE LAS BUTACAS SEAN DE LA SALA DE LA FUNCIÓN Y QUE LA FUNCIÓN SIGA A LA VENTA
+            if (\Models\Butaca::fueraDeFuncion($pares)) {
+                echo json_encode([
+                    'ok' => false,
+                    'mensaje' => 'Una o más butacas no están a la venta para esta función. Recarga la página.'
+                ]);
+                return;
+            }
+
+            // ⭐ VERIFICAR QUE LAS BUTACAS NO ESTÉN VENDIDAS NI SIENDO PAGADAS POR OTRO CLIENTE
             $noDisponibles = \Models\Butaca::noDisponibles($pares, (int)$idUsuario);
 
             if (in_array('vendida', $noDisponibles, true)) {

@@ -116,6 +116,78 @@ describe('Butaca que deja de estar disponible', () => {
     });
   });
 
+  it('rechaza ids de butaca que no son números enteros (inyección SQL) sin tocar el carrito', () => {
+    dosButacas().then(([butaca]) => {
+      cy.loginComo('cliente');
+      // El texto intenta reescribir el INSERT del carrito para guardar la entrada a $1
+      [
+        { butacas: [`${butaca}, ${FUNCION}, 1, 1, NOW())#`], id_funcion: FUNCION },
+        { butacas: [butaca], id_funcion: `${FUNCION}, 1, 1, NOW())#` },
+        { butacas: `${butaca}`, id_funcion: FUNCION },
+        { butacas: [0], id_funcion: FUNCION },
+      ].forEach((body) => {
+        cy.postJson('/api/butacas/reservar', body).its('body').then((b) => {
+          expect(json(b).ok).to.eq(false);
+          expect(json(b).mensaje).to.eq('Datos inválidos');
+        });
+      });
+      consultar('SELECT COUNT(*) AS n FROM carrito_temporal').its('0.n').should('eq', '0');
+
+      // Con un id válido sigue funcionando, y se guarda el precio de la función
+      agregarAlCarrito([butaca]);
+      consultar(`SELECT id_butaca, id_funcion, precio_unitario FROM carrito_temporal`).then((filas) => {
+        expect(filas).to.have.length(1);
+        expect(Number(filas[0].id_butaca)).to.eq(butaca);
+        expect(Number(filas[0].id_funcion)).to.eq(FUNCION);
+        expect(Number(filas[0].precio_unitario)).to.eq(3000);
+      });
+    });
+  });
+
+  it('no deja reservar una butaca de otra sala, ni de una función dada de baja o ya empezada', () => {
+    // Butaca de la sala 2 pedida para la función 1 (sala 1)
+    consultar('SELECT id_butaca FROM butacas WHERE rela_salas = 2 AND rela_estado_butaca = 1 ORDER BY id_butaca LIMIT 1')
+      .then(([{ id_butaca }]) => {
+        cy.loginComo('cliente');
+        cy.postJson('/api/butacas/reservar', { butacas: [Number(id_butaca)], id_funcion: FUNCION })
+          .its('body').then((b) => {
+            expect(json(b).ok).to.eq(false);
+            expect(json(b).mensaje).to.contain('no están a la venta para esta función');
+          });
+      });
+
+    dosButacas().then(([butaca]) => {
+      // Función de la sala 1 que empezó hace 10 minutos
+      cy.task('crearFuncion', -10).then((idEmpezada) => {
+        cy.loginComo('cliente');
+        cy.postJson('/api/butacas/reservar', { butacas: [butaca], id_funcion: idEmpezada })
+          .its('body').then((b) => expect(json(b).ok).to.eq(false));
+      });
+
+      // La función 1 está en mi carrito y el admin la da de baja: ya no se puede pagar
+      cy.loginComo('cliente');
+      agregarAlCarrito([butaca]);
+      cy.loginComo('admin');
+      cy.postJson('/administrador/funciones/eliminar', { id_funcion: FUNCION }).its('body.ok').should('eq', true);
+
+      cy.loginComo('cliente');
+      cy.postJson('/api/butacas/reservar', { butacas: [butaca], id_funcion: FUNCION })
+        .its('body').then((b) => expect(json(b).ok).to.eq(false));
+      cy.visit('/carrito/checkout');
+      cy.get('.checkout-item.no-disponible').should('have.length', 1)
+        .and('contain.text', 'ya no está a la venta para esa función');
+      cy.get('.btn-pagar').should('be.disabled');
+      cy.postJson('/pago/crear-orden', {}).its('body').then((b) => {
+        const datos = json(b);
+        expect(datos.ok).to.eq(false);
+        expect(datos.no_disponibles.map((p) => p.motivo)).to.deep.eq(['no_corresponde']);
+      });
+      consultar('SELECT COUNT(*) AS n FROM ordenes').its('0.n').should('eq', '0');
+    });
+
+    consultar('SELECT COUNT(*) AS n FROM carrito_temporal WHERE id_funcion <> 1').its('0.n').should('eq', '0');
+  });
+
   it('mi propia reserva de pago no me bloquea (por ejemplo, si reintento el pago)', () => {
     dosButacas().then(([butaca]) => {
       cy.loginComo('cliente');

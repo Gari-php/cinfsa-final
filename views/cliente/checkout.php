@@ -20,6 +20,7 @@
             $motivos = [
                 'vendida' => 'Esta butaca ya fue vendida',
                 'reservada' => 'Otro cliente está pagando esta butaca en este momento',
+                'no_corresponde' => 'Esta butaca ya no está a la venta para esa función',
                 'sin_stock' => 'No hay stock suficiente',
             ];
             ?>

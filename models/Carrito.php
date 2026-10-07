@@ -40,23 +40,27 @@ class Carrito extends ActiveRecord
 
     public static function agregarItem($idUsuario, $idProducto, $tipo, $cantidad, $precio = null, $idButaca = null, $idFuncion = null)
     {
+        $cantidad = (int)$cantidad;
+
+        // Para butacas: sentencia preparada con ids enteros (llegan del JSON del cliente)
+        if ($tipo === 'butacas' || $tipo === 'funciones') {
+            $idUsuario = (int)$idUsuario;
+            $idProducto = (int)$idProducto;
+            $idButaca = $idButaca !== null ? (int)$idButaca : null;
+            $idFuncion = $idFuncion !== null ? (int)$idFuncion : null;
+            $precio = $precio !== null ? (float)$precio : null;
+
+            $stmt = self::$db->prepare("INSERT INTO " . static::$tabla . "
+                    (id_usuario, id_producto, tipo_producto, id_butaca, id_funcion, cantidad, precio_unitario, fecha_agregado)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->bind_param('iisiiid', $idUsuario, $idProducto, $tipo, $idButaca, $idFuncion, $cantidad, $precio);
+
+            return $stmt->execute();
+        }
+
         $idUsuario = self::$db->escape_string($idUsuario);
         $idProducto = self::$db->escape_string($idProducto);
         $tipo = self::$db->escape_string($tipo);
-        $cantidad = (int)$cantidad;
-        $idButaca = $idButaca ? self::$db->escape_string($idButaca) : 'NULL';
-        $idFuncion = $idFuncion ? self::$db->escape_string($idFuncion) : 'NULL';
-
-        // Para butacas
-        if ($tipo === 'butacas' || $tipo === 'funciones') {
-            $precio = $precio !== null ? (float)$precio : 'NULL';
-
-            $query = "INSERT INTO " . static::$tabla . " 
-                    (id_usuario, id_producto, tipo_producto, id_butaca, id_funcion, cantidad, precio_unitario, fecha_agregado) 
-                    VALUES ('{$idUsuario}', '{$idProducto}', '{$tipo}', {$idButaca}, {$idFuncion}, {$cantidad}, {$precio}, NOW())";
-
-            return self::$db->query($query);
-        }
 
         // Para cantina y fichas: verificar si existe
         $queryCheck = "SELECT id, cantidad FROM " . static::$tabla . " 

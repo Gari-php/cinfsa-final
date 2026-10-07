@@ -50,7 +50,8 @@ class PagoController
 
             $db->begin_transaction();
             Butaca::bloquearParaVenta(array_column($paresButacas, 'id_butaca'));
-            $noDisponibles = Butaca::noDisponibles($paresButacas, (int)$idUsuario);
+            // Una butaca que no es de la sala de su función, o de una función dada de baja o ya empezada, no se cobra
+            $noDisponibles = Butaca::fueraDeFuncion($paresButacas) + Butaca::noDisponibles($paresButacas, (int)$idUsuario);
 
             $problemas = [];
             foreach ($items as $item) {
@@ -70,7 +71,7 @@ class PagoController
 
             if ($problemas) {
                 $db->rollback();
-                $textos = ['vendida' => 'ya fue vendida', 'reservada' => 'la está pagando otro cliente', 'sin_stock' => 'no tiene stock suficiente'];
+                $textos = ['vendida' => 'ya fue vendida', 'reservada' => 'la está pagando otro cliente', 'no_corresponde' => 'ya no está a la venta para esa función', 'sin_stock' => 'no tiene stock suficiente'];
                 $detalle = implode("\n", array_map(fn($p) => "• {$p['nombre']}: {$textos[$p['motivo']]}", $problemas));
                 echo json_encode([
                     'ok' => false,

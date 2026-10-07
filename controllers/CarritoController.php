@@ -248,7 +248,7 @@ class CarritoController
                     $paresButacas[] = ['id_butaca' => $item['id_butaca'], 'id_funcion' => $item['id_funcion']];
                 }
             }
-            $noDisponibles = \Models\Butaca::noDisponibles($paresButacas, (int)$idUsuario);
+            $noDisponibles = \Models\Butaca::fueraDeFuncion($paresButacas) + \Models\Butaca::noDisponibles($paresButacas, (int)$idUsuario);
 
             // Calcular total y validar disponibilidad
             $itemsValidos = [];

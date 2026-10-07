@@ -790,6 +790,37 @@ class Butaca extends ActiveRecord {
     }
 
     /**
+     * Devuelve las butacas que no corresponden a la función pedida: la butaca no es de la sala
+     * de la función, la función está dada de baja o ya empezó. La pantalla nunca las ofrece,
+     * pero el pedido se puede armar a mano, así que la venta online lo controla en el servidor.
+     *
+     * @param array $pares [['id_butaca' => .., 'id_funcion' => ..], ...]
+     * @return array ["idButaca-idFuncion" => 'no_corresponde']
+     */
+    public static function fueraDeFuncion(array $pares): array
+    {
+        $stmt = self::getDB()->prepare("SELECT 1 FROM butacas b
+                                        INNER JOIN funciones f ON f.rela_salas = b.rela_salas
+                                        INNER JOIN turnos t ON t.id_turnos = f.rela_turnos
+                                        WHERE b.id_butaca = ? AND f.id_funcion = ?
+                                          AND f.estado = 1
+                                          AND TIMESTAMP(f.fecha_hora, t.turno_horario) > NOW()");
+        $resultado = [];
+
+        foreach ($pares as $par) {
+            $idButaca = (int)$par['id_butaca'];
+            $idFuncion = (int)$par['id_funcion'];
+            $stmt->bind_param('ii', $idButaca, $idFuncion);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows === 0) {
+                $resultado["$idButaca-$idFuncion"] = 'no_corresponde';
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Al cancelar una entrada desde el administrador, su registro en butacas_vendidas se conserva
      * (así se puede restaurar) pero la butaca ya cuenta como libre en esa función.
      * Antes de volver a venderla hay que borrar ese registro viejo (la tabla admite uno por butaca y función).
