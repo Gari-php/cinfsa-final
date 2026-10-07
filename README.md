@@ -1,11 +1,79 @@
 # CINFSA
 
-Sistema de gestión para cine: cartelera y venta de entradas online (con selección
-de butacas y pago por MercadoPago), venta presencial en boletería y cantina,
-control de caja, stock, proveedores/gastos, y un panel de administración
-completo con reportes.
+![CINFSA: cine, cantina y sala de juegos en un solo sistema](docs/capturas/portada.jpg)
+
+Sistema de gestión para un complejo de cine: cartelera y venta de entradas online (con selección
+de butacas y pago por MercadoPago), entradas con QR que se validan en la puerta, retiro de
+pedidos web, venta presencial en boletería y cantina, control de caja, stock, proveedores/gastos,
+y un panel de administración completo con reportes y auditoría.
 
 > ⚠️ Todos los derechos reservados. Ver [`LICENSE`](./LICENSE).
+
+> Las capturas son del sistema funcionando sobre una copia de la base con los datos personales
+> anonimizados.
+
+## Recorrido
+
+### El público
+
+Cartelera por día, mapa de butacas de cada sala, cantina y sala de juegos en el mismo carrito,
+pago con MercadoPago y entrada con QR.
+
+| Cartelera | Selección de butacas |
+|---|---|
+| ![Cartelera por día](docs/capturas/cartelera.jpg) | ![Mapa de butacas](docs/capturas/butacas.jpg) |
+
+![Cantina](docs/capturas/cantina.jpg)
+
+### En la puerta
+
+El personal escanea el QR de la entrada con el celular (o tipea los primeros 8 caracteres del
+código): **verde** pasa y la entrada queda usada (se puede deshacer unos segundos),
+**amarillo** está fuera de horario (se puede dejar pasar igual y queda auditado) y **rojo** ya
+ingresó, está cancelada o vencida.
+
+![Control de entradas: verde, amarillo y rojo](docs/capturas/control-entradas.jpg)
+
+<img src="docs/capturas/retiro.jpg" alt="Retiro de pedidos web" width="300" align="right">
+
+Los pedidos web con productos o fichas tienen su propio QR. En la cantina se ve lo comprado, lo
+entregado y lo que queda de cada ítem, y se puede entregar por partes: nunca más de lo que queda.
+
+<br clear="right">
+
+### Detrás del mostrador
+
+Boletería y cantina abren su propia caja. La boletería vende sobre el mapa de la sala; cada caja de
+cantina vende solo el stock de la cantina a la que está asignada.
+
+| Boletería | Cantina |
+|---|---|
+| ![Venta de entradas en boletería](docs/capturas/boleteria.jpg) | ![Venta de productos y fichas](docs/capturas/cantina-caja.jpg) |
+
+### La administración
+
+Panel con la gestión de películas, funciones, salas, butacas, productos, stock, gastos y usuarios;
+reportes con gráficos y exportación a Excel/PDF; monitor de cajas abiertas; registro de auditoría
+y permisos por perfil (cliente, administración, boletería, cantina, control de entradas y entrega
+de productos).
+
+| Panel | Reportes | Auditoría |
+|---|---|---|
+| ![Panel de administración](docs/capturas/admin.jpg) | ![Reportes con gráficos](docs/capturas/reportes.jpg) | ![Registro de auditoría](docs/capturas/auditoria.jpg) |
+
+## Detalles técnicos
+
+- **MVC propio, sin framework:** front controller, router con control de acceso en dos capas
+  (rutas públicas + módulos por perfil, configurables desde la base) y modelos ActiveRecord sobre `mysqli`.
+- **Validación de entradas sin dobles ingresos:** marcar una entrada como usada es un `UPDATE`
+  condicionado a su estado, así dos escaneos simultáneos del mismo QR no pueden dejar pasar a dos personas.
+- **Entregas parciales consistentes:** el retiro de pedidos bloquea las filas del pedido
+  (`SELECT ... FOR UPDATE`) antes de registrar una entrega.
+- **Reservas temporales de butacas** mientras se paga, con limpieza programada de las vencidas.
+- **Auditoría de solo lectura** de las acciones sensibles, que nunca guarda contraseñas ni tokens.
+- **Seguridad:** contraseñas con bcrypt, tokens CSRF en los formularios y salida escapada en las vistas.
+- **Tests:** prueba rápida que recorre todas las rutas con cada rol buscando errores de PHP,
+  y tests E2E con Cypress sobre una base de prueba aislada que se recrea antes de cada spec.
 
 ## Stack
 

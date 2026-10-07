@@ -31,3 +31,6 @@ estructura.txt
 /.agents/
 /.claude/
 skills-lock.json
+
+# Videos generados con /brag
+/brag-output/
