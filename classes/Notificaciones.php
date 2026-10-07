@@ -13,10 +13,10 @@ class Notificaciones
     private static function getPusherConfig()
     {
         return [
-            'app_id' => $_ENV['PUSHER_APP_ID'] ?? '',
-            'key' => $_ENV['PUSHER_KEY'] ?? '',
-            'secret' => $_ENV['PUSHER_SECRET'] ?? '',
-            'cluster' => $_ENV['PUSHER_CLUSTER'] ?? 'us2',
+            'app_id' => env('PUSHER_APP_ID', ''),
+            'key' => env('PUSHER_KEY', ''),
+            'secret' => env('PUSHER_SECRET', ''),
+            'cluster' => env('PUSHER_CLUSTER', 'us2'),
             'useTLS' => true
         ];
     }
@@ -25,10 +25,10 @@ class Notificaciones
     {
         if (self::$db === null) {
             self::$db = new \mysqli(
-                $_ENV['DB_HOST'] ?? 'localhost',
-                $_ENV['DB_USER'] ?? 'root',
-                $_ENV['DB_PASSWORD'] ?? '',
-                $_ENV['DB_NAME'] ?? 'cinfsa1'
+                env('DB_HOST', 'localhost'),
+                env('DB_USER', 'root'),
+                env('DB_PASSWORD', ''),
+                env('DB_NAME', 'cinfsa1')
             );
 
             if (self::$db->connect_error) {
