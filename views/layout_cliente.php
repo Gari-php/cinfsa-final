@@ -91,6 +91,7 @@
             <li><a href="/cantina"><i class="fa-solid fa-store"></i> Cantina</a></li>
             <li><a href="/peliculas"><i class="fa-solid fa-film"></i> Películas</a></li>
             <li><a href="/calificacion-peliculas"><i class="fa-solid fa-film"></i> Ver Calificaciones</a></li>
+            <li class="solo-movil"><a href="/perfil"><i class="fa-solid fa-circle-user"></i> Mi Perfil</a></li>
 
 
             <li class="carrito-nav">
@@ -670,9 +671,27 @@
         display: none;
     }
 
+    /* Enlaces del menú superior que solo se muestran en el celular */
+    .urls li.solo-movil {
+        display: none;
+    }
+
     @media (max-width: 768px) {
         body.perfil-abierto .main-content {
             margin-left: 0;
+        }
+
+        /* En el celular el menú del perfil no queda fijo: tapa la pantalla, así que se tiene que poder cerrar */
+        body.perfil-abierto .container-menu {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        body.perfil-abierto .cont-menu label {
+            display: block;
+        }
+
+        .urls li.solo-movil {
+            display: list-item;
         }
     }
 
@@ -1879,9 +1898,9 @@
             right: auto;
         }
 
-        /* Ocultar menú lateral original en móvil */
+        /* El menú lateral (perfil, calificar, cerrar sesión) sigue disponible en el celular */
         .container .btn-menu {
-            display: none;
+            display: block;
         }
 
         /* Ajustar logo */
