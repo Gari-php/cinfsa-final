@@ -221,7 +221,6 @@ class Notificaciones
 
     public static function notificarNuevoUsuario($nuevo_usuario_id, $nombre_usuario)
     {
-        file_put_contents('debug_notificaciones.txt', "EJECUTANDO notificarNuevoUsuario: $nombre_usuario\n", FILE_APPEND);
         error_log("🔍 INICIO notificarNuevoUsuario - Usuario: $nombre_usuario");
 
         // Obtener todos los administradores

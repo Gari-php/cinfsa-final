@@ -91,27 +91,15 @@ class GastosController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Crear log personalizado en el proyecto
-            $logFile = __DIR__ . '/../../logs/gastos_debug.log';
-            $logDir = dirname($logFile);
-            if (!file_exists($logDir)) {
-                mkdir($logDir, 0777, true);
-            }
-
             try {
                 $datos = json_decode(file_get_contents('php://input'), true);
 
                 if (!$datos) {
-                    file_put_contents($logFile, date('Y-m-d H:i:s') . " - Datos JSON inválidos\n", FILE_APPEND);
                     echo json_encode(['ok' => false, 'mensaje' => 'Datos JSON inválidos']);
                     return;
                 }
 
                 // DEBUG: Ver qué datos llegan
-                file_put_contents($logFile, date('Y-m-d H:i:s') . " - INICIO DEBUG\n", FILE_APPEND);
-                file_put_contents($logFile, "Datos: " . print_r($datos, true) . "\n", FILE_APPEND);
-                file_put_contents($logFile, "SESSION id: " . ($_SESSION['id'] ?? 'NO EXISTE') . "\n", FILE_APPEND);
-
                 error_log("=== INICIO DEBUG GASTOS ===");
                 error_log("Datos recibidos: " . print_r($datos, true));
                 error_log("SESSION id: " . ($_SESSION['id'] ?? 'NO EXISTE'));
@@ -175,14 +163,12 @@ class GastosController
                 }
 
                 // DEBUG: Ver objeto antes de guardar
-                file_put_contents($logFile, "Objeto Gasto: " . print_r($gasto, true) . "\n", FILE_APPEND);
                 error_log("Objeto Gasto antes de crear: " . print_r($gasto, true));
 
                 // Crear egreso
                 $resultado = $gasto->crearEgreso();
 
                 // DEBUG: Ver resultado
-                file_put_contents($logFile, "Resultado: " . print_r($resultado, true) . "\n", FILE_APPEND);
                 error_log("Resultado de crearEgreso: " . print_r($resultado, true));
 
                 if (!$resultado['resultado']) {

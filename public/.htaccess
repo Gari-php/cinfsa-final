@@ -1,0 +1,15 @@
+# Document root del sistema. Los archivos que existen (css, js, imágenes) se sirven tal cual;
+# cualquier otra ruta la atiende index.php (el Router), igual que con `php -S ... -t public`.
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Ningún archivo oculto (.env, .git, etc.) aunque alguien lo copie acá por error
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

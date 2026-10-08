@@ -1,0 +1,13 @@
+# Raíz del proyecto: Apache nunca tiene que servir nada de acá (.env, respaldos, logs, código).
+# El document root debería ser public/ (ver README). Si el hosting apunta a esta carpeta,
+# todo se redirige internamente a public/, así el sistema funciona y lo de la raíz queda oculto.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Sin mod_rewrite no hay forma segura de servir el proyecto desde acá: se bloquea todo
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

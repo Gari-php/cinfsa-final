@@ -165,19 +165,7 @@ class PagoController
             curl_close($ch);
 
             if ($httpCode !== 201) {
-                file_put_contents(
-                    __DIR__ . '/../debug_mp.log',
-                    "Error HTTP {$httpCode}: {$response}" . PHP_EOL,
-                    FILE_APPEND
-                );
-                $preference = json_decode($response, true);
-                file_put_contents(
-                    __DIR__ . '/../debug_mp.log',
-                    "PREFERENCIA CREADA:\n" .
-                        json_encode($preference, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) .
-                        "\n\n",
-                    FILE_APPEND
-                );
+                error_log("crearOrden(): Mercado Pago respondió HTTP {$httpCode} al crear la preferencia: {$response}");
                 throw new \Exception("Error al crear preferencia en Mercado Pago");
             }
 
@@ -205,11 +193,7 @@ class PagoController
             if (!empty($paresButacas)) {
                 Butaca::liberarReservasDeUsuario($paresButacas, (int)$idUsuario);
             }
-            file_put_contents(
-                __DIR__ . '/../debug_mp.log',
-                "ERROR: " . $e->getMessage() . PHP_EOL,
-                FILE_APPEND
-            );
+            error_log('crearOrden(): ' . $e->getMessage());
             echo json_encode([
                 'ok' => false,
                 'mensaje' => 'Error al procesar el pago',

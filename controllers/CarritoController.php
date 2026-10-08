@@ -351,21 +351,6 @@ class CarritoController
         $merchantOrderId = $_GET['merchant_order_id'] ?? null;
         $preferenceId = $_GET['preference_id'] ?? null;
 
-        // Guardamos los datos para depuración
-        file_put_contents(
-            __DIR__ . '/../debug_mp.log',
-            "RETORNO MERCADO PAGO:\n" .
-                print_r([
-                    'status' => $status,
-                    'payment_id' => $paymentId,
-                    'external_reference' => $externalReference,
-                    'merchant_order_id' => $merchantOrderId,
-                    'preference_id' => $preferenceId
-                ], true) .
-                "\n-----------------------------\n",
-            FILE_APPEND
-        );
-
         // Si no tenemos referencia de la orden, no podemos continuar
         if (!$externalReference) {
             http_response_code(400);
