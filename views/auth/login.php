@@ -4,6 +4,11 @@
     <img src="/assets/img/logo.png" alt="Logo del cine" class="form-logo">
     <h2>Iniciar Sesión</h2>
     <div class="contenedor-alertas"></div>
+    <?php if (!empty($aviso)): ?>
+        <p class="aviso-sesion" style="background:#7f1d1d;color:#fff;padding:10px 14px;border-radius:6px;text-align:center;margin:0 0 16px;">
+            <?php echo s($aviso); ?>
+        </p>
+    <?php endif; ?>
 
     <form method="POST" action="/" data-fetch="true" data-alerta=".contenedor-alertas" data-redirigir="/menu">
 

@@ -40,6 +40,12 @@ module.exports = defineConfig({
           const script = path.join(__dirname, 'tests', 'funcion_prueba.php');
           return Number(execFileSync(php, [script, String(minutosDesdeAhora)], { encoding: 'utf8' }));
         },
+        // Atrasa N minutos la última actividad de una sesión (para probar el vencimiento por inactividad)
+        envejecerSesion({ idSesion, minutos }) {
+          const php = process.env.PHP_BIN || 'php';
+          const script = path.join(__dirname, 'tests', 'envejecer_sesion_prueba.php');
+          return execFileSync(php, [script, String(idSesion), String(minutos)], { encoding: 'utf8' });
+        },
         // Crea un pedido web con 10 productos y 6 fichas; devuelve { id_orden, numero_orden, codigo }
         crearPedidoWeb({ idUsuario, estado = 'pagado' }) {
           const php = process.env.PHP_BIN || 'php';

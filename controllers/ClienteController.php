@@ -965,6 +965,12 @@ class ClienteController
         $resultado = Usuario::cambiarPassword($_SESSION['id_usuario'], $passwordActual, $passwordNueva);
 
         if ($resultado['ok']) {
+            // Esta sesión sigue abierta con la contraseña nueva; las demás de la cuenta se cierran
+            $usuarioActual = Usuario::find($_SESSION['id_usuario']);
+            if ($usuarioActual) {
+                $_SESSION['huella_clave'] = huellaClave($usuarioActual->clave_usuario);
+            }
+
             try {
                 $email = new Email($resultado['email'], $resultado['nombre_usuario'], '');
                 $email->enviarNotificacionCambioPassword();

@@ -59,6 +59,12 @@ class LoginController
                 return;
             }
 
+            // Cuenta dada de baja por el administrador (se avisa solo con la contraseña correcta)
+            if ($usuario->estado !== null && (int)$usuario->estado === 0) {
+                echo json_encode(['error' => 'Tu cuenta está desactivada. Consultá con el administrador.']);
+                return;
+            }
+
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
@@ -73,6 +79,8 @@ class LoginController
             $_SESSION['email'] = $usuario->email;
             $_SESSION['perfil'] = (int)$usuario->rela_perfil;
             $_SESSION['login'] = true;
+            $_SESSION['huella_clave'] = huellaClave($usuario->clave_usuario);
+            $_SESSION['ultima_actividad'] = time();
 
             Auditoria::registrar('sesion.login', "Inició sesión", 'usuarios', $usuario->id_usuario);
 
@@ -99,7 +107,11 @@ class LoginController
             return;
         }
 
-        $router->render('auth/login');
+        // Aviso de una sesión que cerró el sistema (inactividad, baja o cambio de contraseña)
+        $aviso = $_SESSION['aviso_sesion'] ?? null;
+        unset($_SESSION['aviso_sesion']);
+
+        $router->render('auth/login', ['aviso' => $aviso]);
     }
 
     public static function olvide(Router $router)
@@ -128,7 +140,7 @@ class LoginController
             // registrados en el sistema.
             $usuario = Usuario::where('email', $email);
 
-            if ($usuario && $usuario->verificado) {
+            if ($usuario && $usuario->verificado && (int)($usuario->estado ?? 1) !== 0) {
                 // Generar token único y guardarlo, con expiración de 30 minutos
                 $token = bin2hex(random_bytes(20));
                 $usuario->token_recuperacion = $token;
@@ -228,7 +240,8 @@ class LoginController
             // Buscar usuario por token
             $usuario = Usuario::where('token_recuperacion', $token);
 
-            if (!$usuario) {
+            // Una cuenta dada de baja no puede ponerse contraseña nueva
+            if (!$usuario || (int)($usuario->estado ?? 1) === 0) {
                 echo json_encode(['error' => 'El token es inválido o ha expirado']);
                 return;
             }

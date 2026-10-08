@@ -47,6 +47,12 @@ function s($html) : string {
     return $s;
 }
 
+// Huella de la contraseña guardada en la sesión al iniciar: si la contraseña cambia,
+// la huella deja de coincidir y el router cierra las sesiones abiertas con la anterior.
+function huellaClave(string $hashClave) : string {
+    return hash('sha256', $hashClave);
+}
+
 // Email válido y sin caracteres de HTML. FILTER_VALIDATE_EMAIL acepta direcciones entre comillas
 // como "<svg/onload=...>"@gmail.com; ningún email real los usa, así que se rechazan.
 function emailValido($email) : bool {

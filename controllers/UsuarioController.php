@@ -316,6 +316,11 @@ class UsuarioController
         $resUsuario = $usuario->guardar();
 
         if ($resPersona['resultado'] && $resUsuario['resultado']) {
+            // Si el admin se cambió su propia contraseña, su sesión actual sigue abierta
+            if ((int)$usuario->id_usuario === (int)($_SESSION['id_usuario'] ?? 0)) {
+                $_SESSION['huella_clave'] = huellaClave($usuario->clave_usuario);
+            }
+
             [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, array_merge((array)$persona, (array)$usuario), $camposAuditados);
             foreach (['rela_perfil'] as $campo) {
                 if (isset($antes[$campo])) $antes[$campo] = \Classes\Auditoria::perfil($antes[$campo]);

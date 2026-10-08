@@ -3,8 +3,12 @@
 namespace MVC;
 
 use Middlewares\ValidarModulo;
+use Models\ActiveRecord;
 
 class Router {
+    // Consultas automáticas de las pantallas (cada 30 s): no cuentan como actividad del usuario
+    const RUTAS_SONDEO = ['/api/notificaciones/contar', '/api/carrito/contar'];
+
     public array $getRoutes = [];
     public array $postRoutes = [];
 
@@ -36,6 +40,16 @@ class Router {
 
         $currentUrl = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
+
+        // Sesión inactiva, cuenta dada de baja o contraseña cambiada: la sesión se cierra acá.
+        // Los pedidos de datos reciben JSON; las páginas siguen y terminan en el login con el aviso.
+        $motivoCierre = $this->revalidarSesion($currentUrl);
+        if ($motivoCierre && ($method !== 'GET' || str_starts_with($currentUrl, '/api/'))) {
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'sesion_cerrada' => true, 'mensaje' => $motivoCierre]);
+            exit;
+        }
 
         if ($method !== 'GET' && !$this->validarCSRF()) {
             http_response_code(403);
@@ -99,6 +113,63 @@ class Router {
         }
 
         return $salida;
+    }
+
+    /**
+     * Con sesión iniciada, controla en cada pedido que siga siendo válida contra la base:
+     * - más de SESION_MINUTOS (30 por defecto) sin actividad → se cierra;
+     * - cuenta dada de baja o contraseña cambiada → se cierra;
+     * - perfil cambiado → se actualiza en la sesión (un admin degradado deja de serlo enseguida).
+     * Devuelve el motivo si la cerró, o null si sigue abierta.
+     */
+    private function revalidarSesion(string $ruta): ?string
+    {
+        if (empty($_SESSION['login'])) {
+            return null;
+        }
+
+        $minutos = (int)env('SESION_MINUTOS', 30);
+        $ultimaActividad = $_SESSION['ultima_actividad'] ?? time();
+        if (time() - $ultimaActividad > $minutos * 60) {
+            return $this->cerrarSesion('Tu sesión venció por inactividad. Iniciá sesión de nuevo.');
+        }
+
+        $stmt = ActiveRecord::getDB()->prepare("SELECT estado, rela_perfil, clave_usuario FROM usuarios WHERE id_usuario = ?");
+        $idUsuario = (int)($_SESSION['id_usuario'] ?? 0);
+        $stmt->bind_param('i', $idUsuario);
+        $stmt->execute();
+        $usuario = $stmt->get_result()->fetch_assoc();
+
+        if (!$usuario || ($usuario['estado'] !== null && (int)$usuario['estado'] === 0)) {
+            return $this->cerrarSesion('Tu cuenta está desactivada. Consultá con el administrador.');
+        }
+
+        // Las sesiones abiertas antes de existir la huella la reciben en su primer pedido
+        $huella = huellaClave($usuario['clave_usuario']);
+        if (!isset($_SESSION['huella_clave'])) {
+            $_SESSION['huella_clave'] = $huella;
+        } elseif (!hash_equals($_SESSION['huella_clave'], $huella)) {
+            return $this->cerrarSesion('Tu contraseña cambió. Iniciá sesión de nuevo.');
+        }
+
+        $_SESSION['perfil'] = (int)$usuario['rela_perfil'];
+
+        if (!in_array($ruta, self::RUTAS_SONDEO, true)) {
+            $_SESSION['ultima_actividad'] = time();
+        }
+
+        return null;
+    }
+
+    /**
+     * Vacía la sesión y le da un ID nuevo; el motivo queda para mostrarlo en el login.
+     */
+    private function cerrarSesion(string $motivo): string
+    {
+        $_SESSION = [];
+        session_regenerate_id(true);
+        $_SESSION['aviso_sesion'] = $motivo;
+        return $motivo;
     }
 
     /**

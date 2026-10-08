@@ -21,6 +21,10 @@ if (env('APP_ENV') === 'production') {
     });
 }
 
+// PHP (XAMPP: 24 min) podría borrar la sesión antes del vencimiento por inactividad que controla
+// el Router (SESION_MINUTOS, 30 por defecto): se le da un margen por encima
+ini_set('session.gc_maxlifetime', (string)(((int)env('SESION_MINUTOS', 30) + 10) * 60));
+
 require 'database.php';
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 
