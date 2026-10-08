@@ -339,9 +339,27 @@ class Carrito extends ActiveRecord
     }
 
 
-    public static function procesarVentaCarrito($idUsuario, $idOrden = null)
+    /**
+     * Ítems de una orden web tal como se pagaron (detalle_orden), con las mismas claves que
+     * obtenerCarritoCompleto() usa para el mail: nombre, precio, cantidad, tipo_producto, ids.
+     */
+    public static function itemsDeOrden(int $idOrden): array
     {
-        $items = self::obtenerCarritoCompleto($idUsuario);
+        $stmt = self::$db->prepare("SELECT id_producto, tipo_producto, id_butaca, id_funcion,
+                                           nombre_producto AS nombre, cantidad, precio_unitario AS precio
+                                    FROM detalle_orden WHERE id_orden = ? ORDER BY id_detalle");
+        $stmt->bind_param('i', $idOrden);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Descuenta el stock de los productos y fichas de una orden web ya pagada (venta web: cantina 1).
+     * Usa lo que se pagó (detalle_orden), no el carrito, que el cliente pudo cambiar mientras pagaba.
+     */
+    public static function procesarVentaOrden(int $idOrden, $idUsuario)
+    {
+        $items = self::itemsDeOrden($idOrden);
         $errores = [];
 
         foreach ($items as $item) {
@@ -372,10 +390,10 @@ class Carrito extends ActiveRecord
         }
 
         if (empty($errores)) {
-            self::vaciarCarrito($idUsuario);
             return ['resultado' => true, 'mensaje' => 'Venta procesada correctamente'];
         }
 
+        error_log("procesarVentaOrden({$idOrden}): " . implode(' | ', $errores));
         return ['resultado' => false, 'errores' => $errores];
     }
 

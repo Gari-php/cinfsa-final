@@ -798,7 +798,7 @@ class VentaFuncionesController
         header('Content-Type: application/json');
 
         $datos = json_decode(file_get_contents('php://input'), true);
-        $idEntrada     = $datos['id_entrada'] ?? null;
+        $idEntrada     = filter_var($datos['id_entrada'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         $observaciones = trim($datos['observaciones'] ?? '');
 
         if (!$idEntrada) {
@@ -818,13 +818,12 @@ class VentaFuncionesController
         $db->begin_transaction();
 
         try {
-            $idEntradaEscaped = $db->escape_string($idEntrada);
-
-            // 1. Obtener datos de la entrada + método de pago original
-            $queryEntrada = "SELECT 
+            // 1. Obtener datos de la entrada + lo que se cobró + método de pago original
+            $queryEntrada = "SELECT
                             e.id_entrada,
                             e.estado,
                             te.precio_entrada,
+                            df.precio_venta,
                             te.tipo_entrada_desc,
                             p.titulo_pelicula,
                             cf.rela_tipos_de_pagos,
@@ -836,22 +835,35 @@ class VentaFuncionesController
                          LEFT JOIN detalle_fact_cine df ON df.rela_entrada = e.id_entrada
                          LEFT JOIN cabecera_fact_cine cf ON df.rela_cabecera_fact = cf.id_pagos
                          LEFT JOIN tipos_de_pagos tp ON cf.rela_tipos_de_pagos = tp.id_tipo_pago
-                         WHERE e.id_entrada = '{$idEntradaEscaped}'
+                         WHERE e.id_entrada = ?
                          LIMIT 1";
 
-            $resEntrada = $db->query($queryEntrada);
+            $stmtEntrada = $db->prepare($queryEntrada);
+            $stmtEntrada->bind_param("i", $idEntrada);
+            $stmtEntrada->execute();
+            $entrada = $stmtEntrada->get_result()->fetch_assoc();
 
-            if (!$resEntrada || $resEntrada->num_rows === 0) {
+            if (!$entrada) {
                 throw new \Exception('Entrada no encontrada');
             }
-
-            $entrada = $resEntrada->fetch_assoc();
 
             if ($entrada['estado'] != 1) {
                 throw new \Exception('Solo se pueden devolver entradas activas');
             }
 
-            $monto           = (float) $entrada['precio_entrada'];
+            // 2. Cancelar la entrada primero, y solo si sigue activa: si dos devoluciones de la
+            //    misma entrada llegan juntas, la segunda no cambia nada y no devuelve plata
+            $stmtCancelar = $db->prepare("UPDATE entradas SET estado = -1 WHERE id_entrada = ? AND estado = 1");
+            $stmtCancelar->bind_param("i", $idEntrada);
+            if (!$stmtCancelar->execute()) {
+                throw new \Exception('Error al cancelar la entrada');
+            }
+            if ($stmtCancelar->affected_rows !== 1) {
+                throw new \Exception('La entrada ya fue devuelta');
+            }
+
+            // Se devuelve lo que se cobró; el precio actual del tipo de entrada solo si la venta no lo guardó
+            $monto           = (float) ($entrada['precio_venta'] ?? $entrada['precio_entrada']);
             $tipoPago        = (int) $entrada['rela_tipos_de_pagos'];
             $formaPagoDesc   = $entrada['forma_pago_desc'] ?? 'Efectivo';
             $concepto        = "Devolución entrada #{$idEntrada} - {$entrada['titulo_pelicula']} ({$entrada['tipo_entrada_desc']})";
@@ -869,42 +881,32 @@ class VentaFuncionesController
                 throw new \Exception('Error al liberar las butacas: ' . $stmtLiberar->error);
             }
 
-            // 2. Cancelar la entrada
-            if (!$db->query("UPDATE entradas SET estado = -1 WHERE id_entrada = '{$idEntradaEscaped}'")) {
-                throw new \Exception('Error al cancelar la entrada');
-            }
-
             // 3. Registrar en egresos
-            $obsEscaped      = $db->escape_string($observaciones ?: $concepto);
-            $conceptoEscaped = $db->escape_string($concepto);
-            $formaPagoEsc    = $db->escape_string($formaPagoDesc);
-            $estadoEsc       = $db->escape_string($estadoEgreso);
-            $idArqueo        = $arqueo->id_arqueo_caja;
+            $obs      = $observaciones ?: $concepto;
+            $idArqueo = (int) $arqueo->id_arqueo_caja;
+            $idUsr    = (int) $idUsuario;
 
-            $queryEgreso = "INSERT INTO egresos 
+            $stmtEgreso = $db->prepare("INSERT INTO egresos
                 (rela_arqueo_caja, rela_usuario, concepto, monto, forma_pago,
                  fecha_egreso, estado_egreso, observaciones)
-                VALUES 
-                ('{$idArqueo}', '{$idUsuario}', '{$conceptoEscaped}', '{$monto}',
-                 '{$formaPagoEsc}', NOW(), '{$estadoEsc}', '{$obsEscaped}')";
+                VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)");
+            $stmtEgreso->bind_param("iisdsss", $idArqueo, $idUsr, $concepto, $monto, $formaPagoDesc, $estadoEgreso, $obs);
 
-            if (!$db->query($queryEgreso)) {
-                throw new \Exception('Error al registrar el egreso: ' . $db->error);
+            if (!$stmtEgreso->execute()) {
+                throw new \Exception('Error al registrar el egreso: ' . $stmtEgreso->error);
             }
 
             $idEgreso = $db->insert_id;
 
             // 4. Si pagó en efectivo, descontar de la caja
             if ($esEfectivo) {
-                $conceptoMovEscaped = $db->escape_string($concepto);
-                $queryMov = "INSERT INTO movimientos_caja 
+                $stmtMov = $db->prepare("INSERT INTO movimientos_caja
                          (rela_arqueo_caja, tipo_movimiento, concepto_movimiento,
                           monto, fecha_movimiento, forma_pago, rela_egreso)
-                         VALUES 
-                         ('{$idArqueo}', 'egreso', '{$conceptoMovEscaped}',
-                          '{$monto}', NOW(), 'Efectivo', '{$idEgreso}')";
+                         VALUES (?, 'egreso', ?, ?, NOW(), 'Efectivo', ?)");
+                $stmtMov->bind_param("isdi", $idArqueo, $concepto, $monto, $idEgreso);
 
-                if (!$db->query($queryMov)) {
+                if (!$stmtMov->execute()) {
                     throw new \Exception('Error al registrar movimiento de caja');
                 }
             }

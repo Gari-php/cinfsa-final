@@ -420,7 +420,6 @@ $router->get('/api/movimientos/servicios', [MovimientosController::class, 'apiOb
 $router->get('/vendedor/movimientos', [MovimientosController::class, 'index']);
 $router->post('/api/movimientos/ingreso', [MovimientosController::class, 'apiRegistrarIngreso']);
 $router->post('/api/movimientos/egreso', [MovimientosController::class, 'apiRegistrarEgreso']);
-$router->post('/api/movimientos/eliminar', [MovimientosController::class, 'apiEliminarMovimiento']);
 $router->get('/api/movimientos/formas-pago', [MovimientosController::class, 'apiObtenerFormasPago']);
 
 // ==============================================

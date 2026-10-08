@@ -396,7 +396,8 @@ class VentasConsultaControllerP
             LEFT JOIN productos_cantina p ON dc.rela_producto_cantina = p.id_producto_cantina
             LEFT JOIN fichas f ON dc.rela_fichas = f.id_fichas
             WHERE dc.rela_cabecera_fact_cantin = ?
-            ORDER BY dc.id_detalle_fact_cantina";
+            ORDER BY dc.id_detalle_fact_cantina
+            FOR UPDATE";
 
                 $stmt = $db->prepare($queryDetalles);
                 $stmt->bind_param("i", $idVenta);
@@ -449,6 +450,20 @@ class VentasConsultaControllerP
                     }
 
                     $idDetalle = (int)$detalleEncontrado['id_detalle_fact_cantina'];
+
+                    // Se marca como devuelto ANTES de devolver plata o stock, y solo si no lo estaba:
+                    // un ítem repetido en la lista (o una devolución simultánea) no se devuelve dos veces
+                    $stmt = $db->prepare("UPDATE detalle_fact_cantina SET estado = 'devuelto'
+                                          WHERE id_detalle_fact_cantina = ? AND (estado IS NULL OR estado <> 'devuelto')");
+                    $stmt->bind_param("i", $idDetalle);
+                    if (!$stmt->execute()) {
+                        throw new \Exception("Error al actualizar estado del detalle ID: {$idDetalle}");
+                    }
+                    if ($stmt->affected_rows !== 1) {
+                        error_log("⚠️ Item ya devuelto (repetido en el pedido): detalle #{$idDetalle}");
+                        continue;
+                    }
+
                     $cantidad = (int)$detalleEncontrado['cantidad'];
                     $precioUnitario = (float)$detalleEncontrado['precio_unitario'];
                     $subtotal = $cantidad * $precioUnitario;
@@ -510,20 +525,6 @@ class VentasConsultaControllerP
                         $detalleDevolucion[] = "Ficha: {$productoNombre} (Cant: {$cantidad} × \${$precioUnitario})";
                         error_log("✅ Fichas devueltas - Ficha #{$idFicha}: +{$cantidad} unidades");
                     }
-
-                    // 👇 NUEVO: Actualizar estado del detalle a "devuelto"
-                    $queryEstadoDetalle = "UPDATE detalle_fact_cantina 
-                                       SET estado = 'devuelto'
-                                       WHERE id_detalle_fact_cantina = ?";
-
-                    $stmt = $db->prepare($queryEstadoDetalle);
-                    $stmt->bind_param("i", $idDetalle);
-
-                    if (!$stmt->execute()) {
-                        throw new \Exception("Error al actualizar estado del detalle ID: {$idDetalle}");
-                    }
-
-                    error_log("✅ Estado actualizado a 'devuelto' - Detalle #{$idDetalle}");
 
                     // Agregar al detalle usando el nombre del item seleccionado directamente
                     $nombreItem = $itemSeleccionado['producto'] ?? 'Item devuelto';

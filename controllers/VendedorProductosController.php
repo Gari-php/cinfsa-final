@@ -1345,6 +1345,66 @@ class VendedorProductosController
         }
     }
 
+    /**
+     * Valida los ítems de una venta de cantina y les pone el precio de la base
+     * (productos_cantina.precio_producto / fichas.precio_ficha). Lo que mande la pantalla
+     * como precio o total no se usa. Devuelve [productos, fichas, total].
+     */
+    private static function preciosDeVenta(array $productos, array $fichas): array
+    {
+        $db = \Models\ActiveRecord::getDB();
+        $cantidadValida = fn($c) => filter_var($c, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $total = 0;
+
+        foreach ([...$productos, ...$fichas] as $item) {
+            if (!is_array($item)) {
+                throw new \InvalidArgumentException('Datos de la venta inválidos');
+            }
+        }
+
+        $stmtProducto = $db->prepare("SELECT precio_producto FROM productos_cantina WHERE id_producto_cantina = ?");
+        foreach ($productos as $i => $producto) {
+            $idProducto = (int)($producto['id_producto_cantina'] ?? 0);
+            $cantidad = $cantidadValida($producto['cantidad'] ?? null);
+            if ($cantidad === false) {
+                throw new \InvalidArgumentException('La cantidad de cada producto tiene que ser un número entero mayor a 0');
+            }
+
+            $stmtProducto->bind_param('i', $idProducto);
+            $stmtProducto->execute();
+            $fila = $stmtProducto->get_result()->fetch_assoc();
+            if (!$fila) {
+                throw new \InvalidArgumentException("El producto ID {$idProducto} no existe");
+            }
+
+            $productos[$i]['cantidad'] = $cantidad;
+            $productos[$i]['precio'] = (float)$fila['precio_producto'];
+            $total += $productos[$i]['precio'] * $cantidad;
+        }
+
+        $stmtFicha = $db->prepare("SELECT precio_ficha FROM fichas WHERE id_fichas = ?");
+        foreach ($fichas as $i => $ficha) {
+            $idFicha = (int)($ficha['id_fichas'] ?? 0);
+            $cantidad = $cantidadValida($ficha['cantidad'] ?? null);
+            if ($cantidad === false) {
+                throw new \InvalidArgumentException('La cantidad de cada ficha tiene que ser un número entero mayor a 0');
+            }
+
+            $stmtFicha->bind_param('i', $idFicha);
+            $stmtFicha->execute();
+            $fila = $stmtFicha->get_result()->fetch_assoc();
+            if (!$fila) {
+                throw new \InvalidArgumentException("La ficha ID {$idFicha} no existe");
+            }
+
+            $fichas[$i]['cantidad'] = $cantidad;
+            $fichas[$i]['precio'] = (float)$fila['precio_ficha'];
+            $total += $fichas[$i]['precio'] * $cantidad;
+        }
+
+        return [$productos, $fichas, round($total, 2)];
+    }
+
     public static function completarVenta()
     {
         header('Content-Type: application/json');
@@ -1380,7 +1440,21 @@ class VendedorProductosController
             return;
         }
 
-        if (!isset($datos['total']) || $datos['total'] <= 0) {
+        // Precios y total salen de la base, no de la pantalla; las cantidades tienen que ser enteros positivos
+        if (!is_array($productos) || !is_array($fichas)) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Datos de la venta inválidos']);
+            return;
+        }
+
+        try {
+            [$productos, $fichas, $totalVenta] = self::preciosDeVenta($productos, $fichas);
+        } catch (\InvalidArgumentException $e) {
+            echo json_encode(['ok' => false, 'mensaje' => $e->getMessage()]);
+            return;
+        }
+        $datos['total'] = $totalVenta;
+
+        if ($totalVenta <= 0) {
             echo json_encode(['ok' => false, 'mensaje' => 'El total debe ser mayor a 0']);
             return;
         }
@@ -1598,7 +1672,7 @@ class VendedorProductosController
                     $precioUnitario = $ficha['precio'];
 
                     // Verificar stock de fichas
-                    $queryStockFicha = "SELECT cantidad_ficha FROM fichas WHERE id_fichas = ?";
+                    $queryStockFicha = "SELECT cantidad_ficha FROM fichas WHERE id_fichas = ? FOR UPDATE";
                     $stmt = $db->prepare($queryStockFicha);
                     $stmt->bind_param("i", $idFicha);
                     $stmt->execute();

@@ -283,11 +283,20 @@ class PagoController
                 return;
             }
 
-            // PASO 1: Actualizar orden
+            // PASO 1: Actualizar orden, solo si sigue pendiente. Si dos confirmaciones llegan juntas
+            // (doble clic, recarga), solo la primera entrega entradas, descuenta stock y manda el mail
             $query = "UPDATE ordenes SET estado = 'pagado', payment_id = ?, fecha_pago = NOW(), fecha_actualizacion = NOW()
-                WHERE numero_orden = ?";
+                WHERE id_orden = ? AND estado = 'pendiente'";
             $stmt = $db->prepare($query);
-            $stmt->execute([$paymentId, $numeroOrden]);
+            $stmt->execute([$paymentId, $idOrden]);
+
+            if ($stmt->affected_rows !== 1) {
+                $router->render('cliente/pago-exitoso', [
+                    'numero_orden' => $numeroOrden,
+                    'payment_id' => $paymentId
+                ]);
+                return;
+            }
 
             // ⭐ PASO 3: MARCAR BUTACAS VENDIDAS Y CREAR LA ENTRADA
             if ($idOrden) {
@@ -367,8 +376,9 @@ class PagoController
                 Butaca::liberarReservasDeUsuario($paresOrden, (int)$idUsuario);
             }
 
-            // PASO 4: Procesar carrito (productos y fichas)
-            $itemsOriginales = \Models\Carrito::obtenerCarritoCompleto($idUsuario);
+            // PASO 4: Productos y fichas: se descuenta y se informa lo que se PAGÓ (detalle_orden),
+            // no lo que haya ahora en el carrito (el cliente pudo cambiarlo mientras pagaba)
+            $itemsOriginales = \Models\Carrito::itemsDeOrden((int)$idOrden);
 
             $items = [];
             $total = 0;
@@ -387,7 +397,7 @@ class PagoController
                 $items[] = $item;
             }
 
-            \Models\Carrito::procesarVentaCarrito($idUsuario, $idOrden);
+            \Models\Carrito::procesarVentaOrden((int)$idOrden, $idUsuario);
             \Models\Carrito::vaciarCarrito($idUsuario);
 
             // Código del QR de retiro, si compró productos o fichas
