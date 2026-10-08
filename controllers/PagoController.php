@@ -464,12 +464,15 @@ class PagoController
     {
         $numeroOrden = $_GET['orden'] ?? null;
 
-        // Marcar orden como fallida
-        if ($numeroOrden) {
+        // Marcar orden como fallida: solo una orden propia y todavía pendiente
+        // (el número llega por la URL; una orden ajena o ya pagada no se toca)
+        $idUsuario = (int)($_SESSION['id_usuario'] ?? 0);
+        if ($numeroOrden && $idUsuario) {
             $db = \Models\ActiveRecord::getDB();
-            $query = "UPDATE ordenes SET estado = 'fallido' WHERE numero_orden = ?";
+            $query = "UPDATE ordenes SET estado = 'fallido'
+                      WHERE numero_orden = ? AND id_usuario = ? AND estado = 'pendiente'";
             $stmt = $db->prepare($query);
-            $stmt->execute([$numeroOrden]);
+            $stmt->execute([$numeroOrden, $idUsuario]);
         }
 
         $router->render('cliente/pago-fallido', [
