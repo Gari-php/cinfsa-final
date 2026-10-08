@@ -147,7 +147,7 @@ class AuditoriaController
             'ip' => $r['ip'] ?? '',
         ], $filas);
 
-        self::enviarCsv($datos, [
+        self::enviarExcel($datos, [
             'fecha' => 'Fecha',
             'usuario' => 'Usuario',
             'perfil' => 'Perfil',
@@ -160,33 +160,21 @@ class AuditoriaController
     }
 
     /**
-     * CSV propio (mismo formato que ExportadorDatos: BOM UTF-8 y ";" para que Excel lo abra bien), pero:
-     *  - sin recortar textos: en una auditoría el detalle completo importa;
-     *  - neutraliza celdas que empiezan con = + - @ para que Excel no las ejecute como fórmulas.
+     * Excel (.xlsx) sin recortar textos: en una auditoría el detalle completo importa.
+     * Las celdas van como texto literal, así que nada se ejecuta como fórmula.
      */
-    private static function enviarCsv(array $datos, array $columnas): void
+    private static function enviarExcel(array $datos, array $columnas): void
     {
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="auditoria_' . date('Y-m-d_H-i-s') . '.csv"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
+        $filas = array_map(
+            fn($fila) => array_map(fn($clave) => (string)($fila[$clave] ?? ''), array_keys($columnas)),
+            $datos
+        );
 
-        $salida = fopen('php://output', 'w');
-        fwrite($salida, "\xEF\xBB\xBF");
-        fputcsv($salida, ['Registro de auditoría - Generado el ' . date('d/m/Y H:i:s')], ';');
-        fputcsv($salida, [''], ';');
-        fputcsv($salida, array_values($columnas), ';');
-
-        foreach ($datos as $fila) {
-            $celdas = [];
-            foreach (array_keys($columnas) as $clave) {
-                $valor = (string)($fila[$clave] ?? '');
-                $celdas[] = preg_match('/^[=+\-@\t\r]/', $valor) ? "'" . $valor : $valor;
-            }
-            fputcsv($salida, $celdas, ';');
-        }
-
-        fclose($salida);
-        exit;
+        \Classes\GeneradorXlsx::descargar(
+            'auditoria_' . date('Y-m-d_H-i-s'),
+            'Registro de auditoría',
+            array_values($columnas),
+            $filas
+        );
     }
 }

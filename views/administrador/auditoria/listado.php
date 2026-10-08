@@ -46,7 +46,7 @@ $icono = function (string $accion): string {
             <li><a href="/administrador"><i class="fa-solid fa-hand-point-left"></i> Volver</a></li>
             <li>
                 <a href="<?php echo s($urlExportar); ?>" class="auditoria-exportar" title="Exporta lo que coincide con los filtros actuales">
-                    <i class="fa-solid fa-file-excel"></i> Exportar CSV
+                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
                 </a>
             </li>
         </ul>

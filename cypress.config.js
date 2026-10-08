@@ -46,6 +46,12 @@ module.exports = defineConfig({
           const script = path.join(__dirname, 'tests', 'envejecer_sesion_prueba.php');
           return execFileSync(php, [script, String(idSesion), String(minutos)], { encoding: 'utf8' });
         },
+        // Lee un .xlsx descargado; devuelve { filas: [[...textos]], anchos: [...] }
+        leerXlsx(ruta) {
+          const php = process.env.PHP_BIN || 'php';
+          const script = path.join(__dirname, 'tests', 'leer_xlsx_prueba.php');
+          return JSON.parse(execFileSync(php, [script, path.resolve(__dirname, ruta)], { encoding: 'utf8' }));
+        },
         // Crea un pedido web con 10 productos y 6 fichas; devuelve { id_orden, numero_orden, codigo }
         crearPedidoWeb({ idUsuario, estado = 'pagado' }) {
           const php = process.env.PHP_BIN || 'php';

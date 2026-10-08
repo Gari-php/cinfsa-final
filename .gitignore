@@ -34,3 +34,7 @@ skills-lock.json
 
 # Videos generados con /brag
 /brag-output/
+
+# Archivos que generan las pruebas de Cypress
+/cypress/downloads/
+/cypress/screenshots/

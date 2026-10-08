@@ -464,44 +464,22 @@ class FuncionController
             $nombreArchivo = self::generarNombreArchivo('funciones', $fechaDesde, $fechaHasta);
             $titulo = self::generarTituloReporte('Funciones', $fechaDesde, $fechaHasta);
 
-            // Headers para CSV
-            header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename="' . $nombreArchivo . '_' . date('Y-m-d_H-i-s') . '.csv"');
-            header('Pragma: no-cache');
-            header('Expires: 0');
+            $columnas = [
+                'id_funcion' => 'ID',
+                'fecha_hora' => 'Fecha Inicio',
+                'fecha_finalizacion' => 'Fecha Fin',
+                'titulo_pelicula' => 'Película',
+                'id_sala' => 'Sala',
+                'turno_horario' => 'Turno',
+                'tipo_entrada_desc' => 'Tipo Entrada',
+                'precio_entrada' => 'Precio',
+                'estado' => 'Estado',
+            ];
 
-            $output = fopen('php://output', 'w');
-            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Título
-            fputcsv($output, [$titulo . ' - Generado el ' . date('d/m/Y H:i:s')], ';');
-            fputcsv($output, [''], ';');
-
-            // Encabezados
-            $columnas = ['ID', 'Fecha Inicio', 'Fecha Fin', 'Película', 'Sala', 'Turno', 'Tipo Entrada', 'Precio', 'Estado'];
-            fputcsv($output, $columnas, ';');
-
-            // Datos
-            foreach ($datos as $fila) {
-                $filaExportar = [
-                    $fila['id_funcion'],
-                    $fila['fecha_hora'],
-                    $fila['fecha_finalizacion'],
-                    $fila['titulo_pelicula'],
-                    $fila['id_sala'],
-                    $fila['turno_horario'],
-                    $fila['tipo_entrada_desc'] ?? '',
-                    $fila['precio_entrada'] ?? '0',
-                    $fila['estado']
-                ];
-                fputcsv($output, $filaExportar, ';');
-            }
-
-            fclose($output);
-            die();
+            ExportadorDatos::exportarExcel($datos, $columnas, $nombreArchivo, $titulo);
         } catch (\Exception $e) {
             error_log("ERROR EXPORTACIÓN EXCEL: " . $e->getMessage());
-            die('Error al generar el archivo CSV');
+            die('Error al generar el archivo Excel');
         }
     }
 

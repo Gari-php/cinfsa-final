@@ -243,9 +243,13 @@ describe('Registro de auditoría', () => {
 
       // La exportación respeta el filtro
       cy.get('.auditoria-exportar').invoke('attr', 'href').should('contain', 'accion=precio.tipo_entrada').then((href) => {
-        cy.request(href).then((r) => {
-          expect(r.headers['content-type']).to.contain('text/csv');
-          expect(r.body).to.contain('Cambio de precio de entrada').and.not.contain('Inicio de sesión fallido');
+        cy.request({ url: href, encoding: 'binary' }).then((r) => {
+          expect(r.headers['content-type']).to.contain('spreadsheetml.sheet');
+          cy.writeFile('cypress/downloads/auditoria.xlsx', r.body, 'binary');
+        });
+        cy.task('leerXlsx', 'cypress/downloads/auditoria.xlsx').then(({ filas }) => {
+          const texto = JSON.stringify(filas);
+          expect(texto).to.contain('Cambio de precio de entrada').and.not.contain('Inicio de sesión fallido');
         });
       });
     });
