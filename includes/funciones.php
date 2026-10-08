@@ -47,6 +47,14 @@ function s($html) : string {
     return $s;
 }
 
+// Email válido y sin caracteres de HTML. FILTER_VALIDATE_EMAIL acepta direcciones entre comillas
+// como "<svg/onload=...>"@gmail.com; ningún email real los usa, así que se rechazan.
+function emailValido($email) : bool {
+    return is_string($email)
+        && filter_var($email, FILTER_VALIDATE_EMAIL) !== false
+        && !preg_match('/[<>"\'()]/', $email);
+}
+
 // Token CSRF ligado a la sesión, generado una vez y reutilizado mientras dure
 function csrf_token(): string {
     if (session_status() === PHP_SESSION_NONE) {

@@ -92,7 +92,7 @@ class Usuario extends ActiveRecord
         } else {
             $this->email = trim(strtolower($this->email));
 
-            if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            if (!emailValido($this->email)) {
                 $errores[] = 'El formato del email no es válido';
             } else {
                 // Validar longitud

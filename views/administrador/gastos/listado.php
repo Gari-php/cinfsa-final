@@ -140,6 +140,13 @@
     <script type="module" src="/assets/js/formularios.js"></script>
 
     <script>
+        // El concepto lo escribe el vendedor: se escapa antes de insertarlo como HTML
+        function escaparHtml(valor) {
+            return String(valor ?? '')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         // Manejar anulación de gastos
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -257,7 +264,7 @@
                         <td>${g.id_egreso}</td>
                         <td>${fecha}</td>
                         <td>${g.numero_comprobante || '-'}</td>
-                        <td>${g.concepto || '-'}</td>
+                        <td>${escaparHtml(g.concepto || '-')}</td>
                         <td><span class="badge-tipo operativo">OPERATIVO</span></td>
                         <td style="color:#ed850f; font-weight:bold;">$${monto}</td>
                         <td>${g.forma_pago || '-'}</td>
@@ -266,7 +273,7 @@
                             ${g.estado_egreso !== 'anulado' ? `
                             <button class="boton eliminar-gasto"
                                     data-id="${g.id_egreso}"
-                                    data-concepto="${g.concepto || ''}">
+                                    data-concepto="${escaparHtml(g.concepto)}">
                                 Anular
                             </button>` : ''}
                             <a class="boton" href="/administrador/gastos/editar?id=${g.id_egreso}">Editar</a>

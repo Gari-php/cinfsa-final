@@ -3,7 +3,7 @@
         <i class="fas fa-clock"></i>
     </div>
     <h1>Pago pendiente</h1>
-    <p>Tu orden <strong><?php echo $numero_orden ?? 'N/A'; ?></strong> está pendiente de confirmación.</p>
+    <p>Tu orden <strong><?php echo s($numero_orden ?? 'N/A'); ?></strong> está pendiente de confirmación.</p>
     <p>Recibirás un email cuando se confirme el pago.</p>
     <div class="acciones-resultado">
         <a href="/menu" class="btn-volver-menu">

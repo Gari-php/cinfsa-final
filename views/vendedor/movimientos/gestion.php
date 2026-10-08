@@ -118,7 +118,7 @@
                                         <?php echo ucfirst($mov->tipo_movimiento); ?>
                                     </span>
                                 </td>
-                                <td class="concepto-cell"><?php echo $mov->concepto_movimiento; ?></td>
+                                <td class="concepto-cell"><?php echo s($mov->concepto_movimiento); ?></td>
                                 <td><?php echo ucfirst($mov->forma_pago); ?></td>
                                 <td class="monto-cell <?php echo $mov->tipo_movimiento; ?>">
                                     <?php echo $mov->tipo_movimiento === 'ingreso' ? '+' : '-'; ?>

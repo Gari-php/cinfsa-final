@@ -115,8 +115,8 @@
 
                             <!-- CLIENTE -->
                             <td style="color: #fff;">
-                                <div style="font-weight: bold;"><?php echo $orden->nombre_usuario; ?></div>
-                                <div style="font-size: 11px; color: #a0aec0;"><?php echo $orden->email; ?></div>
+                                <div style="font-weight: bold;"><?php echo s($orden->nombre_usuario); ?></div>
+                                <div style="font-size: 11px; color: #a0aec0;"><?php echo s($orden->email); ?></div>
                             </td>
 
                             <!-- ESTADO -->

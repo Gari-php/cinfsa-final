@@ -726,7 +726,10 @@ class ClienteController
             $nombre_usuario = trim(filter_input(INPUT_POST, 'nombre_usuario', FILTER_UNSAFE_RAW));
             $nombre_persona = trim(filter_input(INPUT_POST, 'nombre_persona', FILTER_UNSAFE_RAW));
             $apellido_persona = trim(filter_input(INPUT_POST, 'apellido_persona', FILTER_UNSAFE_RAW));
-            $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+            $email = trim($_POST['email'] ?? '');
+            if ($email !== '' && !emailValido($email)) {
+                throw new \Exception('El formato del email no es válido');
+            }
             $sexo = filter_input(INPUT_POST, 'sexo', FILTER_VALIDATE_INT);
 
             $nombre_usuario = htmlspecialchars($nombre_usuario, ENT_QUOTES, 'UTF-8');

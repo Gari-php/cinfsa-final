@@ -1,3 +1,19 @@
+// Escapa un texto para insertarlo como HTML (los datos vienen de la base y algunos los escribe el cliente)
+function escaparHtml(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Copia del resultado con todos los textos escapados; los números y null quedan igual
+function escaparDatos(datos) {
+    const copia = {};
+    for (const [clave, valor] of Object.entries(datos)) {
+        copia[clave] = typeof valor === 'string' ? escaparHtml(valor) : valor;
+    }
+    return copia;
+}
+
 // ===== BUSCADOR GENÉRICO =====
 // Configuración por tipo de listado
 const CONFIGURACIONES_BUSQUEDA = {
@@ -209,7 +225,7 @@ async function buscar(config) {
         if (data.ok) {
             const tbody = document.getElementById(config.tbodyId);
             const resultado = data[config.responseKey];
-            tbody.innerHTML = config.renderFila(resultado);
+            tbody.innerHTML = config.renderFila(escaparDatos(resultado));
         } else {
             alert(data.mensaje);
         }

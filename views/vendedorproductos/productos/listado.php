@@ -678,6 +678,13 @@
 <script>
     console.log('✅ Script cargando...');
 
+    // Escapa un texto de la base antes de insertarlo como HTML
+    function escaparHtml(valor) {
+        return String(valor ?? '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     // ==================== VARIABLES GLOBALES ====================
     const busqueda = document.getElementById('busqueda');
     const sugerencias = document.getElementById('sugerencias');
@@ -1648,7 +1655,7 @@
             div.style.cssText = 'padding:8px;border-bottom:1px solid #4a5568;display:flex;justify-content:space-between';
             div.innerHTML = `
             <div>
-                <div style="font-weight:500;color:#fff">${mov.concepto_movimiento}</div>
+                <div style="font-weight:500;color:#fff">${escaparHtml(mov.concepto_movimiento)}</div>
                 <div style="font-size:12px;color:rgba(255,255,255,0.6)">${new Date(mov.fecha_movimiento).toLocaleString('es-AR')}</div>
             </div>
             <div style="font-weight:600;color:${color}">${signo}${parseFloat(mov.monto).toFixed(0)}</div>

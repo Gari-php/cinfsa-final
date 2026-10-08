@@ -59,11 +59,11 @@
                 <h3><i class="fa-solid fa-user"></i> Datos del Cliente</h3>
                 <div class="info-row">
                     <span class="label">Nombre:</span>
-                    <span class="value"><?php echo $orden->nombre_usuario; ?></span>
+                    <span class="value"><?php echo s($orden->nombre_usuario); ?></span>
                 </div>
                 <div class="info-row">
                     <span class="label">Email:</span>
-                    <span class="value"><?php echo $orden->email; ?></span>
+                    <span class="value"><?php echo s($orden->email); ?></span>
                 </div>
                 <div class="info-row">
                     <span class="label">Teléfono:</span>

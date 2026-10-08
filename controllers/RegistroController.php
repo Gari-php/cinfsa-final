@@ -158,8 +158,8 @@ class RegistroController {
      */
     private static function validarEmail($email) {
         $email = trim(strtolower($email));
-        
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+        if (!emailValido($email)) {
             return false;
         }
         
