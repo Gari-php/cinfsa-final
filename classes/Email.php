@@ -2,6 +2,7 @@
 
 namespace Classes;
 
+use PHPMailer\PHPMailer\PHPMailer;
 use SendGrid;
 use SendGrid\Mail\Mail;
 
@@ -18,24 +19,139 @@ class Email
         $this->token_verificacion = $token_verificacion;
     }
 
+    // Casilla que recibe los reclamos de soporte y los mensajes de contacto si MAIL_SOPORTE no está en el .env
+    const CASILLA_SOPORTE = 'cinecinfsa@gmail.com';
+
     private static function obtenerApiKey()
     {
-        return $_ENV['SENDGRID_API_KEY'] ?? getenv('SENDGRID_API_KEY') ?: '';
+        return env('SENDGRID_API_KEY', '');
     }
 
     // URL pública del sitio para armar los enlaces de los emails (APP_URL en .env)
     private static function obtenerUrlBase()
     {
-        $url = $_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'https://multiramose-connectional-hanna.ngrok-free.dev';
+        $url = env('APP_URL', 'https://multiramose-connectional-hanna.ngrok-free.dev');
         return rtrim($url, '/');
+    }
+
+    /**
+     * Remitente de todos los mails: MAIL_FROM y MAIL_FROM_NAME del .env.
+     * SendGrid solo envía desde un remitente verificado en la cuenta (Sender Authentication).
+     */
+    private static function remitente(?string $nombre = null): array
+    {
+        $email = env('MAIL_FROM', '');
+        if ($email === '') {
+            error_log('Email: falta MAIL_FROM en el .env (remitente verificado en SendGrid); se usa ' . self::CASILLA_SOPORTE);
+            $email = self::CASILLA_SOPORTE;
+        }
+        return [$email, $nombre ?? env('MAIL_FROM_NAME', 'CINFSA Cinema')];
+    }
+
+    // Adónde llegan los reclamos de soporte y los mensajes de contacto (MAIL_SOPORTE en .env)
+    private static function casillaSoporte(): string
+    {
+        return env('MAIL_SOPORTE', self::CASILLA_SOPORTE);
+    }
+
+    /**
+     * Envía un mail con el proveedor de MAIL_DRIVER (.env):
+     *  - smtp (por defecto): Brevo u otro servidor SMTP, con PHPMailer (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
+     *  - sendgrid: API de SendGrid (SENDGRID_API_KEY)
+     *
+     * $mensaje: 'para' => [email, nombre], 'asunto', 'html',
+     *           'remitente' => [email, nombre] (por defecto MAIL_FROM), 'responder_a' => [email, nombre],
+     *           'adjuntos' => [['contenido' => binario, 'nombre', 'tipo']],
+     *           'incrustadas' => [cid => png binario] (el HTML las muestra con cid:...)
+     *
+     * Devuelve true si el proveedor aceptó el mail; si no, deja el motivo en el log de PHP.
+     */
+    public static function enviar(array $mensaje): bool
+    {
+        $mensaje += ['remitente' => self::remitente(), 'responder_a' => null, 'adjuntos' => [], 'incrustadas' => []];
+        $proveedor = strtolower(env('MAIL_DRIVER', 'smtp'));
+
+        try {
+            return $proveedor === 'sendgrid' ? self::enviarSendGrid($mensaje) : self::enviarSmtp($mensaje);
+        } catch (\Throwable $e) {
+            error_log("Email ({$proveedor}): no se pudo enviar \"{$mensaje['asunto']}\" a {$mensaje['para'][0]}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private static function enviarSmtp(array $m): bool
+    {
+        $mail = new PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = env('SMTP_HOST', 'smtp-relay.brevo.com');
+        $mail->Port = (int) env('SMTP_PORT', 587);
+        $mail->SMTPAuth = true;
+        $mail->Username = env('SMTP_USER', '');
+        $mail->Password = env('SMTP_PASSWORD', '');
+        $mail->SMTPSecure = $mail->Port === 465 ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Timeout = 15;
+        $mail->CharSet = PHPMailer::CHARSET_UTF8;
+
+        $mail->setFrom($m['remitente'][0], $m['remitente'][1] ?? '');
+        $mail->addAddress($m['para'][0], $m['para'][1] ?? '');
+        if (!empty($m['responder_a'][0])) {
+            $mail->addReplyTo($m['responder_a'][0], $m['responder_a'][1] ?? '');
+        }
+
+        $mail->isHTML(true);
+        $mail->Subject = $m['asunto'];
+        $mail->Body = $m['html'];
+        $mail->AltBody = self::textoPlano($m['html']);
+
+        foreach ($m['incrustadas'] as $cid => $png) {
+            $mail->addStringEmbeddedImage($png, $cid, "$cid.png", PHPMailer::ENCODING_BASE64, 'image/png');
+        }
+        foreach ($m['adjuntos'] as $adjunto) {
+            $mail->addStringAttachment($adjunto['contenido'], $adjunto['nombre'], PHPMailer::ENCODING_BASE64, $adjunto['tipo']);
+        }
+
+        return $mail->send();
+    }
+
+    private static function enviarSendGrid(array $m): bool
+    {
+        $email = new Mail();
+        $email->setFrom($m['remitente'][0], $m['remitente'][1] ?? null);
+        $email->addTo($m['para'][0], $m['para'][1] ?? null);
+        if (!empty($m['responder_a'][0])) {
+            $email->setReplyTo($m['responder_a'][0], $m['responder_a'][1] ?? null);
+        }
+        $email->setSubject($m['asunto']);
+        $email->addContent('text/html', $m['html']);
+
+        foreach ($m['incrustadas'] as $cid => $png) {
+            $email->addAttachment(base64_encode($png), 'image/png', "$cid.png", 'inline', $cid);
+        }
+        foreach ($m['adjuntos'] as $adjunto) {
+            $email->addAttachment(base64_encode($adjunto['contenido']), $adjunto['tipo'], $adjunto['nombre'], 'attachment');
+        }
+
+        $respuesta = (new SendGrid(self::obtenerApiKey()))->send($email);
+        $codigo = $respuesta->statusCode();
+        if ($codigo >= 200 && $codigo < 300) {
+            return true;
+        }
+        error_log("Email (sendgrid): SendGrid respondió {$codigo} a \"{$m['asunto']}\": " . $respuesta->body());
+        return false;
+    }
+
+    // Versión en texto del mail, para los clientes de correo que no muestran HTML
+    private static function textoPlano(string $html): string
+    {
+        $texto = preg_replace('/<(style|script|head)\b.*?<\/\1>/is', '', $html);
+        $texto = preg_replace('/<(br|\/p|\/div|\/h\d|\/tr)\b[^>]*>/i', "\n", $texto);
+        $texto = html_entity_decode(strip_tags($texto), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return trim(preg_replace("/\n\s*\n+/", "\n\n", preg_replace('/[ \t]+/', ' ', $texto)));
     }
 
     public function enviarConfirmacion()
     {
-        $email = new Mail();
-        $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA Cinema");
-        $email->setSubject("🎬 Verificá tu cuenta");
-        $email->addTo($this->email, $this->nombre_usuario);
+        $asunto = "🎬 Verificá tu cuenta";
 
         $url = self::obtenerUrlBase() . "/confirmar-cuenta?token=" . $this->token_verificacion;
 
@@ -82,25 +198,16 @@ class Email
         </body>
         </html>';
 
-        $email->addContent("text/html", $contenido);
-        $apiKey = self::obtenerApiKey();
-        $sendgrid = new SendGrid($apiKey);
-
-        try {
-            $response = $sendgrid->send($email);
-            return $response->statusCode() === 202;
-        } catch (\Exception $e) {
-            error_log("❌ Error: " . $e->getMessage());
-            return false;
-        }
+        return self::enviar([
+            'para' => [$this->email, $this->nombre_usuario],
+            'asunto' => $asunto,
+            'html' => $contenido,
+        ]);
     }
 
     public function enviarRecuperacion($token)
     {
-        $email = new Mail();
-        $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA Cinema");
-        $email->setSubject(" Restablecer Contraseña");
-        $email->addTo($this->email, $this->nombre_usuario);
+        $asunto = "Restablecer Contraseña";
 
         $url = self::obtenerUrlBase() . "/restablecer?token=" . $token;
 
@@ -147,45 +254,24 @@ class Email
         </body>
         </html>';
 
-        $email->addContent("text/html", $contenido);
-        $apiKey = self::obtenerApiKey();
-        $sendgrid = new SendGrid($apiKey);
-
-        try {
-            $response = $sendgrid->send($email);
-            return $response->statusCode() === 202;
-        } catch (\Exception $e) {
-            error_log(" Error: " . $e->getMessage());
-            return false;
-        }
+        return self::enviar([
+            'para' => [$this->email, $this->nombre_usuario],
+            'asunto' => $asunto,
+            'html' => $contenido,
+        ]);
     }
     public function enviarTicketCompra($numeroOrden, $items, $total, $paymentId, $codigoRetiro = null)
     {
         $ticket = self::armarTicketCompra($this->nombre_usuario, $numeroOrden, $items, $total, $paymentId, $codigoRetiro);
 
-        $email = new Mail();
-        $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA Cinema");
-        $email->setSubject($ticket['asunto']);
-        $email->addTo($this->email, $this->nombre_usuario);
-        $email->addContent("text/html", $ticket['html']);
-
         // Los QR van adjuntos "inline" y el HTML los muestra con cid:...
         // (Gmail y otros bloquean las imágenes data: incrustadas en el HTML)
-        foreach ($ticket['adjuntos'] as $cid => $png) {
-            $email->addAttachment(base64_encode($png), 'image/png', $cid . '.png', 'inline', $cid);
-        }
-
-        $apiKey = self::obtenerApiKey();
-        $sendgrid = new SendGrid($apiKey);
-
-        try {
-            $response = $sendgrid->send($email);
-            error_log("✔️ Ticket enviado a: " . $this->email);
-            return $response->statusCode() === 202;
-        } catch (\Exception $e) {
-            error_log("❌ Error al enviar ticket: " . $e->getMessage());
-            return false;
-        }
+        return self::enviar([
+            'para' => [$this->email, $this->nombre_usuario],
+            'asunto' => $ticket['asunto'],
+            'html' => $ticket['html'],
+            'incrustadas' => $ticket['adjuntos'],
+        ]);
     }
 
     /**
@@ -534,43 +620,29 @@ class Email
     </html>
     ";
 
-        try {
-            // Obtener la API Key de SendGrid (ajusta según tu configuración)
-            $apiKey = self::obtenerApiKey();
-
-            $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA - Soporte");
-            $email->setSubject("🎬 Nuevo Reclamo: {$asunto}");
-            $email->addTo("cinecinfsa@gmail.com", "Soporte CINFSA");
-            $email->setReplyTo($emailCliente, $nombreCliente);
-            $email->addContent("text/html", $contenidoHTML);
-
-            // Adjuntar comprobante si existe
-            if ($comprobante && isset($comprobante['content'])) {
-                $attachment = new \SendGrid\Mail\Attachment();
-                $attachment->setContent($comprobante['content']);
-                $attachment->setType($comprobante['type']);
-                $attachment->setFilename($comprobante['filename']);
-                $attachment->setDisposition("attachment");
-                $email->addAttachment($attachment);
-            }
-
-            $sendgrid = new \SendGrid($apiKey);
-            $response = $sendgrid->send($email);
-
-            return $response->statusCode() >= 200 && $response->statusCode() < 300;
-        } catch (\Exception $e) {
-            error_log("Error enviando reclamo: " . $e->getMessage());
-            return false;
+        // El comprobante llega en base64 desde SoporteController
+        $adjuntos = [];
+        if ($comprobante && isset($comprobante['content'])) {
+            $adjuntos[] = [
+                'contenido' => base64_decode($comprobante['content']),
+                'nombre' => $comprobante['filename'],
+                'tipo' => $comprobante['type'],
+            ];
         }
+
+        return self::enviar([
+            'para' => [self::casillaSoporte(), 'Soporte CINFSA'],
+            'remitente' => self::remitente('CINFSA - Soporte'),
+            'responder_a' => [$emailCliente, $nombreCliente],
+            'asunto' => "🎬 Nuevo Reclamo: {$asunto}",
+            'html' => $contenidoHTML,
+            'adjuntos' => $adjuntos,
+        ]);
     }
 
     public function enviarNotificacionCambioPassword()
     {
-        $email = new Mail();
-        $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA Cinema");
-        $email->setSubject("🔒 Tu contraseña fue actualizada");
-        $email->addTo($this->email, $this->nombre_usuario);
+        $asunto = "🔒 Tu contraseña fue actualizada";
 
         $fecha = date('d/m/Y H:i');
 
@@ -605,17 +677,11 @@ class Email
     </body>
     </html>';
 
-        $email->addContent("text/html", $contenido);
-        $apiKey = self::obtenerApiKey();
-        $sendgrid = new SendGrid($apiKey);
-
-        try {
-            $response = $sendgrid->send($email);
-            return $response->statusCode() === 202;
-        } catch (\Exception $e) {
-            error_log("❌ Error al enviar notificación de cambio de contraseña: " . $e->getMessage());
-            return false;
-        }
+        return self::enviar([
+            'para' => [$this->email, $this->nombre_usuario],
+            'asunto' => $asunto,
+            'html' => $contenido,
+        ]);
     }
 
     public static function enviarContacto($nombre, $emailCliente, $asunto, $mensaje)
@@ -695,23 +761,12 @@ class Email
     </html>
     ";
 
-        try {
-            $apiKey = self::obtenerApiKey();
-
-            $email = new Mail();
-            $email->setFrom("no-reply@mail.cineavenida.online", "CINFSA - Contacto");
-            $email->setSubject("📩 Nuevo Contacto: {$asuntoLegible}");
-            $email->addTo("cinecinfsa@gmail.com", "CINFSA");
-            $email->setReplyTo($emailCliente, $nombre);
-            $email->addContent("text/html", $contenidoHTML);
-
-            $sendgrid = new SendGrid($apiKey);
-            $response = $sendgrid->send($email);
-
-            return $response->statusCode() >= 200 && $response->statusCode() < 300;
-        } catch (\Exception $e) {
-            error_log("Error enviando contacto: " . $e->getMessage());
-            return false;
-        }
+        return self::enviar([
+            'para' => [self::casillaSoporte(), 'CINFSA'],
+            'remitente' => self::remitente('CINFSA - Contacto'),
+            'responder_a' => [$emailCliente, $nombre],
+            'asunto' => "📩 Nuevo Contacto: {$asuntoLegible}",
+            'html' => $contenidoHTML,
+        ]);
     }
 }

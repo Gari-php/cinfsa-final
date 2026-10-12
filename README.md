@@ -115,7 +115,7 @@ de productos).
    ```bash
    cp .env.example .env
    ```
-   Variables necesarias: conexión a MySQL, API key de SendGrid (envío de emails),
+   Variables necesarias: conexión a MySQL, datos de Brevo (envío de emails),
    credenciales de MercadoPago (cobros) y de Pusher (notificaciones en tiempo real
    dentro del panel de administrador). El sistema funciona sin estas tres últimas,
    pero esas funcionalidades puntuales quedarán deshabilitadas hasta configurarlas.
@@ -125,6 +125,15 @@ de productos).
      dirección de retorno de MercadoPago, así que tiene que ser el dominio donde corre el sitio.
    - `APP_ENV`: `development` muestra los errores en pantalla; `production` los oculta
      y los guarda en `logs/php_errors.log`. **En un servidor público usá `production`.**
+   - **Emails** (`MAIL_DRIVER`): por defecto `smtp` con **Brevo** (`SMTP_HOST`,
+     `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, de *Brevo → Settings → SMTP & API → SMTP*);
+     también admite `sendgrid` (`SENDGRID_API_KEY`). `php scripts/probar_email.php`
+     manda un mail de prueba y muestra el error si algo falla.
+   - `MAIL_FROM` / `MAIL_FROM_NAME`: remitente de todos los emails. Tiene que estar
+     verificado en el proveedor. Si el nombre tiene espacios, va entre comillas
+     (`MAIL_FROM_NAME="CINFSA Cinema"`): sin comillas el `.env` no se puede leer.
+   - `MAIL_SOPORTE`: casilla que recibe los reclamos de soporte y los mensajes de
+     contacto (por defecto `cinecinfsa@gmail.com`).
 6. Levantá el proyecto con XAMPP (Apache apuntando a la carpeta del repo) o con
    el servidor embebido de PHP:
    ```bash
@@ -344,7 +353,7 @@ MP_ACCESS_TOKEN=APP_USR-...   # credenciales de PRODUCCIÓN de MercadoPago, no l
 MP_PUBLIC_KEY=APP_USR-...
 ```
 
-SendGrid y Pusher pueden usar las mismas claves de siempre. Con `APP_ENV=production` los
+Brevo y Pusher pueden usar las mismas claves de siempre. Con `APP_ENV=production` los
 errores no se muestran en pantalla y quedan en `logs/php_errors.log`.
 
 ### 5. Programar las tareas
@@ -358,6 +367,6 @@ Si `php` no es el comando correcto, el panel suele indicar la ruta (por ejemplo 
 - [ ] El sitio abre en `https://` y muestra la cartelera con imágenes
 - [ ] Los administradores y un vendedor pueden iniciar sesión
 - [ ] Una página inexistente muestra la página 404 (y no un error de PHP)
-- [ ] Llega el mail de "¿Olvidaste tu contraseña?" y su link abre el sitio (confirma `APP_URL` y SendGrid)
+- [ ] Llega el mail de "¿Olvidaste tu contraseña?" y su link abre el sitio (confirma `APP_URL` y Brevo)
 - [ ] Una compra real de bajo monto: el pago vuelve al sitio, se asigna la entrada y llega el mail
 - [ ] Después de 15 minutos, `logs/cron.log` tiene líneas nuevas
