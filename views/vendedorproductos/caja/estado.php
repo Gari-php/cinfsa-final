@@ -33,6 +33,7 @@
         <div class="info-usuario-caja">
             <p><i class="fas fa-user"></i> <?php echo $_SESSION['nombre_usuario'] ?? 'Usuario'; ?></p>
             <p><i class="fas fa-clock"></i> Abierta desde: <?php echo date('d/m/Y H:i', strtotime($arqueo->fecha_inicio)); ?></p>
+            <a href="/logaut" class="btn-salir-caja" data-cerrar-sesion title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
         </div>
     </div>
 

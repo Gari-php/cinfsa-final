@@ -50,6 +50,30 @@ describe('Cerrar sesión', () => {
     });
   });
 
+  it('con la caja abierta, el panel de la caja de cada vendedor tiene "Cerrar sesión"', () => {
+    const paneles = [
+      ['vfunciones', '/vendedor/caja/abrir', { rela_caja: 1, monto_inicial: 0 }, '/vendedor/caja'],
+      ['vproductos', '/vendedorproductos/caja/abrir', { rela_caja: 3, monto_inicial: 0 }, '/vendedorproductos/caja/estado'],
+    ];
+
+    paneles.forEach(([rol, urlAbrir, datos, panel]) => {
+      cy.loginComo(rol);
+      cy.postJson(urlAbrir, datos);
+      cy.visit(panel);
+      cy.get('.info-usuario-caja .btn-salir-caja').should('be.visible').and('have.attr', 'href', '/logaut');
+      cy.screenshot(`panel-caja-${rol}`, { capture: 'viewport' });
+      cy.viewport(390, 844);
+      cy.get('.btn-salir-caja').should('be.visible');
+      cy.screenshot(`panel-caja-${rol}-celular`, { capture: 'viewport' });
+      cy.viewport(1280, 720);
+
+      cy.get('.btn-salir-caja').click();
+      cy.contains('#modal-cerrar-sesion button', 'Sí, cerrar sesión').click();
+      cy.location('pathname').should('eq', '/');
+      sigueLogueado(panel).should('eq', 302);
+    });
+  });
+
   it('el administrador ve el cierre de sesión en la auditoría', () => {
     cy.loginComo('admin');
     cy.visit('/administrador/auditoria/listado?accion=sesion.logout');

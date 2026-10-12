@@ -27,6 +27,26 @@
         body {
             min-height: 100vh;
         }
+
+        /* Cerrar sesión en el panel de la caja abierta (franja del usuario, sobre el naranja) */
+        .btn-salir-caja {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .btn-salir-caja:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+        }
     </style>
 </head>
 <body>
