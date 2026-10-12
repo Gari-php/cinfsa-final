@@ -14,6 +14,7 @@
 
     <script>window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";</script>
     <script src="/assets/js/csrf.js"></script>
+    <script src="/assets/js/cerrar-sesion.js" defer></script>
 
     <!-- Estilo para fuente -->
     <style>

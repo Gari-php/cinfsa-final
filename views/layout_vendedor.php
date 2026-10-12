@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/assets/css/alertas.css">
     <script>window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";</script>
     <script src="/assets/js/csrf.js"></script>
+    <script src="/assets/js/cerrar-sesion.js" defer></script>
     <script type="module" src="/assets/js/formularios.js"></script>
     <style>
         * {

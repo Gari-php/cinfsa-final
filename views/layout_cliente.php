@@ -14,6 +14,7 @@
 
     <script>window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";</script>
     <script src="/assets/js/csrf.js"></script>
+    <script src="/assets/js/cerrar-sesion.js" defer></script>
 
     <!-- Estilo para fuente -->
     <style>
@@ -187,7 +188,7 @@
                     <a href="/calificacion-peliculas">CALIFICACIÓN DE PELÍCULAS</a>
                 <?php endif; ?>
                 <a href="/calificar-peliculas">CALIFICAR PELÍCULAS</a>
-                <a href="/">CERRAR SESIÓN</a>
+                <a href="/logaut" data-cerrar-sesion>CERRAR SESIÓN</a>
             </nav>
             <label for="btn-menu"><i class="fa-regular fa-circle-xmark"></i></label>
         </div>

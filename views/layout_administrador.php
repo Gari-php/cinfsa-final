@@ -42,6 +42,7 @@
         window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";
     </script>
     <script src="/assets/js/csrf.js"></script>
+    <script src="/assets/js/cerrar-sesion.js" defer></script>
 
     <!-- Estilo para fuente -->
     <style>
@@ -78,7 +79,7 @@
             </div>
             <nav class="menu">
                 <a href="/administrador">Inicio</a>
-                <a href="/"><i class="fa-solid fa-user-xmark"></i></a>
+                <a href="/logaut" data-cerrar-sesion title="Cerrar sesión"><i class="fa-solid fa-user-xmark"></i></a>
 
                 <!-- CAMPANITA CON DROPDOWN DE NOTIFICACIONES -->
                 <div class="notifications-container">
@@ -370,7 +371,7 @@
                     </div>
                 <?php endif; ?>
 
-                <a href="/">CERRAR SESIÓN</a>
+                <a href="/logaut" data-cerrar-sesion>CERRAR SESIÓN</a>
             </nav>
             <label for="btn-menu"><i class="fa-regular fa-circle-xmark"></i></label>
         </div>

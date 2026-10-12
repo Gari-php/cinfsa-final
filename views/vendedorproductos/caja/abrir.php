@@ -1,6 +1,6 @@
 <div class="caja-abrir-container">
 
-    <a href="/" class="btn-logout" title="Cerrar sesión">
+    <a href="/logaut" class="btn-logout" title="Cerrar sesión" data-cerrar-sesion>
         <i class="fas fa-sign-out-alt"></i>
     </a>
 

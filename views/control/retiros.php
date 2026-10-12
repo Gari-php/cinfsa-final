@@ -11,7 +11,7 @@
             <?php if ($urlVolver): ?>
                 <a href="<?php echo s($urlVolver); ?>" class="control-enlace"><i class="fa-solid fa-arrow-left"></i> Volver</a>
             <?php endif; ?>
-            <a href="/logaut" class="control-enlace"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+            <a href="/logaut" class="control-enlace" data-cerrar-sesion><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
         </nav>
     </header>
 
