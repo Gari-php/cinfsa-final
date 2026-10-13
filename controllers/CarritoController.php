@@ -275,11 +275,22 @@ class CarritoController
                 $itemsValidos[] = $item;
             }
 
+            // Teléfono y DNI de su última compra, para no tener que escribirlos de nuevo
+            $stmtContacto = \Models\ActiveRecord::getDB()->prepare("SELECT telefono_contacto, dni_contacto FROM ordenes
+                                          WHERE id_usuario = ? AND telefono_contacto IS NOT NULL
+                                          ORDER BY id_orden DESC LIMIT 1");
+            $idContacto = (int)$idUsuario;
+            $stmtContacto->bind_param('i', $idContacto);
+            $stmtContacto->execute();
+            $contacto = $stmtContacto->get_result()->fetch_assoc() ?: ['telefono_contacto' => '', 'dni_contacto' => ''];
+
             $router->render('cliente/checkout', [
                 'items' => $itemsValidos,
                 'estadisticas' => $estadisticas,
                 'total' => $total,
                 'usuario' => $_SESSION,
+                'telefonoContacto' => $contacto['telefono_contacto'],
+                'dniContacto' => $contacto['dni_contacto'],
                 'hayNoDisponibles' => in_array(false, array_column($itemsValidos, 'disponible'), true)
             ]);
         } catch (\Exception $e) {

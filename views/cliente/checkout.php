@@ -59,7 +59,7 @@
                     <label>Nombre completo</label>
                     <input type="text" 
                            name="nombre" 
-                           value="<?php echo $_SESSION['nombre_usuario'] ?? ''; ?>" 
+                           value="<?php echo s($_SESSION['nombre_usuario'] ?? ''); ?>" 
                            required>
                 </div>
 
@@ -67,7 +67,7 @@
                     <label>Email</label>
                     <input type="email" 
                            name="email" 
-                           value="<?php echo $_SESSION['email'] ?? ''; ?>" 
+                           value="<?php echo s($_SESSION['email'] ?? ''); ?>" 
                            required>
                 </div>
 
@@ -75,6 +75,7 @@
                     <label>Teléfono</label>
                     <input type="tel" 
                            name="telefono" 
+                           value="<?php echo s($telefonoContacto ?? ''); ?>"
                            placeholder="+54 9 11 1234-5678" 
                            required>
                 </div>
@@ -83,6 +84,7 @@
                     <label>DNI</label>
                     <input type="text" 
                            name="dni" 
+                           value="<?php echo s($dniContacto ?? ''); ?>"
                            placeholder="12345678" 
                            required>
                 </div>

@@ -30,8 +30,20 @@ class PagoController
         header('Content-Type: application/json');
 
         try {
-            $datos = json_decode(file_get_contents('php://input'), true);
+            $datos = json_decode(file_get_contents('php://input'), true) ?? [];
             $idUsuario = $_SESSION['id_usuario'];
+
+            // Datos de contacto de la compra (el admin los ve en el detalle de la orden)
+            $telefono = trim(preg_replace('/\s+/', ' ', (string)($datos['telefono'] ?? '')));
+            $dni = preg_replace('/[.\s-]/', '', (string)($datos['dni'] ?? ''));   // "12.345.678" → "12345678"
+            if (!preg_match('/^\+?[0-9 ()-]{6,20}$/', $telefono) || preg_match_all('/\d/', $telefono) < 6) {
+                echo json_encode(['ok' => false, 'mensaje' => 'Ingresá un teléfono válido (solo números, espacios, +, - o paréntesis).']);
+                return;
+            }
+            if (!preg_match('/^\d{7,8}$/', $dni)) {
+                echo json_encode(['ok' => false, 'mensaje' => 'Ingresá un DNI válido (7 u 8 números, sin letras).']);
+                return;
+            }
 
             $items = Carrito::obtenerCarritoCompleto($idUsuario);
 
@@ -92,10 +104,10 @@ class PagoController
 
             $numeroOrden = 'CINFSA-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
 
-            $query = "INSERT INTO ordenes (id_usuario, numero_orden, total, estado, metodo_pago, fecha_creacion) 
-                    VALUES (?, ?, ?, 'pendiente', 'Mercado Pago', NOW())";
+            $query = "INSERT INTO ordenes (id_usuario, numero_orden, total, estado, metodo_pago, fecha_creacion, telefono_contacto, dni_contacto)
+                    VALUES (?, ?, ?, 'pendiente', 'Mercado Pago', NOW(), ?, ?)";
             $stmt = $db->prepare($query);
-            $stmt->execute([$idUsuario, $numeroOrden, $total]);
+            $stmt->execute([$idUsuario, $numeroOrden, $total, $telefono, $dni]);
             $idOrden = $db->insert_id;
 
             foreach ($items as $item) {

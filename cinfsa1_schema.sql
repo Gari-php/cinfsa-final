@@ -819,6 +819,8 @@ CREATE TABLE `ordenes` (
   `fecha_pago` datetime DEFAULT NULL,
   `fecha_actualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp(),
   `codigo_retiro` char(32) DEFAULT NULL COMMENT 'Codigo aleatorio del QR de retiro (hex)',
+  `telefono_contacto` varchar(30) DEFAULT NULL,
+  `dni_contacto` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`id_orden`),
   UNIQUE KEY `numero_orden` (`numero_orden`),
   UNIQUE KEY `uq_ordenes_codigo_retiro` (`codigo_retiro`),

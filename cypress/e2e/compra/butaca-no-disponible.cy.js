@@ -5,6 +5,9 @@
 const FUNCION = 1;
 const ID_CLIENTE2 = 5;
 
+// Datos de contacto válidos para el checkout (teléfono y DNI son obligatorios)
+const CONTACTO = { nombre: 'Cliente', email: 'cliente@cinfsa.test', telefono: '11 3456-7890', dni: '30123456' };
+
 const consultar = (sql) => cy.task('consultarBase', sql);
 const json = (body) => (typeof body === 'string' ? JSON.parse(body) : body);
 
@@ -48,7 +51,7 @@ describe('Butaca que deja de estar disponible', () => {
       cy.get('.btn-pagar').should('be.disabled');
 
       // Aunque se fuerce el pago, el servidor lo rechaza y no crea la orden
-      cy.postJson('/pago/crear-orden', { nombre: 'x', email: 'x@x.com', telefono: '1', dni: '1' })
+      cy.postJson('/pago/crear-orden', CONTACTO)
         .its('body').then((b) => {
           const datos = json(b);
           expect(datos.ok).to.eq(false);
@@ -80,7 +83,7 @@ describe('Butaca que deja de estar disponible', () => {
       cy.get('.total-amount').should('contain.text', '3.000'); // solo cuenta la libre
       cy.get('.btn-pagar').should('be.disabled');
 
-      cy.postJson('/pago/crear-orden', {}).its('body').then((b) => {
+      cy.postJson('/pago/crear-orden', CONTACTO).its('body').then((b) => {
         const datos = json(b);
         expect(datos.ok).to.eq(false);
         expect(datos.no_disponibles.map((p) => p.motivo)).to.deep.eq(['reservada']);
@@ -177,7 +180,7 @@ describe('Butaca que deja de estar disponible', () => {
       cy.get('.checkout-item.no-disponible').should('have.length', 1)
         .and('contain.text', 'ya no está a la venta para esa función');
       cy.get('.btn-pagar').should('be.disabled');
-      cy.postJson('/pago/crear-orden', {}).its('body').then((b) => {
+      cy.postJson('/pago/crear-orden', CONTACTO).its('body').then((b) => {
         const datos = json(b);
         expect(datos.ok).to.eq(false);
         expect(datos.no_disponibles.map((p) => p.motivo)).to.deep.eq(['no_corresponde']);

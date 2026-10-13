@@ -65,9 +65,14 @@
                     <span class="label">Email:</span>
                     <span class="value"><?php echo s($orden->email); ?></span>
                 </div>
+                <!-- Los deja el cliente en el checkout de esta compra (órdenes anteriores: sin dato) -->
                 <div class="info-row">
                     <span class="label">Teléfono:</span>
-                    <span class="value">No especificado</span>
+                    <span class="value"><?php echo s($orden->telefono_contacto ?? '') ?: 'No especificado'; ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">DNI:</span>
+                    <span class="value"><?php echo s($orden->dni_contacto ?? '') ?: 'No especificado'; ?></span>
                 </div>
             </div>
 
