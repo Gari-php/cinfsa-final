@@ -489,6 +489,8 @@ $router->get('/administrador/movimientos-web/reportes', [MovimientosWebControlle
 $router->get('/administrador/movimientos-web/datos-grafico', [MovimientosWebController::class, 'datosGrafico']);
 $router->get('/administrador/movimientos-web/detalle', [MovimientosWebController::class, 'detalle']);
 $router->post('/administrador/movimientos-web/cancelar', [MovimientosWebController::class, 'cancelar']);
+$router->post('/administrador/movimientos-web/cancelar-entrada', [MovimientosWebController::class, 'cancelarEntrada']);
+$router->post('/administrador/movimientos-web/devolver-producto', [MovimientosWebController::class, 'devolverProducto']);
 $router->post('/administrador/movimientos-web/buscar', [MovimientosWebController::class, 'buscar']);
 
 // ==========================================

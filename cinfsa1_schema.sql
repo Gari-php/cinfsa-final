@@ -394,6 +394,7 @@ CREATE TABLE `detalle_orden` (
   `id_funcion` int(11) DEFAULT NULL,
   `nombre_producto` varchar(255) DEFAULT NULL,
   `cantidad` int(11) NOT NULL,
+  `cantidad_devuelta` int(11) NOT NULL DEFAULT 0,
   `precio_unitario` decimal(10,2) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL,
   PRIMARY KEY (`id_detalle`),

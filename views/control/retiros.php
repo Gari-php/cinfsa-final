@@ -158,9 +158,11 @@
 
         const info = document.createElement('div');
         info.append(texto('strong', item.nombre), texto('span', item.tipo, 'retiro-tipo'));
-        info.append(texto('small', item.quedan === 0
+        // Lo que devolvió el administrador ya no se entrega
+        const devuelto = item.devuelto > 0 ? ` · devuelto ${item.devuelto}` : '';
+        info.append(texto('small', item.quedan === 0 && !item.devuelto
             ? `Compró ${item.comprado} · ✓ retirado`
-            : `Compró ${item.comprado} · retiró ${item.entregado} · quedan ${item.quedan}`));
+            : `Compró ${item.comprado} · retiró ${item.entregado}${devuelto} · quedan ${item.quedan}`));
         li.append(info);
 
         if (editable && item.quedan > 0) {

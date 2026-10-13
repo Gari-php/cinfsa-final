@@ -152,6 +152,210 @@ class MovimientosWebController
         ]);
     }
 
+    /**
+     * Cancela UNA entrada de una compra web pagada (el cliente pidió devolver parte de la orden).
+     * La entrada queda cancelada y la butaca libre. La plata se cobró por Mercado Pago: el
+     * reembolso lo hace el administrador desde su cuenta de Mercado Pago (acá no se toca ninguna caja).
+     */
+    public static function cancelarEntrada()
+    {
+        header('Content-Type: application/json');
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['login']) || $_SESSION['perfil'] !== 3) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
+            return;
+        }
+
+        $datos = json_decode(file_get_contents('php://input'), true) ?? [];
+        $idDetalle = filter_var($datos['id_detalle'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if (!$idDetalle) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Entrada inválida']);
+            return;
+        }
+
+        $db = ActiveRecord::getDB();
+        $db->begin_transaction();
+
+        try {
+            $stmt = $db->prepare("SELECT do.id_orden, do.id_butaca, do.id_funcion, do.precio_unitario,
+                                         o.estado, o.numero_orden, o.payment_id,
+                                         p.titulo_pelicula, f.rela_salas, b.fila_butaca, b.numero_butaca
+                                  FROM detalle_orden do
+                                  INNER JOIN ordenes o ON o.id_orden = do.id_orden
+                                  INNER JOIN funciones f ON f.id_funcion = do.id_funcion
+                                  INNER JOIN peliculas p ON p.id_pelicula = f.rela_peliculas
+                                  INNER JOIN butacas b ON b.id_butaca = do.id_butaca
+                                  WHERE do.id_detalle = ? AND do.tipo_producto = 'butacas'
+                                  FOR UPDATE");
+            $stmt->bind_param('i', $idDetalle);
+            $stmt->execute();
+            $item = $stmt->get_result()->fetch_assoc();
+
+            if (!$item) {
+                throw new \RuntimeException('Entrada no encontrada');
+            }
+            if ($item['estado'] !== 'pagado') {
+                throw new \RuntimeException('Solo se pueden cancelar entradas de compras pagadas');
+            }
+
+            // La entrada de esa butaca en esta orden (bloqueada mientras se cancela)
+            $stmt = $db->prepare("SELECT bv.id_venta_butaca, e.id_entrada, e.estado
+                                  FROM butacas_vendidas bv
+                                  INNER JOIN entradas e ON e.id_entrada = bv.id_entrada
+                                  WHERE bv.id_butaca = ? AND bv.id_funcion = ? AND bv.id_orden = ?
+                                  FOR UPDATE");
+            $stmt->bind_param('iii', $item['id_butaca'], $item['id_funcion'], $item['id_orden']);
+            $stmt->execute();
+            $venta = $stmt->get_result()->fetch_assoc();
+
+            if (!$venta || (int)$venta['estado'] === -1) {
+                throw new \RuntimeException('Esta entrada ya fue cancelada');
+            }
+            if ((int)$venta['estado'] === 2) {
+                throw new \RuntimeException('Esta entrada ya se usó para ingresar a la función: no se puede cancelar');
+            }
+
+            $stmt = $db->prepare("UPDATE entradas SET estado = -1 WHERE id_entrada = ? AND estado IN (0, 1)");
+            $stmt->bind_param('i', $venta['id_entrada']);
+            $stmt->execute();
+            if ($stmt->affected_rows !== 1) {
+                throw new \RuntimeException('Esta entrada ya fue cancelada');
+            }
+
+            // Sin el registro de venta, la butaca queda libre para esa función
+            $stmt = $db->prepare("DELETE FROM butacas_vendidas WHERE id_venta_butaca = ?");
+            $stmt->bind_param('i', $venta['id_venta_butaca']);
+            $stmt->execute();
+
+            $db->commit();
+        } catch (\RuntimeException $e) {
+            $db->rollback();
+            echo json_encode(['ok' => false, 'mensaje' => $e->getMessage()]);
+            return;
+        } catch (\Throwable $e) {
+            $db->rollback();
+            error_log('cancelarEntrada(): ' . $e->getMessage());
+            echo json_encode(['ok' => false, 'mensaje' => 'Error al cancelar la entrada']);
+            return;
+        }
+
+        $monto = '$' . number_format((float)$item['precio_unitario'], 0, ',', '.');
+        $butaca = "{$item['titulo_pelicula']}, Sala {$item['rela_salas']} · Fila {$item['fila_butaca']} · Asiento {$item['numero_butaca']}";
+        \Classes\Auditoria::registrar(
+            'orden.cancelar_entrada',
+            "Canceló la entrada #{$venta['id_entrada']} de la compra online {$item['numero_orden']} ({$butaca}); "
+                . "reembolso de {$monto} a hacer por Mercado Pago",
+            'entradas',
+            (int)$venta['id_entrada'],
+            ['estado' => 'activa'],
+            ['estado' => 'cancelada', 'reembolso_pendiente' => $monto]
+        );
+
+        echo json_encode([
+            'ok' => true,
+            'mensaje' => "Entrada cancelada y butaca liberada. Recordá hacer el reembolso de {$monto} desde tu cuenta de Mercado Pago"
+                . ($item['payment_id'] ? " (pago N° {$item['payment_id']})." : '.'),
+        ]);
+    }
+
+    /**
+     * Devuelve parte de una línea de productos o fichas de una compra web pagada. Solo se puede
+     * devolver lo que el cliente todavía no retiró; vuelve al stock y deja de estar para retirar.
+     * El dinero se reintegra por Mercado Pago, desde la cuenta del administrador.
+     */
+    public static function devolverProducto()
+    {
+        header('Content-Type: application/json');
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['login']) || $_SESSION['perfil'] !== 3) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
+            return;
+        }
+
+        $datos = json_decode(file_get_contents('php://input'), true) ?? [];
+        $entero = ['options' => ['min_range' => 1]];
+        $idDetalle = filter_var($datos['id_detalle'] ?? null, FILTER_VALIDATE_INT, $entero);
+        $cantidad = filter_var($datos['cantidad'] ?? null, FILTER_VALIDATE_INT, $entero);
+        if (!$idDetalle || !$cantidad) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Indicá cuántas unidades devolver (un número entero mayor a 0)']);
+            return;
+        }
+
+        $db = ActiveRecord::getDB();
+        $db->begin_transaction();
+
+        try {
+            $stmt = $db->prepare("SELECT o.id_orden, o.estado, o.numero_orden, o.payment_id
+                                  FROM detalle_orden d
+                                  INNER JOIN ordenes o ON o.id_orden = d.id_orden
+                                  WHERE d.id_detalle = ? AND d.tipo_producto IN ('cantina', 'fichas')
+                                  FOR UPDATE");
+            $stmt->bind_param('i', $idDetalle);
+            $stmt->execute();
+            $orden = $stmt->get_result()->fetch_assoc();
+
+            if (!$orden) {
+                throw new \RuntimeException('Producto no encontrado en la orden');
+            }
+            if ($orden['estado'] !== 'pagado') {
+                throw new \RuntimeException('Solo se pueden devolver productos de compras pagadas');
+            }
+
+            // Las líneas quedan bloqueadas hasta el commit: no se cruza con una entrega en la cantina
+            $items = \Models\RetiroOrden::items((int)$orden['id_orden'], true);
+            $item = current(array_filter($items, fn($i) => (int)$i['id_detalle'] === $idDetalle));
+
+            if ($item['quedan'] === 0) {
+                throw new \RuntimeException('No queda nada para devolver: ya se retiró o se devolvió todo');
+            }
+            if ($cantidad > $item['quedan']) {
+                throw new \RuntimeException("Solo se pueden devolver {$item['quedan']}: es lo que el cliente todavía no retiró");
+            }
+
+            $stmt = $db->prepare("UPDATE detalle_orden SET cantidad_devuelta = cantidad_devuelta + ? WHERE id_detalle = ?");
+            $stmt->bind_param('ii', $cantidad, $idDetalle);
+            $stmt->execute();
+
+            self::reponerStock($item['tipo_producto'], (int)$item['id_producto'], $cantidad, (int)$orden['id_orden'], 'Devolución parcial de orden web');
+
+            $db->commit();
+        } catch (\RuntimeException $e) {
+            $db->rollback();
+            echo json_encode(['ok' => false, 'mensaje' => $e->getMessage()]);
+            return;
+        } catch (\Throwable $e) {
+            $db->rollback();
+            error_log('devolverProducto(): ' . $e->getMessage());
+            echo json_encode(['ok' => false, 'mensaje' => 'Error al devolver el producto']);
+            return;
+        }
+
+        $monto = '$' . number_format($cantidad * (float)$item['precio_unitario'], 0, ',', '.');
+        \Classes\Auditoria::registrar(
+            'orden.devolver_producto',
+            "Devolvió {$cantidad} × {$item['nombre_producto']} de la compra online {$orden['numero_orden']}; "
+                . "reembolso de {$monto} a hacer por Mercado Pago",
+            'ordenes',
+            (int)$orden['id_orden'],
+            ['pendiente_de_retirar' => $item['quedan']],
+            ['pendiente_de_retirar' => $item['quedan'] - $cantidad, 'devuelto' => $cantidad, 'reembolso_pendiente' => $monto]
+        );
+
+        echo json_encode([
+            'ok' => true,
+            'mensaje' => "Se devolvió {$cantidad} × {$item['nombre_producto']} al stock. Recordá hacer el reembolso de {$monto} "
+                . 'desde tu cuenta de Mercado Pago' . ($orden['payment_id'] ? " (pago N° {$orden['payment_id']})." : '.'),
+        ]);
+    }
+
     public static function cancelar()
     {
         header('Content-Type: application/json');
@@ -367,8 +571,14 @@ class MovimientosWebController
             CASE
                 WHEN do.tipo_producto = 'butacas' THEN DATE_FORMAT(f.fecha_hora, '%d/%m/%Y %H:%i')
                 ELSE NULL
-            END as fecha_funcion
+            END as fecha_funcion,
+            e.id_entrada,
+            e.estado AS estado_entrada,
+            COALESCE((SELECT SUM(eo.cantidad) FROM entregas_orden eo WHERE eo.id_detalle = do.id_detalle), 0) AS entregado
           FROM detalle_orden do
+          LEFT JOIN butacas_vendidas bv ON bv.id_butaca = do.id_butaca AND bv.id_funcion = do.id_funcion
+                                       AND bv.id_orden = do.id_orden AND do.tipo_producto = 'butacas'
+          LEFT JOIN entradas e ON e.id_entrada = bv.id_entrada
           LEFT JOIN productos_cantina pc ON pc.id_producto_cantina = do.id_producto AND do.tipo_producto = 'cantina'
           LEFT JOIN maquinas m ON m.id_maquinas = do.id_producto AND do.tipo_producto = 'fichas'
           LEFT JOIN butacas b ON b.id_butaca = do.id_butaca AND do.tipo_producto = 'butacas'
@@ -389,6 +599,51 @@ class MovimientosWebController
 
         $orden->detalles = $detalles;
         return $orden;
+    }
+
+    /**
+     * Vuelve al stock una cantidad de un producto (cantina 1, como la venta web) o de las fichas
+     * de una máquina, y deja el movimiento registrado.
+     */
+    private static function reponerStock(string $tipo, int $idProducto, int $cantidad, int $idOrden, string $motivo): void
+    {
+        $db = ActiveRecord::getDB();
+        $idUsuario = (int)($_SESSION['id_usuario'] ?? 0);
+
+        if ($tipo === 'cantina') {
+            $stmt = $db->prepare("UPDATE stock_cantina SET stock_cantina = stock_cantina + ?
+                                  WHERE rela_producto_cantina = ? AND rela_cantina = 1");
+            $stmt->bind_param('ii', $cantidad, $idProducto);
+            $stmt->execute();
+
+            // Sincronizar el estado del producto (Disponible/Agotado) según el nuevo stock
+            $stmt = $db->prepare("SELECT stock_cantina FROM stock_cantina WHERE rela_producto_cantina = ? AND rela_cantina = 1");
+            $stmt->bind_param('i', $idProducto);
+            $stmt->execute();
+            $filaStock = $stmt->get_result()->fetch_assoc();
+            if ($filaStock) {
+                \Models\Stock::actualizarEstadoProducto($idProducto, $filaStock['stock_cantina']);
+            }
+        } elseif ($tipo === 'fichas') {
+            // id_producto de una ficha web es la máquina; sus fichas están en rela_fichas
+            $stmt = $db->prepare("SELECT rela_fichas FROM maquinas WHERE id_maquinas = ?");
+            $stmt->bind_param('i', $idProducto);
+            $stmt->execute();
+            $relaFichas = $stmt->get_result()->fetch_assoc()['rela_fichas'] ?? null;
+            if (!$relaFichas) {
+                return;
+            }
+            $stmt = $db->prepare("UPDATE fichas SET cantidad_ficha = cantidad_ficha + ? WHERE id_fichas = ?");
+            $stmt->bind_param('ii', $cantidad, $relaFichas);
+            $stmt->execute();
+        } else {
+            return;
+        }
+
+        $stmt = $db->prepare("INSERT INTO movimientos_stock (tipo_producto, id_producto, tipo_movimiento, cantidad, id_usuario, id_orden, fecha, observaciones)
+                              VALUES (?, ?, 'entrada', ?, ?, ?, NOW(), ?)");
+        $stmt->bind_param('siiiis', $tipo, $idProducto, $cantidad, $idUsuario, $idOrden, $motivo);
+        $stmt->execute();
     }
 
     /**
@@ -420,52 +675,12 @@ class MovimientosWebController
                 if ($entregado > 0) {
                     $yaEntregado[$detalle['nombre_producto']] = $entregado;
                 }
-                $cantidad -= $entregado;
+                // Lo retirado ya no está y lo devuelto antes por el admin ya volvió al stock
+                $cantidad -= $entregado + (int)$detalle['cantidad_devuelta'];
                 if ($cantidad <= 0) {
-                    continue; // se retiró todo: no hay nada para devolver
+                    continue; // no queda nada para devolver
                 }
-            }
-
-            // Devolver stock según tipo
-            if ($tipo === 'cantina') {
-                // Devolver stock en la tabla real (stock_cantina), cantina fija = 1 (mismo criterio que usa el checkout)
-                $query = "UPDATE stock_cantina SET stock_cantina = stock_cantina + ? 
-              WHERE rela_producto_cantina = ? AND rela_cantina = 1";
-                $stmt2 = $db->prepare($query);
-                $stmt2->bind_param('ii', $cantidad, $idProducto);
-                $stmt2->execute();
-
-                // Sincronizar el estado del producto (Disponible/Agotado) según el nuevo stock
-                $queryNuevoStock = "SELECT stock_cantina FROM stock_cantina WHERE rela_producto_cantina = ? AND rela_cantina = 1";
-                $stmt3 = $db->prepare($queryNuevoStock);
-                $stmt3->bind_param('i', $idProducto);
-                $stmt3->execute();
-                $filaStock = $stmt3->get_result()->fetch_assoc();
-
-                if ($filaStock) {
-                    \Models\Stock::actualizarEstadoProducto($idProducto, $filaStock['stock_cantina']);
-                }
-
-                // Registrar movimiento de devolución
-                $query = "INSERT INTO movimientos_stock (tipo_producto, id_producto, tipo_movimiento, cantidad, id_usuario, id_orden, fecha, observaciones)
-              VALUES ('cantina', ?, 'entrada', ?, ?, ?, NOW(), 'Devolución por cancelación de orden web')";
-                $stmt2 = $db->prepare($query);
-                $stmt2->bind_param('iiii', $idProducto, $cantidad, $_SESSION['id_usuario'], $idOrden);
-                $stmt2->execute();
-            } elseif ($tipo === 'fichas') {
-                // Obtener rela_fichas de la máquina
-                $query = "SELECT rela_fichas FROM maquinas WHERE id_maquinas = ?";
-                $stmt2 = $db->prepare($query);
-                $stmt2->bind_param('i', $idProducto);
-                $stmt2->execute();
-                $relaFichas = $stmt2->get_result()->fetch_assoc()['rela_fichas'];
-
-                if ($relaFichas) {
-                    $query = "UPDATE fichas SET cantidad_ficha = cantidad_ficha + ? WHERE id_fichas = ?";
-                    $stmt2 = $db->prepare($query);
-                    $stmt2->bind_param('ii', $cantidad, $relaFichas);
-                    $stmt2->execute();
-                }
+                self::reponerStock($tipo, (int)$idProducto, $cantidad, (int)$idOrden, 'Devolución por cancelación de orden web');
             } elseif ($tipo === 'butacas') {
                 $idButaca = $detalle['id_butaca'];
                 $idFuncion = $detalle['id_funcion'];

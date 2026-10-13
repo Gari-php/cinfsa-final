@@ -60,12 +60,14 @@ class RetiroOrden extends ActiveRecord
     }
 
     /**
-     * Ítems de productos y fichas de la orden con lo comprado, lo entregado y lo que queda.
+     * Ítems de productos y fichas de la orden con lo comprado, lo entregado, lo devuelto por el
+     * administrador y lo que queda por retirar (comprado − entregado − devuelto).
      * Con $bloquear = true (dentro de una transacción) se bloquean las filas hasta el commit.
      */
     public static function items(int $idOrden, bool $bloquear = false): array
     {
-        $stmt = self::getDB()->prepare("SELECT d.id_detalle, d.tipo_producto, d.nombre_producto, d.cantidad AS comprado, d.subtotal,
+        $stmt = self::getDB()->prepare("SELECT d.id_detalle, d.tipo_producto, d.id_producto, d.nombre_producto, d.cantidad AS comprado,
+                d.cantidad_devuelta AS devuelto, d.precio_unitario, d.subtotal,
                 COALESCE((SELECT SUM(eo.cantidad) FROM entregas_orden eo WHERE eo.id_detalle = d.id_detalle), 0) AS entregado
             FROM detalle_orden d
             WHERE d.id_orden = ? AND d.tipo_producto IN ('cantina', 'fichas')
@@ -77,7 +79,8 @@ class RetiroOrden extends ActiveRecord
         foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $fila) {
             $fila['comprado'] = (int)$fila['comprado'];
             $fila['entregado'] = (int)$fila['entregado'];
-            $fila['quedan'] = max(0, $fila['comprado'] - $fila['entregado']);
+            $fila['devuelto'] = (int)$fila['devuelto'];
+            $fila['quedan'] = max(0, $fila['comprado'] - $fila['entregado'] - $fila['devuelto']);
             $items[] = $fila;
         }
         return $items;

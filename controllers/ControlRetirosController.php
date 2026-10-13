@@ -154,7 +154,9 @@ class ControlRetirosController
         } elseif (!$items) {
             [$resultado, $titulo, $mensaje] = ['rojo', 'Sin productos', 'Este pedido no tiene productos ni fichas para retirar'];
         } elseif ($quedan === 0) {
-            [$resultado, $titulo, $mensaje] = ['rojo', 'Ya retiró todo', 'Este pedido ya se entregó completo'];
+            [$resultado, $titulo, $mensaje] = array_sum(array_column($items, 'devuelto')) > 0
+                ? ['rojo', 'Nada para retirar', 'Ya retiró todo lo que no se devolvió']
+                : ['rojo', 'Ya retiró todo', 'Este pedido ya se entregó completo'];
         } else {
             [$resultado, $titulo, $mensaje] = ['pendiente', 'Pedido para retirar', "Quedan $quedan para entregar"];
         }
@@ -176,6 +178,7 @@ class ControlRetirosController
                     'tipo' => $i['tipo_producto'] === 'fichas' ? 'Fichas' : 'Cantina',
                     'comprado' => $i['comprado'],
                     'entregado' => $i['entregado'],
+                    'devuelto' => $i['devuelto'],
                     'quedan' => $i['quedan'],
                 ], $items),
                 'historial' => array_map(fn($h) => [

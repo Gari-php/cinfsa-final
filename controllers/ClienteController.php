@@ -1047,6 +1047,7 @@ class ClienteController
                         'nombre' => $i['nombre_producto'],
                         'comprado' => $i['comprado'],
                         'entregado' => $i['entregado'],
+                        'devuelto' => $i['devuelto'],
                         'quedan' => $i['quedan'],
                     ], $items),
                 ];

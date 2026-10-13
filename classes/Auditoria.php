@@ -26,6 +26,8 @@ class Auditoria
         'devolucion.entrada'    => 'Devolución de entrada',
         'devolucion.productos'  => 'Devolución de productos',
         'orden.cancelar'        => 'Cancelación de compra online',
+        'orden.cancelar_entrada' => 'Cancelación de entrada de compra online',
+        'orden.devolver_producto' => 'Devolución de productos de compra online',
         'caja.abrir'            => 'Apertura de caja',
         'caja.cerrar'           => 'Cierre de caja',
         'precio.tipo_entrada'   => 'Cambio de precio de entrada',

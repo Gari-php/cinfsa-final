@@ -199,7 +199,7 @@
                                     <?php if ($orden->estado === 'pagado' || $orden->estado === 'pendiente'): ?>
                                         <button class="boton eliminar-entrada"
                                             data-id="<?php echo $orden->id_orden; ?>"
-                                            data-nombre="Orden <?php echo $orden->numero_orden ?? '#' . $orden->id_orden; ?>"
+                                            data-nombre="orden <?php echo s($orden->numero_orden ?? '#' . $orden->id_orden); ?>"
                                             data-accion="cancelar"
                                             title="Cancelar orden">
                                             <i class="fa-solid fa-ban"></i> Cancelar
@@ -440,7 +440,8 @@
                     const nombre = button.dataset.nombre;
 
                     const confirmado = await confirmarAccionPersonalizada(
-                        `¿Confirma la cancelación de ${nombre}? Esta acción devolverá el stock.`
+                        `¿Cancelar la ${nombre}? Se cancelan sus entradas (las butacas quedan libres) y vuelve al stock lo que no se retiró. ` +
+                        'Esto NO devuelve el dinero: el reembolso se hace desde tu cuenta de Mercado Pago. No se puede deshacer.'
                     );
 
                     if (confirmado) {

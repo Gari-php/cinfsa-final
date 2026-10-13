@@ -167,8 +167,46 @@
                         <!-- DETALLES -->
                         <td class="producto-detalles">
                             <?php if ($detalle->tipo_producto === 'butacas'): ?>
-                                <div><strong>Butaca:</strong> <?php echo $detalle->info_butaca; ?></div>
-                                <div><strong>Función:</strong> <?php echo $detalle->fecha_funcion; ?></div>
+                                <div><strong>Butaca:</strong> <?php echo s($detalle->info_butaca); ?></div>
+                                <div><strong>Función:</strong> <?php echo s($detalle->fecha_funcion); ?></div>
+                                <?php
+                                $estadosEntrada = [1 => 'Activa', 2 => 'Usada', 0 => 'Expirada', -1 => 'Cancelada'];
+                                $estadoEntrada = $detalle->id_entrada !== null ? (int)$detalle->estado_entrada : -1;
+                                ?>
+                                <div><strong>Entrada:</strong>
+                                    <?php echo $detalle->id_entrada !== null ? '#' . (int)$detalle->id_entrada . ' · ' : ''; ?>
+                                    <?php echo $estadosEntrada[$estadoEntrada] ?? 'Sin entrada'; ?>
+                                </div>
+                                <?php if ($orden->estado === 'pagado' && $estadoEntrada === 1): ?>
+                                    <!-- Devolución de una entrada web: solo el administrador; el dinero vuelve por Mercado Pago -->
+                                    <button type="button" class="btn-cancelar-entrada-web"
+                                        data-id-detalle="<?php echo (int)$detalle->id_detalle; ?>"
+                                        data-descripcion="<?php echo s('#' . $detalle->id_entrada . ' — ' . $detalle->producto_nombre . ', ' . $detalle->info_butaca); ?>"
+                                        data-monto="<?php echo s(number_format($detalle->precio_unitario, 0, ',', '.')); ?>"
+                                        data-pago="<?php echo s($orden->payment_id ?? ''); ?>">
+                                        <i class="fa-solid fa-ban"></i> Cancelar entrada
+                                    </button>
+                                <?php endif; ?>
+                            <?php elseif (in_array($detalle->tipo_producto, ['cantina', 'fichas'], true)): ?>
+                                <?php
+                                $entregado = (int)$detalle->entregado;
+                                $devuelto = (int)$detalle->cantidad_devuelta;
+                                $pendiente = max(0, (int)$detalle->cantidad - $entregado - $devuelto);
+                                ?>
+                                <div><strong>Retiró:</strong> <?php echo $entregado; ?>
+                                    <?php if ($devuelto > 0): ?> · <strong>Devuelto:</strong> <?php echo $devuelto; ?><?php endif; ?>
+                                    · <strong>Pendiente:</strong> <?php echo $pendiente; ?></div>
+                                <?php if ($orden->estado === 'pagado' && $pendiente > 0): ?>
+                                    <!-- Devolución de lo que todavía no se retiró: solo el administrador; el dinero vuelve por Mercado Pago -->
+                                    <button type="button" class="btn-devolver-producto-web"
+                                        data-id-detalle="<?php echo (int)$detalle->id_detalle; ?>"
+                                        data-nombre="<?php echo s($detalle->producto_nombre ?? $detalle->nombre_producto); ?>"
+                                        data-pendiente="<?php echo $pendiente; ?>"
+                                        data-precio="<?php echo (float)$detalle->precio_unitario; ?>"
+                                        data-pago="<?php echo s($orden->payment_id ?? ''); ?>">
+                                        <i class="fa-solid fa-rotate-left"></i> Devolver
+                                    </button>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <span style="color: #a0aec0;">-</span>
                             <?php endif; ?>
@@ -205,6 +243,101 @@
     </div>
 
     <script>
+        // Cancelar una entrada de la compra: pide confirmación aclarando que el dinero no vuelve solo
+        document.addEventListener('click', (e) => {
+            const boton = e.target.closest('.btn-cancelar-entrada-web');
+            if (!boton) return;
+
+            const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const pago = boton.dataset.pago ? ` (pago N° ${esc(boton.dataset.pago)})` : '';
+
+            window.confirmarAccionModal({
+                id: boton.dataset.idDetalle,
+                nombre: esc(boton.dataset.descripcion),
+                mensajeConfirmacion: '¿Cancelar la entrada {nombre}? La entrada deja de servir y la butaca queda libre.<br><br>'
+                    + `<strong>Esto NO devuelve el dinero:</strong> hacé el reembolso de $${esc(boton.dataset.monto)} `
+                    + `desde tu cuenta de Mercado Pago${pago}. No se puede deshacer.`,
+                url: '/administrador/movimientos-web/cancelar-entrada',
+                dataKey: 'id_detalle',
+                mensajeError: 'No se pudo cancelar la entrada'
+            });
+        });
+
+        // Devolver productos o fichas que el cliente todavía no retiró: se elige cuántos
+        document.addEventListener('click', (e) => {
+            const boton = e.target.closest('.btn-devolver-producto-web');
+            if (!boton) return;
+
+            const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const pendiente = Number(boton.dataset.pendiente);
+            const precio = Number(boton.dataset.precio);
+            const plata = (n) => '$' + Math.round(n).toLocaleString('es-AR');
+            const pago = boton.dataset.pago ? ` (pago N° ${esc(boton.dataset.pago)})` : '';
+
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-alertas-overlay';
+            overlay.id = 'modal-devolver-producto';
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
+                <div class="alerta-modal confirmacion" role="dialog" aria-modal="true">
+                    <div class="alerta-modal-content confirmacion-content">
+                        <div class="alerta-modal-icon" style="color:#ed850f"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div class="alerta-modal-message">
+                            Devolver <strong>${esc(boton.dataset.nombre)}</strong> que el cliente todavía no retiró
+                            (pendientes: ${pendiente}).
+                            <div class="devolver-cantidad">
+                                <label for="devolver-cantidad">Cantidad a devolver</label>
+                                <input type="number" id="devolver-cantidad" min="1" max="${pendiente}" step="1" value="${pendiente}">
+                            </div>
+                            Vuelven al stock y ya no se pueden retirar.<br><br>
+                            <strong>Esto NO devuelve el dinero:</strong> hacé el reembolso de
+                            <strong id="devolver-monto">${plata(pendiente * precio)}</strong>
+                            desde tu cuenta de Mercado Pago${pago}. No se puede deshacer.
+                        </div>
+                        <div class="confirmacion-botones">
+                            <button type="button" class="boton-modal cancelar" data-accion="cancelar"><i class="fa-solid fa-times"></i> Cancelar</button>
+                            <button type="button" class="boton-modal confirmar" data-accion="confirmar"><i class="fa-solid fa-check"></i> Devolver</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+
+            const campo = overlay.querySelector('#devolver-cantidad');
+            campo.addEventListener('input', () => {
+                const n = Math.min(pendiente, Math.max(0, Math.floor(Number(campo.value) || 0)));
+                overlay.querySelector('#devolver-monto').textContent = plata(n * precio);
+            });
+
+            overlay.addEventListener('click', async (ev) => {
+                const accion = ev.target.closest('[data-accion]')?.dataset.accion;
+                if (ev.target === overlay || accion === 'cancelar') {
+                    overlay.remove();
+                    return;
+                }
+                if (accion !== 'confirmar') return;
+
+                const cantidad = Number(campo.value);
+                if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > pendiente) {
+                    campo.focus();
+                    return;
+                }
+                overlay.remove();
+
+                try {
+                    const respuesta = await fetch('/administrador/movimientos-web/devolver-producto', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_detalle: boton.dataset.idDetalle, cantidad })
+                    });
+                    const datos = await respuesta.json();
+                    window.mostrarAlerta(datos.mensaje || 'No se pudo devolver', datos.ok ? 'exito' : 'error');
+                    if (datos.ok) setTimeout(() => location.reload(), 2500);
+                } catch (error) {
+                    window.mostrarAlerta('No se pudo devolver el producto', 'error');
+                }
+            });
+        });
+
         function copiarTexto(texto) {
             navigator.clipboard.writeText(texto).then(() => {
                 alert('Texto copiado al portapapeles');
@@ -405,6 +538,57 @@
 
         .producto-detalles div {
             margin: 3px 0;
+        }
+
+        .btn-cancelar-entrada-web {
+            margin-top: 8px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #dc2626;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancelar-entrada-web:hover {
+            background: #b91c1c;
+        }
+
+        .btn-devolver-producto-web {
+            margin-top: 8px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #ed850f;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-devolver-producto-web:hover {
+            background: #c96d08;
+        }
+
+        .devolver-cantidad {
+            margin: 14px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .devolver-cantidad input {
+            width: 80px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #4a5568;
+            background: #1a202c;
+            color: #fff;
+            font-size: 15px;
+            text-align: center;
         }
 
         .text-center {

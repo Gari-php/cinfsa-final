@@ -10,6 +10,11 @@ use Middlewares\ValidarModulo;
 
 class VentaFuncionesController
 {
+    // Una entrada comprada por la web no se devuelve en boletería: se cobró por Mercado Pago
+    const MENSAJE_ENTRADA_WEB = 'Esta entrada se compró por la web: la devolución la hace el administrador desde Ventas web '
+        . 'y el reembolso vuelve por Mercado Pago. Pedile al cliente que envíe un reclamo desde Soporte con su número de orden, '
+        . 'o avisale al administrador.';
+
 
     private static function verificarPermisos()
     {
@@ -823,6 +828,7 @@ class VentaFuncionesController
                             e.id_entrada,
                             e.estado,
                             te.precio_entrada,
+                            df.id_detalle AS id_detalle_boleteria,
                             df.precio_venta,
                             te.tipo_entrada_desc,
                             p.titulo_pelicula,
@@ -849,6 +855,12 @@ class VentaFuncionesController
 
             if ($entrada['estado'] != 1) {
                 throw new \Exception('Solo se pueden devolver entradas activas');
+            }
+
+            // Una entrada web se cobró por Mercado Pago, no en una caja: devolverla acá registraría
+            // un egreso por plata que esta caja nunca recibió
+            if ($entrada['id_detalle_boleteria'] === null) {
+                throw new \Exception(self::MENSAJE_ENTRADA_WEB);
             }
 
             // 2. Cancelar la entrada primero, y solo si sigue activa: si dos devoluciones de la
@@ -966,7 +978,8 @@ class VentaFuncionesController
                 f.fecha_hora,
                 cf.rela_tipos_de_pagos,
                 tp.descripcion_tipo_pago as forma_pago_desc,
-                cf.numero_comprobante
+                cf.numero_comprobante,
+                df.id_detalle AS id_detalle_boleteria
               FROM entradas e
               INNER JOIN tipo_entradas te ON e.rela_tipo_entrada = te.id_tipo_entrada
               INNER JOIN funciones f ON e.rela_funcion = f.id_funcion
@@ -985,6 +998,11 @@ class VentaFuncionesController
         }
 
         $entrada = $res->fetch_assoc();
+
+        if ($entrada['id_detalle_boleteria'] === null) {
+            echo json_encode(['ok' => false, 'es_web' => true, 'mensaje' => self::MENSAJE_ENTRADA_WEB]);
+            return;
+        }
 
         echo json_encode([
             'ok'           => true,

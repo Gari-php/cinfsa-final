@@ -645,9 +645,9 @@ foreach ($perfil as $perfiles) {
                 timeStyle: 'short'
             });
             const productos = p.productos.map(x => `
-                <li>${escaparHtml(x.nombre)} — compró ${x.comprado} · ${x.quedan === 0
+                <li>${escaparHtml(x.nombre)} — compró ${x.comprado} · ${x.quedan === 0 && !x.devuelto
                     ? '<span class="pedido-retirado">✓ retirado</span>'
-                    : `retiró ${x.entregado} · <strong>quedan ${x.quedan}</strong>`}</li>`).join('');
+                    : `retiró ${x.entregado}${x.devuelto > 0 ? ` · devuelto ${x.devuelto}` : ''} · <strong>quedan ${x.quedan}</strong>`}</li>`).join('');
 
             const idPanel = `qr-pedido-${p.id_orden}`;
             const botonQR = p.qr ? `
