@@ -54,40 +54,52 @@ class Usuario extends ActiveRecord
         $this->foto_perfil = $args['foto_perfil'] ?? null;
     }
 
+    /**
+     * Reglas del nombre de usuario (registro, perfil y edición del admin). Sin "@": así un
+     * nombre de usuario nunca puede ser igual al email de otra cuenta, y el login no se confunde.
+     */
+    public static function erroresNombreUsuario(string $nombre): array
+    {
+        if ($nombre === '') {
+            return ['El nombre de usuario es obligatorio'];
+        }
+
+        $errores = [];
+
+        if (strlen($nombre) < 3) {
+            $errores[] = 'El nombre de usuario debe tener al menos 3 caracteres';
+        }
+
+        if (strlen($nombre) > 20) {
+            $errores[] = 'El nombre de usuario no puede tener más de 20 caracteres';
+        }
+
+        // Solo letras, números, puntos, guiones y guiones bajos
+        if (!preg_match('/^[a-zA-Z0-9_.-]+$/', $nombre)) {
+            $errores[] = 'El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos';
+        }
+
+        // No puede empezar con número
+        if (preg_match('/^[0-9]/', $nombre)) {
+            $errores[] = 'El nombre de usuario no puede empezar con un número';
+        }
+
+        // Verificar palabras prohibidas
+        $palabras_prohibidas = ['admin', 'administrator', 'root', 'system', 'null', 'undefined'];
+        if (in_array(strtolower($nombre), $palabras_prohibidas)) {
+            $errores[] = 'El nombre de usuario no está permitido';
+        }
+
+        return $errores;
+    }
+
     public function validar()
     {
         $errores = [];
 
         // Validar nombre de usuario
-        if (!$this->nombre_usuario || trim($this->nombre_usuario) === '') {
-            $errores[] = 'El nombre de usuario es obligatorio';
-        } else {
-            $this->nombre_usuario = trim($this->nombre_usuario);
-
-            if (strlen($this->nombre_usuario) < 3) {
-                $errores[] = 'El nombre de usuario debe tener al menos 3 caracteres';
-            }
-
-            if (strlen($this->nombre_usuario) > 20) {
-                $errores[] = 'El nombre de usuario no puede tener más de 20 caracteres';
-            }
-
-            // Solo letras, números, guiones y guiones bajos
-            if (!preg_match('/^[a-zA-Z0-9_.-]+$/', $this->nombre_usuario)) {
-                $errores[] = 'El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos';
-            }
-
-            // No puede empezar con número
-            if (preg_match('/^[0-9]/', $this->nombre_usuario)) {
-                $errores[] = 'El nombre de usuario no puede empezar con un número';
-            }
-
-            // Verificar palabras prohibidas
-            $palabras_prohibidas = ['admin', 'administrator', 'root', 'system', 'null', 'undefined'];
-            if (in_array(strtolower($this->nombre_usuario), $palabras_prohibidas)) {
-                $errores[] = 'El nombre de usuario no está permitido';
-            }
-        }
+        $this->nombre_usuario = trim($this->nombre_usuario ?? '');
+        $errores = array_merge($errores, self::erroresNombreUsuario($this->nombre_usuario));
 
         // Validar email
         if (!$this->email || trim($this->email) === '') {
@@ -246,15 +258,17 @@ class Usuario extends ActiveRecord
         ];
     }
 
+    /**
+     * Cuenta para el login: si lo escrito tiene "@" se busca solo por email; si no, solo por
+     * nombre de usuario. Así nunca coinciden dos cuentas distintas para lo mismo.
+     */
     public static function buscarEmailoNombre($input)
     {
-        $input = self::$db->escape_string($input);
-
-        $query = "SELECT * FROM " . static::$tabla . "
-                WHERE email = '{$input}' OR nombre_usuario = '{$input}'
-                LIMIT 1";
-
-        $resultado = self::$db->query($query);
+        $columna = str_contains((string)$input, '@') ? 'email' : 'nombre_usuario';
+        $stmt = self::$db->prepare("SELECT * FROM " . static::$tabla . " WHERE {$columna} = ? LIMIT 1");
+        $stmt->bind_param('s', $input);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
 
         if ($resultado && $resultado->num_rows) {
             $datos = $resultado->fetch_assoc();

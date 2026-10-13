@@ -747,8 +747,14 @@ class ClienteController
                 throw new \Exception('Todos los campos son obligatorios');
             }
 
-            if (strlen($nombre_usuario) < 3) {
-                throw new \Exception('El nombre de usuario debe tener al menos 3 caracteres');
+            // Si cambia el nombre de usuario, valen las mismas reglas que al registrarse (sin "@":
+            // nadie puede ponerse el email de otro como usuario). Uno viejo que no cambia no se toca.
+            $usuarioActual = Usuario::find($id_usuario);
+            if ($usuarioActual && $nombre_usuario !== $usuarioActual->nombre_usuario) {
+                $erroresUsuario = Usuario::erroresNombreUsuario($nombre_usuario);
+                if ($erroresUsuario) {
+                    throw new \Exception($erroresUsuario[0]);
+                }
             }
 
             if (strlen($nombre_persona) < 2) {
