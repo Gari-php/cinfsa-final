@@ -57,6 +57,7 @@ $router->post('/administrador/entradas/expirar-automaticamente', [EntradaControl
 // rutas de notificaciones
 $router->get('/api/notificaciones/obtener', [NotificacionesController::class, 'obtener']);
 $router->get('/api/notificaciones/contar', [NotificacionesController::class, 'contarNoLeidas']);
+$router->post('/api/notificaciones/pusher-auth', [NotificacionesController::class, 'autorizarPusher']);
 $router->post('/api/notificaciones/marcar-leida', [NotificacionesController::class, 'marcarLeida']);
 $router->post('/api/notificaciones/marcar-todas-leidas', [NotificacionesController::class, 'marcarTodasLeidas']);
 $router->post('/api/notificaciones/verificar-funciones-vencidas', [NotificacionesController::class, 'verificarFuncionesVencidas']);

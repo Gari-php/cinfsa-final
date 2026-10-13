@@ -40,6 +40,8 @@
             perfil: <?= $_SESSION['perfil'] ?? 'null' ?>
         };
         window.CSRF_TOKEN = "<?php echo csrf_token(); ?>";
+        // Pusher (notificaciones en vivo): clave pública y cluster del .env; sin clave no se conecta
+        window.PUSHER_CONFIG = <?= json_encode(['key' => env('PUSHER_KEY', ''), 'cluster' => env('PUSHER_CLUSTER', 'us2')], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     </script>
     <script src="/assets/js/csrf.js"></script>
     <script src="/assets/js/cerrar-sesion.js" defer></script>

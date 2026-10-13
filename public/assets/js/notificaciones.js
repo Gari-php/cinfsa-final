@@ -39,27 +39,24 @@ class Notificaciones {
     }
 
     setupPusher() {
-        if (!window.USUARIO_DATOS?.id || !window.Pusher) return;
+        if (!window.USUARIO_DATOS?.id || !window.Pusher || !window.PUSHER_CONFIG?.key) return;
 
         try {
-            this.pusher = new Pusher('195cfd5239428846d64e', {
-                cluster: 'us2',
-                encrypted: true
+            // Canal privado: para escucharlo, Pusher pide permiso a nuestro servidor,
+            // que solo autoriza el canal del usuario logueado
+            this.pusher = new Pusher(window.PUSHER_CONFIG.key, {
+                cluster: window.PUSHER_CONFIG.cluster,
+                forceTLS: true,
+                channelAuthorization: {
+                    endpoint: '/api/notificaciones/pusher-auth',
+                    transport: 'ajax',
+                    headers: { 'X-CSRF-Token': window.CSRF_TOKEN }
+                }
             });
 
-            // Canal personal del usuario
-            this.canal = this.pusher.subscribe(`usuario-${window.USUARIO_DATOS.id}`);
-            this.canal.bind('nueva-notificacion', (data) => {
-                this.handleNewNotification(data);
-            });
-
-            // Canal de admins si es administrador
-            if (window.USUARIO_DATOS.perfil === 3) {
-                const canalAdmin = this.pusher.subscribe('admin-notifications');
-                canalAdmin.bind('nueva-notificacion', (data) => {
-                    this.handleNewNotification(data);
-                });
-            }
+            // Por Pusher llega solo el id: el contenido se pide al servidor (exige la sesión)
+            this.canal = this.pusher.subscribe(`private-usuario-${window.USUARIO_DATOS.id}`);
+            this.canal.bind('nueva-notificacion', (aviso) => this.recibirAviso(aviso.id));
 
             console.log('✅ Notificaciones en tiempo real activas');
         } catch (error) {
@@ -169,6 +166,22 @@ class Notificaciones {
         return escapado.replace(/\/uploads\/\S+/g, (ruta) => {
             return `<a href="${ruta}" target="_blank" rel="noopener" class="notification-adjunto" onclick="event.stopPropagation()">📎 Ver adjunto</a>`;
         });
+    }
+
+    // Aviso en vivo de Pusher (solo trae el id): busca la notificación en el servidor y la muestra
+    async recibirAviso(id) {
+        try {
+            const response = await fetch('/api/notificaciones/obtener?limite=10');
+            const data = await response.json();
+            const notificacion = (data.notificaciones || []).find((n) => Number(n.id_notificacion) === Number(id));
+            if (notificacion) {
+                this.handleNewNotification(notificacion);
+            } else {
+                this.updateNotificationCount();
+            }
+        } catch (error) {
+            console.error('Error al traer la notificación nueva:', error);
+        }
     }
 
     handleNewNotification(data) {

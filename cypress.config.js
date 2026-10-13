@@ -5,6 +5,7 @@ const fs = require("fs");
 
 // Donde el servidor de pruebas guarda los mails en vez de enviarlos (ver tests/servidor_pruebas.php)
 const ARCHIVO_MAILS = path.join(__dirname, 'cypress', 'downloads', 'mails_enviados.jsonl');
+const ARCHIVO_PUSHER = path.join(__dirname, 'cypress', 'downloads', 'pusher_enviados.jsonl');
 
 // Los tests corren contra la base de prueba (cinfsa1_test), nunca contra la real.
 // Servidor: `npm run test:servidor` (usa tests/servidor_pruebas.php).
@@ -18,12 +19,19 @@ module.exports = defineConfig({
           const php = process.env.PHP_BIN || 'php';
           const script = path.join(__dirname, 'tests', 'preparar_base_pruebas.php');
           fs.rmSync(ARCHIVO_MAILS, { force: true });
+          fs.rmSync(ARCHIVO_PUSHER, { force: true });
           return execFileSync(php, [script], { encoding: 'utf8' });
         },
         // Mails que el sistema "mandó" durante el test (el servidor de pruebas no envía: los guarda)
         mailsEnviados() {
           if (!fs.existsSync(ARCHIVO_MAILS)) return [];
           return fs.readFileSync(ARCHIVO_MAILS, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+        },
+        // Avisos en vivo que el sistema "mandó" por Pusher durante el test (texto crudo del archivo y lista)
+        pusherEnviados() {
+          if (!fs.existsSync(ARCHIVO_PUSHER)) return { crudo: '', avisos: [] };
+          const crudo = fs.readFileSync(ARCHIVO_PUSHER, 'utf8');
+          return { crudo, avisos: crudo.split('\n').filter(Boolean).map((l) => JSON.parse(l)) };
         },
         // Atrasa N minutos el último mail de recuperación de contraseña de un usuario
         envejecerRecuperacion({ idUsuario, minutos }) {

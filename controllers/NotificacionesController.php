@@ -13,6 +13,38 @@ class NotificacionesController {
         return isset($_SESSION['login']) && isset($_SESSION['id_usuario']);
     }
 
+    /**
+     * Pusher pide permiso acá cuando el navegador quiere escuchar un canal privado.
+     * Solo se autoriza el canal del propio usuario logueado; cualquier otro, 403.
+     */
+    public static function autorizarPusher() {
+        header('Content-Type: application/json');
+
+        if (!self::verificarSesion()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
+            return;
+        }
+
+        $canal = $_POST['channel_name'] ?? '';
+        $socketId = $_POST['socket_id'] ?? '';
+        $canalPropio = Notificaciones::canalDeUsuario((int)$_SESSION['id_usuario']);
+
+        if (!hash_equals($canalPropio, (string)$canal) || !preg_match('/^\d+\.\d+$/', (string)$socketId)) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'mensaje' => 'Canal no permitido']);
+            return;
+        }
+
+        try {
+            echo Notificaciones::autorizarCanal($canal, $socketId);
+        } catch (\Exception $e) {
+            error_log('Error al autorizar canal de Pusher: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'mensaje' => 'No se pudo autorizar']);
+        }
+    }
+
     public static function obtener() {
         header('Content-Type: application/json');
         

@@ -22,6 +22,10 @@ putenv("DB_NAME=$baseDePrueba");
 $_ENV['MAIL_DRIVER'] = 'prueba';
 $_ENV['MAIL_ARCHIVO'] = __DIR__ . '/../cypress/downloads/mails_enviados.jsonl';
 
+// Ni Pusher real: los avisos en vivo también van a un archivo (tarea pusherEnviados)
+$_ENV['PUSHER_DRIVER'] = 'prueba';
+$_ENV['PUSHER_ARCHIVO'] = __DIR__ . '/../cypress/downloads/pusher_enviados.jsonl';
+
 // Archivos estáticos de /public: los sirve el propio servidor
 $ruta = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 if ($ruta !== '/' && is_file(__DIR__ . '/../public' . $ruta)) {

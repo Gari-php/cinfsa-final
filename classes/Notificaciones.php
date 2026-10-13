@@ -97,23 +97,47 @@ class Notificaciones
         }
     }
 
+    // Canal privado de cada usuario: solo lo puede escuchar quien autorice /api/notificaciones/pusher-auth
+    public static function canalDeUsuario(int $usuario_id): string
+    {
+        return "private-usuario-{$usuario_id}";
+    }
+
+    /**
+     * Avisa en tiempo real que hay una notificación nueva. Por Pusher viaja solo el id
+     * (nunca título ni descripción, que pueden tener datos de clientes): el navegador del
+     * usuario pide el contenido a /api/notificaciones/obtener, que exige su sesión.
+     */
     private static function enviarTiempoReal($usuario_id, $data)
     {
+        $canal = self::canalDeUsuario((int)$usuario_id);
+        $aviso = ['id' => (int)$data['id']];
+
+        // Servidor de pruebas: no se usa Pusher, el aviso se guarda en un archivo
+        if (env('PUSHER_DRIVER', '') === 'prueba') {
+            $linea = json_encode(['canal' => $canal, 'evento' => 'nueva-notificacion', 'datos' => $aviso]);
+            file_put_contents(env('PUSHER_ARCHIVO', sys_get_temp_dir() . '/cinfsa_pusher_prueba.jsonl'), $linea . "\n", FILE_APPEND | LOCK_EX);
+            return;
+        }
+
+        if (env('PUSHER_KEY', '') === '') {
+            return; // Pusher sin configurar: la campana se actualiza igual con su consulta periódica
+        }
+
         try {
-            $pusher = self::getPusher();
-
-            // Canal específico para el usuario
-            $canal = "usuario-{$usuario_id}";
-
-            $pusher->trigger($canal, 'nueva-notificacion', $data);
-
-            // También enviar a canal general de administradores si es admin
-            if (self::esAdministrador($usuario_id)) {
-                $pusher->trigger('admin-notifications', 'nueva-notificacion', $data);
-            }
+            self::getPusher()->trigger($canal, 'nueva-notificacion', $aviso);
         } catch (\Exception $e) {
             error_log("Error al enviar notificación en tiempo real: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Firma de Pusher para que un navegador escuche su canal privado. Solo se llama después de
+     * comprobar que el canal es el del usuario logueado (NotificacionesController::autorizarPusher).
+     */
+    public static function autorizarCanal(string $canal, string $socketId): string
+    {
+        return self::getPusher()->authorizeChannel($canal, $socketId);
     }
 
 
@@ -268,24 +292,6 @@ class Notificaciones
             );
         }
     }
-
-    private static function esAdministrador($usuario_id)
-    {
-        try {
-            $db = self::getDB();
-            $query = "SELECT rela_perfil FROM usuarios WHERE id_usuario = ?"; // CORREGIDO
-            $stmt = $db->prepare($query);
-            $stmt->execute([$usuario_id]);
-            $resultado = $stmt->get_result();
-            $usuario = $resultado->fetch_assoc();
-
-            return $usuario && $usuario['rela_perfil'] == 3; // CORREGIDO
-        } catch (\Exception $e) {
-            error_log("Error al verificar administrador: " . $e->getMessage());
-            return false;
-        }
-    }
-
 
     private static function obtenerAdministradores()
     {
