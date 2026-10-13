@@ -5,6 +5,9 @@ namespace Models;
 class Usuario extends ActiveRecord
 {
 
+    // Proveedores de email aceptados para registrarse y recuperar la contraseña
+    const DOMINIOS_PERMITIDOS = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
+
     protected static $tabla = 'usuarios';
 
     protected static $columnasDB = [
@@ -101,7 +104,7 @@ class Usuario extends ActiveRecord
                 }
 
                 // Validar dominios permitidos (opcional, puedes comentar si no quieres restricción)
-                $dominios_permitidos = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
+                $dominios_permitidos = self::DOMINIOS_PERMITIDOS;
                 $dominio = substr(strrchr($this->email, "@"), 1);
 
                 if (!in_array($dominio, $dominios_permitidos)) {

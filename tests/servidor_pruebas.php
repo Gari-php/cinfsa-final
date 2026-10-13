@@ -18,6 +18,10 @@ if (!preg_match('/_test$/', $baseDePrueba)) {
 $_ENV['DB_NAME'] = $baseDePrueba;
 putenv("DB_NAME=$baseDePrueba");
 
+// Los tests nunca mandan mails reales: se guardan en un archivo (tarea mailsEnviados de Cypress)
+$_ENV['MAIL_DRIVER'] = 'prueba';
+$_ENV['MAIL_ARCHIVO'] = __DIR__ . '/../cypress/downloads/mails_enviados.jsonl';
+
 // Archivos estáticos de /public: los sirve el propio servidor
 $ruta = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 if ($ruta !== '/' && is_file(__DIR__ . '/../public' . $ruta)) {

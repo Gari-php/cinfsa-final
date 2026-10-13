@@ -164,7 +164,7 @@ class RegistroController {
         }
         
         // Opcional: validar dominios específicos
-        $dominiosPermitidos = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
+        $dominiosPermitidos = Usuario::DOMINIOS_PERMITIDOS;
         $dominio = substr(strrchr($email, "@"), 1);
         
         return in_array($dominio, $dominiosPermitidos) ? $email : false;

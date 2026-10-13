@@ -1,6 +1,10 @@
 const { defineConfig } = require("cypress");
 const { execFileSync } = require("child_process");
 const path = require("path");
+const fs = require("fs");
+
+// Donde el servidor de pruebas guarda los mails en vez de enviarlos (ver tests/servidor_pruebas.php)
+const ARCHIVO_MAILS = path.join(__dirname, 'cypress', 'downloads', 'mails_enviados.jsonl');
 
 // Los tests corren contra la base de prueba (cinfsa1_test), nunca contra la real.
 // Servidor: `npm run test:servidor` (usa tests/servidor_pruebas.php).
@@ -9,11 +13,23 @@ module.exports = defineConfig({
     baseUrl: 'http://localhost:3000',
     setupNodeEvents(on, config) {
       on('task', {
-        // Recrea cinfsa1_test desde cero (estructura + datos de prueba)
+        // Recrea cinfsa1_test desde cero (estructura + datos de prueba) y vacía los mails de prueba
         prepararBase() {
           const php = process.env.PHP_BIN || 'php';
           const script = path.join(__dirname, 'tests', 'preparar_base_pruebas.php');
+          fs.rmSync(ARCHIVO_MAILS, { force: true });
           return execFileSync(php, [script], { encoding: 'utf8' });
+        },
+        // Mails que el sistema "mandó" durante el test (el servidor de pruebas no envía: los guarda)
+        mailsEnviados() {
+          if (!fs.existsSync(ARCHIVO_MAILS)) return [];
+          return fs.readFileSync(ARCHIVO_MAILS, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+        },
+        // Atrasa N minutos el último mail de recuperación de contraseña de un usuario
+        envejecerRecuperacion({ idUsuario, minutos }) {
+          const php = process.env.PHP_BIN || 'php';
+          const script = path.join(__dirname, 'tests', 'envejecer_recuperacion_prueba.php');
+          return Number(execFileSync(php, [script, String(idUsuario), String(minutos)], { encoding: 'utf8' }));
         },
         // SELECT de solo lectura sobre la base de prueba; devuelve un array de filas
         consultarBase(sql) {

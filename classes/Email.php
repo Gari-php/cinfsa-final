@@ -72,7 +72,11 @@ class Email
         $proveedor = strtolower(env('MAIL_DRIVER', 'smtp'));
 
         try {
-            return $proveedor === 'sendgrid' ? self::enviarSendGrid($mensaje) : self::enviarSmtp($mensaje);
+            return match ($proveedor) {
+                'sendgrid' => self::enviarSendGrid($mensaje),
+                'prueba' => self::guardarMailDePrueba($mensaje),
+                default => self::enviarSmtp($mensaje),
+            };
         } catch (\Throwable $e) {
             error_log("Email ({$proveedor}): no se pudo enviar \"{$mensaje['asunto']}\" a {$mensaje['para'][0]}: " . $e->getMessage());
             return false;
@@ -138,6 +142,27 @@ class Email
         }
         error_log("Email (sendgrid): SendGrid respondió {$codigo} a \"{$m['asunto']}\": " . $respuesta->body());
         return false;
+    }
+
+    /**
+     * MAIL_DRIVER=prueba (lo usa el servidor de pruebas): no envía nada, agrega el mail como una
+     * línea JSON al archivo MAIL_ARCHIVO, para que los tests vean qué se habría mandado.
+     */
+    private static function guardarMailDePrueba(array $m): bool
+    {
+        $archivo = env('MAIL_ARCHIVO', sys_get_temp_dir() . '/cinfsa_mails_prueba.jsonl');
+        if (!is_dir(dirname($archivo))) {
+            mkdir(dirname($archivo), 0777, true);
+        }
+        $linea = json_encode([
+            'fecha' => date('Y-m-d H:i:s'),
+            'para' => $m['para'][0],
+            'asunto' => $m['asunto'],
+            'texto' => self::textoPlano($m['html']),
+            'html' => $m['html'],
+            'adjuntos' => count($m['adjuntos']) + count($m['incrustadas']),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return file_put_contents($archivo, $linea . "\n", FILE_APPEND | LOCK_EX) !== false;
     }
 
     // Versión en texto del mail, para los clientes de correo que no muestran HTML
