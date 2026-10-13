@@ -767,6 +767,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // MANEJO MEJORADO DE RESPUESTAS CON ALERTAS MODALES
             if (respuesta.ok === true || respuesta.ok === "true") {
                 mostrarAlerta(respuesta.mensaje || 'Operación exitosa', 'exito', contenedor);
+                // data-limpiar="true": el formulario queda en blanco para cargar otro (dispara el evento "reset")
+                if (formulario.dataset.limpiar === 'true') formulario.reset();
                 const destino = respuesta.redirigir || redirigirHTML;
                 if (destino) setTimeout(() => window.location.href = destino, 2000);
 

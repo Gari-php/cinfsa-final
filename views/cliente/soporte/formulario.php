@@ -14,6 +14,7 @@
             action="/soporte/enviar"
             enctype="multipart/form-data"
             data-fetch="true"
+            data-limpiar="true"
             data-alerta=".soporte-container"
             class="soporte-form">
 
@@ -497,6 +498,14 @@
                 } else {
                     fileName.textContent = 'Seleccionar archivo';
                 }
+            });
+        }
+
+        // Después de enviar el reclamo el formulario se vacía (data-limpiar): también el nombre del archivo
+        const formSoporte = document.getElementById('formSoporte');
+        if (formSoporte && fileName) {
+            formSoporte.addEventListener('reset', () => {
+                fileName.textContent = 'Seleccionar archivo';
             });
         }
     });
