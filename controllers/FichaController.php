@@ -114,7 +114,7 @@ class FichaController {
         $id = $datos['id_fichas'] ?? null;
         $precio = $datos['precio_ficha'] ?? '';
         $cantidad = $datos['cantidad_ficha'] ?? '';
-        $maquina = $datos['rela_maquinas'] ?? '';
+        $estado = (int)($datos['estado'] ?? 1) === 0 ? 0 : 1;
 
         $errores = [];
         if (!$id || !is_numeric($id)) $errores[] = 'ID inválido';
@@ -133,15 +133,21 @@ class FichaController {
             return;
         }
 
-        $datosAntes = ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha];
+        if ($estado === 0 && (int)$ficha->estado === 1 && ($maquinas = Ficha::maquinasActivas($id))) {
+            echo json_encode(['errores' => ['No podés desactivar la ficha: la usan máquinas activas (' . implode(', ', $maquinas) . ')']]);
+            return;
+        }
+
+        $datosAntes = ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha, 'estado' => self::nombreEstado($ficha->estado)];
 
         $ficha->precio_ficha = $precio;
         $ficha->cantidad_ficha = $cantidad;
+        $ficha->estado = $estado;
         $resultado = $ficha->actualizar();
 
         if ($resultado) {
             // Igual que en productos: si cambió el precio queda como "cambio de precio"
-            $datosDespues = ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha];
+            $datosDespues = ['precio' => (float)$ficha->precio_ficha, 'cantidad' => (int)$ficha->cantidad_ficha, 'estado' => self::nombreEstado($ficha->estado)];
             [$antes, $despues] = \Classes\Auditoria::cambios($datosAntes, $datosDespues, array_keys($datosAntes));
             if ($antes) {
                 $cambioPrecio = array_key_exists('precio', $despues);
@@ -152,6 +158,9 @@ class FichaController {
                     : "Modificó la ficha #{$ficha->id_fichas}";
                 if (array_key_exists('cantidad', $despues)) {
                     $descripcion .= " (cantidad: {$antes['cantidad']} → {$despues['cantidad']})";
+                }
+                if (array_key_exists('estado', $despues)) {
+                    $descripcion .= " (estado: {$antes['estado']} → {$despues['estado']})";
                 }
                 \Classes\Auditoria::registrar(
                     $cambioPrecio ? 'precio.ficha' : 'ficha.modificar',
@@ -171,6 +180,55 @@ class FichaController {
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al actualizar']);
         }
+    }
+
+    // Baja lógica: la ficha queda inactiva (se puede reactivar desde Editar)
+    public static function eliminar() {
+        if (!self::verificarAdmin()) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
+            return;
+        }
+
+        $datos = json_decode(file_get_contents('php://input'), true);
+        $id = $datos['id_fichas'] ?? null;
+
+        if (!$id || !is_numeric($id)) {
+            echo json_encode(['ok' => false, 'mensaje' => 'ID de ficha no válido']);
+            return;
+        }
+
+        $ficha = Ficha::find($id);
+
+        if (!$ficha) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Ficha no encontrada']);
+            return;
+        }
+
+        if ((int)$ficha->estado === 0) {
+            echo json_encode(['ok' => false, 'mensaje' => 'La ficha ya está inactiva']);
+            return;
+        }
+
+        if ($maquinas = Ficha::maquinasActivas($id)) {
+            echo json_encode(['ok' => false, 'mensaje' => 'La ficha la usan máquinas activas (' . implode(', ', $maquinas) . '): cambiales la ficha o dalas de baja antes']);
+            return;
+        }
+
+        if ($ficha->darDeBaja()) {
+            \Classes\Auditoria::registrar(
+                'ficha.baja',
+                "Dio de baja (desactivó) la ficha #{$ficha->id_fichas} de $" . number_format((float)$ficha->precio_ficha, 0, ',', '.'),
+                'fichas',
+                $ficha->id_fichas
+            );
+            echo json_encode(['ok' => true, 'mensaje' => 'Ficha dada de baja correctamente']);
+        } else {
+            echo json_encode(['ok' => false, 'mensaje' => 'Error al dar de baja la ficha']);
+        }
+    }
+
+    private static function nombreEstado($estado) {
+        return (int)$estado === 1 ? 'Activa' : 'Inactiva';
     }
 
     public static function buscar() {

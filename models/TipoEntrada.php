@@ -73,19 +73,14 @@ class TipoEntrada extends ActiveRecord{
     private function verificarDescripcionUnica() {
         $db = self::getDB();
         
-        if ($this->id_tipo_entrada) {
-            $query = "SELECT COUNT(*) as total FROM tipo_entradas 
-                    WHERE LOWER(tipo_entrada_desc) = LOWER('{$this->tipo_entrada_desc}') 
-                    AND id_tipo_entrada != '{$this->id_tipo_entrada}' 
-                    AND estado = 1";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM tipo_entradas 
-                    WHERE LOWER(tipo_entrada_desc) = LOWER('{$this->tipo_entrada_desc}') 
-                    AND estado = 1";
-        }
-        
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $query = "SELECT COUNT(*) as total FROM tipo_entradas
+                WHERE LOWER(tipo_entrada_desc) = LOWER(?)
+                AND id_tipo_entrada != ?
+                AND estado = 1";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->tipo_entrada_desc, (int)$this->id_tipo_entrada]);
+        $row = $stmt->get_result()->fetch_assoc();
         
         return $row['total'] > 0;
     }
@@ -110,9 +105,10 @@ class TipoEntrada extends ActiveRecord{
     }
     public function creartipoentrada() {
         $query = "INSERT INTO " . static::$tabla . " (tipo_entrada_desc, precio_entrada, estado) 
-                VALUES ('{$this->tipo_entrada_desc}', '{$this->precio_entrada}', '{$this->estado}')";
+                VALUES (?, ?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->tipo_entrada_desc, $this->precio_entrada, $this->estado]);
 
         return [
             'resultado' => $resultado,
@@ -144,7 +140,7 @@ class TipoEntrada extends ActiveRecord{
     }
 
     public function darDeBaja(){
-        $query = "UPDATE tipo_entradas SET estado = 0 WHERE id_tipo_entrada = " . self::$db->real_escape_string($this->id_tipo_entrada);
+        $query = "UPDATE tipo_entradas SET estado = 0 WHERE id_tipo_entrada = " . (int)$this->id_tipo_entrada;
         $resultado = self::$db->query($query);
         return $resultado;
     }

@@ -14,6 +14,14 @@
             <input type="text" name="nombre_sexo" id="nombre_sexo" value="<?= htmlspecialchars($sexo->nombre_sexo) ?>">
         </div>
 
+        <div class="campo">
+            <label for="estado">Estado</label>
+            <select name="estado" id="estado">
+                <option value="1" <?= $sexo->estado == 1 ? 'selected' : '' ?>>Activo</option>
+                <option value="0" <?= $sexo->estado == 0 ? 'selected' : '' ?>>Inactivo</option>
+            </select>
+        </div>
+
         <input type="submit" class="boton" value="Actualizar">
         <div class="contenedor-alertas"></div>
         <div class="acciones">

@@ -161,17 +161,13 @@ class Proveedor extends ActiveRecord
     {
         $db = self::getDB();
 
-        if ($this->id_proveedor) {
-            $query = "SELECT COUNT(*) as total FROM proveedores 
-                      WHERE rut = '{$this->rut}' 
-                      AND id_proveedor != '{$this->id_proveedor}'";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM proveedores 
-                      WHERE rut = '{$this->rut}'";
-        }
+        $query = "SELECT COUNT(*) as total FROM proveedores
+                  WHERE rut = ?
+                  AND id_proveedor != ?";
 
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->rut, (int)$this->id_proveedor]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }

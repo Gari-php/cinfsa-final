@@ -75,19 +75,14 @@ class Stock extends ActiveRecord {
         
         $db = self::getDB();
         
-        if ($this->id_stock_cantina) {
-            $query = "SELECT COUNT(*) as total FROM stock_cantina 
-                    WHERE rela_producto_cantina = '{$this->rela_producto_cantina}' 
-                    AND rela_cantina = '{$this->rela_cantina}' 
-                    AND id_stock_cantina != '{$this->id_stock_cantina}'";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM stock_cantina 
-                    WHERE rela_producto_cantina = '{$this->rela_producto_cantina}' 
-                    AND rela_cantina = '{$this->rela_cantina}'";
-        }
-        
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $query = "SELECT COUNT(*) as total FROM stock_cantina
+                WHERE rela_producto_cantina = ?
+                AND rela_cantina = ?
+                AND id_stock_cantina != ?";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->rela_producto_cantina, $this->rela_cantina, (int)$this->id_stock_cantina]);
+        $row = $stmt->get_result()->fetch_assoc();
         
         return $row['total'] > 0;
     }

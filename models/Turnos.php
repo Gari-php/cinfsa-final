@@ -135,9 +135,10 @@ class Turnos extends ActiveRecord{
 
     public function crearTurno() {
         $query = "INSERT INTO " . static::$tabla . " (turno_horario, estado) 
-                VALUES ('{$this->turno_horario}', '{$this->estado}')";
+                VALUES (?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->turno_horario, $this->estado]);
 
         return [
             'resultado' => $resultado,
@@ -156,7 +157,7 @@ class Turnos extends ActiveRecord{
         ]);
     }
     public function eliminarLogico(){
-        $query = "UPDATE turnos SET estado = 0 WHERE id_turnos = " . self::$db->real_escape_string($this->id_turnos);
+        $query = "UPDATE turnos SET estado = 0 WHERE id_turnos = " . (int)$this->id_turnos;
         $resultado = self::$db->query($query);
         return $resultado;
     }

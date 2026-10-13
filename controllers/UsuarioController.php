@@ -57,7 +57,7 @@ class UsuarioController
 
         $db = \Models\ActiveRecord::getDB();
         $perfiles = $db->query("SELECT * FROM perfiles")->fetch_all(MYSQLI_ASSOC);
-        $sexos = $db->query("SELECT * FROM sexo")->fetch_all(MYSQLI_ASSOC);
+        $sexos = $db->query("SELECT * FROM sexo WHERE estado = 1")->fetch_all(MYSQLI_ASSOC);
 
         $router->render('administrador/usuarios/crear', [
             'usuario' => $usuario,
@@ -206,7 +206,7 @@ class UsuarioController
 
         $db = \Models\ActiveRecord::getDB();
         $perfiles = $db->query("SELECT * FROM perfiles")->fetch_all(MYSQLI_ASSOC);
-        $sexos = $db->query("SELECT * FROM sexo")->fetch_all(MYSQLI_ASSOC);
+        $sexos = $db->query("SELECT * FROM sexo WHERE estado = 1 OR id_sexo = " . (int)($persona->rela_sexo ?? 0))->fetch_all(MYSQLI_ASSOC);
 
         $router->render('administrador/usuarios/editar', [
             'usuario' => $usuario,

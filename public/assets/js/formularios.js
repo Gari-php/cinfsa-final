@@ -1023,6 +1023,30 @@ document.body.addEventListener('click', function (e) {
             mensajeError: 'Error al dar de baja el perfil'
         });
     }
+    if (e.target.classList.contains('eliminar-sexo')) {
+        e.preventDefault();
+        confirmarAccionModal({
+            id: e.target.dataset.id,
+            nombre: e.target.dataset.nombre,
+            mensajeConfirmacion: '¿Deseas dar de baja {nombre}? Quedará inactivo y podrás reactivarlo desde Editar.',
+            url: '/administrador/sexo/eliminar',
+            dataKey: 'id_sexo',
+            mensajeExito: 'Dado de baja correctamente',
+            mensajeError: 'Error al dar de baja'
+        });
+    }
+    if (e.target.classList.contains('eliminar-ficha')) {
+        e.preventDefault();
+        confirmarAccionModal({
+            id: e.target.dataset.id,
+            nombre: e.target.dataset.nombre,
+            mensajeConfirmacion: '¿Deseas dar de baja la ficha de {nombre}? Quedará inactiva y podrás reactivarla desde Editar.',
+            url: '/administrador/fichas/eliminar',
+            dataKey: 'id_fichas',
+            mensajeExito: 'Ficha dada de baja correctamente',
+            mensajeError: 'Error al dar de baja la ficha'
+        });
+    }
     if (e.target.classList.contains('eliminar-proveedor')) {
         e.preventDefault();
         confirmarAccionModal({

@@ -295,18 +295,16 @@ class Funciones extends ActiveRecord
 
         $db = self::getDB();
 
-        $query = "SELECT COUNT(*) as total FROM funciones 
-            WHERE rela_salas = '{$this->rela_salas}' 
-            AND rela_turnos = '{$this->rela_turnos}'
-            AND fecha_hora = '{$this->fecha_hora}'
-            AND estado = 1";
+        $query = "SELECT COUNT(*) as total FROM funciones
+            WHERE rela_salas = ?
+            AND rela_turnos = ?
+            AND fecha_hora = ?
+            AND estado = 1
+            AND id_funcion != ?";
 
-        if ($this->id_funcion) {
-            $query .= " AND id_funcion != '{$this->id_funcion}'";
-        }
-
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->rela_salas, $this->rela_turnos, $this->fecha_hora, (int)$this->id_funcion]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }
@@ -319,29 +317,22 @@ class Funciones extends ActiveRecord
 
         $db = self::getDB();
 
-        if ($this->id_funcion) {
-            // Editando
-            $query = "SELECT COUNT(*) as total FROM funciones 
-                    WHERE rela_peliculas = '{$this->rela_peliculas}' 
-                    AND rela_salas = '{$this->rela_salas}' 
-                    AND rela_turnos = '{$this->rela_turnos}'
-                    AND fecha_hora = '{$this->fecha_hora}'
-                    AND fecha_finalizacion = '{$this->fecha_finalizacion}'
-                    AND id_funcion != '{$this->id_funcion}'
-                    AND estado = 1";
-        } else {
-            // Creando
-            $query = "SELECT COUNT(*) as total FROM funciones 
-                    WHERE rela_peliculas = '{$this->rela_peliculas}' 
-                    AND rela_salas = '{$this->rela_salas}' 
-                    AND rela_turnos = '{$this->rela_turnos}'
-                    AND fecha_hora = '{$this->fecha_hora}'
-                    AND fecha_finalizacion = '{$this->fecha_finalizacion}'
-                    AND estado = 1";
-        }
+        // Al editar se excluye la función actual (al crear el id es 0 y no excluye nada)
+        $query = "SELECT COUNT(*) as total FROM funciones
+                WHERE rela_peliculas = ?
+                AND rela_salas = ?
+                AND rela_turnos = ?
+                AND fecha_hora = ?
+                AND fecha_finalizacion = ?
+                AND id_funcion != ?
+                AND estado = 1";
 
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([
+            $this->rela_peliculas, $this->rela_salas, $this->rela_turnos,
+            $this->fecha_hora, $this->fecha_finalizacion, (int)$this->id_funcion
+        ]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }
@@ -353,27 +344,21 @@ class Funciones extends ActiveRecord
 
         $db = self::getDB();
 
-        if ($this->id_funcion) {
-            $query = "SELECT COUNT(*) as total FROM funciones 
-                    WHERE rela_salas = '{$this->rela_salas}' 
-                    AND rela_turnos = '{$this->rela_turnos}'
-                    AND id_funcion != '{$this->id_funcion}'
-                    AND estado = 1
-                    AND (
-                        (fecha_hora <= '{$this->fecha_finalizacion}' AND fecha_finalizacion >= '{$this->fecha_hora}')
-                    )";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM funciones 
-                    WHERE rela_salas = '{$this->rela_salas}' 
-                    AND rela_turnos = '{$this->rela_turnos}'
-                    AND estado = 1
-                    AND (
-                        (fecha_hora <= '{$this->fecha_finalizacion}' AND fecha_finalizacion >= '{$this->fecha_hora}')
-                    )";
-        }
+        $query = "SELECT COUNT(*) as total FROM funciones
+                WHERE rela_salas = ?
+                AND rela_turnos = ?
+                AND id_funcion != ?
+                AND estado = 1
+                AND (
+                    (fecha_hora <= ? AND fecha_finalizacion >= ?)
+                )";
 
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([
+            $this->rela_salas, $this->rela_turnos, (int)$this->id_funcion,
+            $this->fecha_finalizacion, $this->fecha_hora
+        ]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }
@@ -386,25 +371,17 @@ class Funciones extends ActiveRecord
 
         $db = self::getDB();
 
-        if ($this->id_funcion) {
-            $query = "SELECT COUNT(*) as total FROM funciones 
-                    WHERE rela_peliculas = '{$this->rela_peliculas}' 
-                    AND id_funcion != '{$this->id_funcion}'
-                    AND estado = 1
-                    AND (
-                        (fecha_hora <= '{$this->fecha_finalizacion}' AND fecha_finalizacion >= '{$this->fecha_hora}')
-                    )";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM funciones 
-                    WHERE rela_peliculas = '{$this->rela_peliculas}' 
-                    AND estado = 1
-                    AND (
-                        (fecha_hora <= '{$this->fecha_finalizacion}' AND fecha_finalizacion >= '{$this->fecha_hora}')
-                    )";
-        }
+        $query = "SELECT COUNT(*) as total FROM funciones
+                WHERE rela_peliculas = ?
+                AND id_funcion != ?
+                AND estado = 1
+                AND (
+                    (fecha_hora <= ? AND fecha_finalizacion >= ?)
+                )";
 
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->rela_peliculas, (int)$this->id_funcion, $this->fecha_finalizacion, $this->fecha_hora]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }
@@ -412,9 +389,13 @@ class Funciones extends ActiveRecord
     public function crearFuncion()
     {
         $query = "INSERT INTO " . static::$tabla . " (fecha_hora, fecha_finalizacion,rela_salas,rela_peliculas,rela_turnos,rela_tipo_entrada,estado) 
-                VALUES ('{$this->fecha_hora}', '{$this->fecha_finalizacion}', '{$this->rela_salas}', '{$this->rela_peliculas}','{$this->rela_turnos}','{$this->rela_tipo_entrada}','{$this->estado}')";
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([
+            $this->fecha_hora, $this->fecha_finalizacion, $this->rela_salas, $this->rela_peliculas,
+            $this->rela_turnos, $this->rela_tipo_entrada, $this->estado
+        ]);
 
         return [
             'resultado' => $resultado,
@@ -440,7 +421,7 @@ class Funciones extends ActiveRecord
 
     public function eliminarLogico()
     {
-        $query = "UPDATE funciones SET estado = 0 WHERE id_funcion = " . self::$db->real_escape_string($this->id_funcion);
+        $query = "UPDATE funciones SET estado = 0 WHERE id_funcion = " . (int)$this->id_funcion;
         $resultado = self::$db->query($query);
         return $resultado;
     }

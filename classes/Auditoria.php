@@ -46,6 +46,8 @@ class Auditoria
         'cantina.baja'          => 'Baja de cantina',
         'ficha.crear'           => 'Alta de ficha',
         'ficha.modificar'       => 'Modificación de ficha',
+        'ficha.baja'            => 'Baja de ficha',
+        'sexo.baja'             => 'Baja de sexo',
         'usuario.crear'         => 'Alta de usuario',
         'usuario.modificar'     => 'Modificación de usuario',
         'usuario.baja'          => 'Baja de usuario',

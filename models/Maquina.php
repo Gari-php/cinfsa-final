@@ -76,17 +76,13 @@ class Maquina extends ActiveRecord
     {
         $db = self::getDB();
 
-        if ($this->id_maquinas) {
-            $query = "SELECT COUNT(*) as total FROM maquinas 
-                    WHERE LOWER(maquinas_nombre) = LOWER('{$this->maquinas_nombre}') 
-                    AND id_maquinas != '{$this->id_maquinas}'";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM maquinas 
-                    WHERE LOWER(maquinas_nombre) = LOWER('{$this->maquinas_nombre}')";
-        }
+        $query = "SELECT COUNT(*) as total FROM maquinas
+                WHERE LOWER(maquinas_nombre) = LOWER(?)
+                AND id_maquinas != ?";
 
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->maquinas_nombre, (int)$this->id_maquinas]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }
@@ -132,9 +128,10 @@ class Maquina extends ActiveRecord
     public function crearMaquina()
     {
         $query = "INSERT INTO " . static::$tabla . " (maquinas_nombre, maquina_descripcion, imagen_maquina, estado, rela_fichas) 
-                 VALUES ('{$this->maquinas_nombre}', '{$this->maquina_descripcion}', '{$this->imagen_maquina}', '{$this->estado}', '{$this->rela_fichas}')";
+                 VALUES (?, ?, ?, ?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->maquinas_nombre, $this->maquina_descripcion, $this->imagen_maquina, $this->estado, $this->rela_fichas]);
 
         return [
             'resultado' => $resultado,
@@ -183,7 +180,7 @@ class Maquina extends ActiveRecord
 
     public function darDeBaja()
     {
-        $query = "UPDATE maquinas SET estado = 0 WHERE id_maquinas = " . self::$db->real_escape_string($this->id_maquinas);
+        $query = "UPDATE maquinas SET estado = 0 WHERE id_maquinas = " . (int)$this->id_maquinas;
         $resultado = self::$db->query($query);
         return $resultado;
     }

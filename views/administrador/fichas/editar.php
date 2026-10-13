@@ -19,6 +19,14 @@
             <input type="number" name="cantidad_ficha" id="cantidad_ficha" value="<?= $ficha->cantidad_ficha ?>">
         </div>
 
+        <div class="campo">
+            <label for="estado">Estado</label>
+            <select name="estado" id="estado">
+                <option value="1" <?= $ficha->estado == 1 ? 'selected' : '' ?>>Activa</option>
+                <option value="0" <?= $ficha->estado == 0 ? 'selected' : '' ?>>Inactiva</option>
+            </select>
+        </div>
+
         <input type="submit" class="boton" value="Actualizar">
         <div class="contenedor-alertas"></div>
         <div class="acciones">

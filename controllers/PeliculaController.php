@@ -304,8 +304,8 @@ class PeliculaController
 
         header('Content-Type: application/json');
 
-        $id_pelicula = $_POST['id_pelicula'] ?? null;
-        if (!$id_pelicula) {
+        $id_pelicula = (int)($_POST['id_pelicula'] ?? 0);
+        if ($id_pelicula <= 0) {
             echo json_encode(['errores' => ['ID no válido']]);
             exit;
         }

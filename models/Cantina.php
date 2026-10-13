@@ -51,9 +51,10 @@ class Cantina extends ActiveRecord {
 
     public function crearCantina() {
         $query = "INSERT INTO " . static::$tabla . " (nombre_cantina)
-                  VALUES ('{$this->nombre_cantina}')";
+                  VALUES (?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->nombre_cantina]);
 
         return [
             'resultado' => $resultado,

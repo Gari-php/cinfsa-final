@@ -49,8 +49,9 @@ class Perfil extends ActiveRecord {
 
     public function crearPerfil() {
         $query = "INSERT INTO " . static::$tabla . " (nombre_perfil, permiso_perfil, estado) 
-                  VALUES ('{$this->nombre_perfil}', '{$this->permiso_perfil}', '{$this->estado}')";
-        $resultado = self::$db->query($query);
+                  VALUES (?, ?, ?)";
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->nombre_perfil, $this->permiso_perfil, $this->estado]);
         return [
             'resultado' => $resultado,
             'id_insertado' => self::$db->insert_id

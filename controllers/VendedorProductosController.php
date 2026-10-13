@@ -644,7 +644,7 @@ class VendedorProductosController
                     cantidad_ficha,
                     nombre_ficha
                   FROM fichas 
-                  WHERE cantidad_ficha > 0
+                  WHERE cantidad_ficha > 0 AND estado = 1
                   ORDER BY precio_ficha ASC";
 
             $resultado = $db->query($query);

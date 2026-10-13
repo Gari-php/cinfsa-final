@@ -118,8 +118,14 @@ class SexoController {
         }
 
         // Actualizar las propiedades del objeto
+        $estadoAnterior = (int)$sexo->estado;
         $sexo->nombre_sexo = $datos['nombre_sexo'] ?? '';
         $sexo->estado = $datos['estado'] ?? 1;
+
+        if ($estadoAnterior === 1 && (int)$sexo->estado === 0 && Sexo::contarActivosExcepto($sexo->id_sexo) === 0) {
+            echo json_encode(['errores' => ['No podés desactivar el único sexo activo']]);
+            exit;
+        }
 
         // AHORA SÍ validar el objeto
         $errores = $sexo->validar();
@@ -140,6 +146,51 @@ class SexoController {
             ]);
         } else {
             echo json_encode(['ok' => false, 'mensaje' => 'Error al actualizar']);
+        }
+    }
+
+    // Baja lógica: queda inactivo (se puede reactivar desde Editar) y deja de ofrecerse al crear usuarios
+    public static function eliminar() {
+        if (!self::verificarAdmin()) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No autorizado']);
+            return;
+        }
+
+        $datos = json_decode(file_get_contents('php://input'), true);
+        $id = $datos['id_sexo'] ?? null;
+
+        if (!$id || !is_numeric($id)) {
+            echo json_encode(['ok' => false, 'mensaje' => 'ID no válido']);
+            return;
+        }
+
+        $sexo = Sexo::find($id);
+
+        if (!$sexo) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Sexo no encontrado']);
+            return;
+        }
+
+        if ((int)$sexo->estado === 0) {
+            echo json_encode(['ok' => false, 'mensaje' => 'Ya está inactivo']);
+            return;
+        }
+
+        if (Sexo::contarActivosExcepto($id) === 0) {
+            echo json_encode(['ok' => false, 'mensaje' => 'No podés dar de baja el único sexo activo']);
+            return;
+        }
+
+        if ($sexo->darDeBaja()) {
+            \Classes\Auditoria::registrar(
+                'sexo.baja',
+                "Dio de baja (desactivó) el sexo {$sexo->nombre_sexo}",
+                'sexo',
+                $sexo->id_sexo
+            );
+            echo json_encode(['ok' => true, 'mensaje' => 'Dado de baja correctamente']);
+        } else {
+            echo json_encode(['ok' => false, 'mensaje' => 'Error al dar de baja']);
         }
     }
 

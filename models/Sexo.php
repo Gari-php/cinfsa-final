@@ -86,8 +86,9 @@ class Sexo extends ActiveRecord {
     }
 
     public function crearSexo() {
-        $query = "INSERT INTO " . static::$tabla . " (nombre_sexo) VALUES ('{$this->nombre_sexo}')";
-        $resultado = self::$db->query($query);
+        $query = "INSERT INTO " . static::$tabla . " (nombre_sexo) VALUES (?)";
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->nombre_sexo]);
         return [
             'resultado' => $resultado,
             'id_insertado' => self::$db->insert_id
@@ -101,9 +102,21 @@ class Sexo extends ActiveRecord {
         return ($resultado && $resultado->num_rows) ? $resultado->fetch_assoc() : null;
     }
 
+    public function darDeBaja() {
+        $query = "UPDATE sexo SET estado = 0 WHERE id_sexo = " . (int)$this->id_sexo;
+        return self::$db->query($query);
+    }
+
+    // Cuántos otros sexos activos hay (el alta de usuarios necesita al menos uno)
+    public static function contarActivosExcepto($idSexo): int {
+        $stmt = self::$db->prepare("SELECT COUNT(*) FROM sexo WHERE estado = 1 AND id_sexo != ?");
+        $stmt->execute([(int)$idSexo]);
+        return (int)$stmt->get_result()->fetch_column();
+    }
+
     public function actualizar() {
-        $query = "UPDATE sexo SET nombre_sexo = ? WHERE id_sexo = ?";
+        $query = "UPDATE sexo SET nombre_sexo = ?, estado = ? WHERE id_sexo = ?";
         $stmt = self::$db->prepare($query);
-        return $stmt->execute([$this->nombre_sexo, $this->id_sexo]);
+        return $stmt->execute([$this->nombre_sexo, (int)$this->estado === 0 ? 0 : 1, $this->id_sexo]);
     }
 }

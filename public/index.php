@@ -159,6 +159,7 @@ $router->get('/administrador/sexo/crear', [SexoController::class, 'crear']);
 $router->post('/administrador/sexo/guardar', [SexoController::class, 'guardar']);
 $router->get('/administrador/sexo/editar', [SexoController::class, 'editar']);
 $router->post('/administrador/sexo/actualizar', [SexoController::class, 'actualizar']);
+$router->post('/administrador/sexo/eliminar', [SexoController::class, 'eliminar']);
 $router->post('/administrador/sexo/buscar', [SexoController::class, 'buscar']);
 $router->get('/administrador/sexo/exportar', [SexoController::class, 'exportar']);
 
@@ -300,6 +301,7 @@ $router->get('/administrador/fichas/crear', [FichaController::class, 'crear']);
 $router->post('/administrador/fichas/guardar', [FichaController::class, 'guardar']);
 $router->get('/administrador/fichas/editar', [FichaController::class, 'editar']);
 $router->post('/administrador/fichas/actualizar', [FichaController::class, 'actualizar']);
+$router->post('/administrador/fichas/eliminar', [FichaController::class, 'eliminar']);
 $router->post('/administrador/fichas/buscar', [FichaController::class, 'buscar']);
 
 // ==============================================

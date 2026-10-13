@@ -77,9 +77,10 @@ class EstadosPeliculas extends ActiveRecord {
 
     public function crearEstadoPelicula() {
         $query = "INSERT INTO " . static::$tabla . " (nombre_estado_pelicula, estado)
-                 VALUES ('{$this->nombre_estado_pelicula}', '{$this->estado}')";
+                 VALUES (?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->nombre_estado_pelicula, $this->estado]);
 
         return [
             'resultado' => $resultado,
@@ -99,7 +100,7 @@ class EstadosPeliculas extends ActiveRecord {
     }
 
     public function eliminarLogico() {
-        $query = "UPDATE estados_peliculas SET estado = 0 WHERE id_estado_pelicula = " . self::$db->real_escape_string($this->id_estado_pelicula);
+        $query = "UPDATE estados_peliculas SET estado = 0 WHERE id_estado_pelicula = " . (int)$this->id_estado_pelicula;
         $resultado = self::$db->query($query);
         return $resultado;
     }

@@ -33,12 +33,14 @@
                             : '<span class="estado-con-icono inactivo">Inactivo</span>'; ?>
                     </td>
                     <td class="acciones">
-                        <button class="boton eliminar-sexo"
-                                data-id="<?php echo $s->id_sexo; ?>"
-                                data-nombre="<?php echo htmlspecialchars($s->nombre_sexo); ?>">
-                            Eliminar
-                        </button>
-                       <a class="boton" href="/administrador/sexo/editar?id=<?= $s->id_sexo ?>">Editar</a>
+                        <a class="boton" href="/administrador/sexo/editar?id=<?= $s->id_sexo ?>">Editar</a>
+                        <?php if ($s->estado == 1): ?>
+                            <button class="boton eliminar-sexo"
+                                    data-id="<?php echo $s->id_sexo; ?>"
+                                    data-nombre="<?php echo htmlspecialchars($s->nombre_sexo); ?>">
+                                Dar de baja
+                            </button>
+                        <?php endif; ?>
                     </td>
                    
                 </tr>

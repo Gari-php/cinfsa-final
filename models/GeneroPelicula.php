@@ -42,9 +42,10 @@ class GeneroPelicula extends ActiveRecord {
 
     public function crearGenero() {
         $query = "INSERT INTO " . static::$tabla . " (genero_pelicula, estado) 
-                 VALUES ('{$this->genero_pelicula}', '{$this->estado}')";
+                 VALUES (?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->genero_pelicula, $this->estado]);
 
         return [
             'resultado' => $resultado,
@@ -77,7 +78,7 @@ class GeneroPelicula extends ActiveRecord {
     }
 
     public function darDeBaja(){
-        $query = "UPDATE generos_peliculas SET estado = 0 WHERE id_genero_pelicula = " . self::$db->real_escape_string($this->id_genero_pelicula);
+        $query = "UPDATE generos_peliculas SET estado = 0 WHERE id_genero_pelicula = " . (int)$this->id_genero_pelicula;
         $resultado = self::$db->query($query);
         return $resultado;
     }

@@ -186,17 +186,13 @@ class Pelicula extends ActiveRecord {
     private function verificarTituloUnico() {
         $db = self::getDB();
         
-        if ($this->id_pelicula) {
-            $query = "SELECT COUNT(*) as total FROM peliculas 
-                    WHERE LOWER(titulo_pelicula) = LOWER('{$this->titulo_pelicula}') 
-                    AND id_pelicula != '{$this->id_pelicula}'";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM peliculas 
-                    WHERE LOWER(titulo_pelicula) = LOWER('{$this->titulo_pelicula}')";
-        }
-        
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $query = "SELECT COUNT(*) as total FROM peliculas
+                WHERE LOWER(titulo_pelicula) = LOWER(?)
+                AND id_pelicula != ?";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->titulo_pelicula, (int)$this->id_pelicula]);
+        $row = $stmt->get_result()->fetch_assoc();
         
         return $row['total'] > 0;
     }

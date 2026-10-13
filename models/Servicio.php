@@ -119,17 +119,13 @@ class Servicio extends ActiveRecord {
         
         $db = self::getDB();
         
-        if ($this->id_servicio) {
-            $query = "SELECT COUNT(*) as total FROM servicios_proveedor 
-                      WHERE codigo_servicio = '{$this->codigo_servicio}' 
-                      AND id_servicio != '{$this->id_servicio}'";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM servicios_proveedor 
-                      WHERE codigo_servicio = '{$this->codigo_servicio}'";
-        }
-        
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $query = "SELECT COUNT(*) as total FROM servicios_proveedor
+                  WHERE codigo_servicio = ?
+                  AND id_servicio != ?";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->codigo_servicio, (int)$this->id_servicio]);
+        $row = $stmt->get_result()->fetch_assoc();
         
         return $row['total'] > 0;
     }

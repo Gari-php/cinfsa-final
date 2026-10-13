@@ -17,6 +17,7 @@
                     <th>ID</th>
                     <th>Precio</th>
                     <th>Cantidad</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -27,16 +28,24 @@
                     <td><?= $f->precio_ficha ?></td>
                     <td><?= $f->cantidad_ficha ?></td>
                     <td>
+                        <?php echo $f->estado == 1
+                            ? '<span class="estado-con-icono activo">ACTIVA</span>'
+                            : '<span class="estado-con-icono inactivo">INACTIVA</span>'; ?>
+                    </td>
+                    <td>
                         <div class="acciones">
-                        <button class="boton eliminar-ficha"
-                                data-id="<?php echo $f->id_fichas; ?>"
-                                data-nombre="<?php echo htmlspecialchars($f->precio_ficha); ?>">
-                            Eliminar
-                        </button>
                         <a class="boton" href="/administrador/fichas/editar?id=<?= $f->id_fichas ?>">Editar</a>
+                        <?php if ($f->estado == 1): ?>
+                            <button class="boton eliminar-ficha"
+                                    data-id="<?php echo $f->id_fichas; ?>"
+                                    data-nombre="<?php echo s('$' . number_format((float)$f->precio_ficha, 0, ',', '.')); ?>">
+                                Dar de baja
+                            </button>
+                        <?php endif; ?>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
-    </div>  s
+    </div>

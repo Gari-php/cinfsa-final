@@ -68,7 +68,7 @@ class MaquinaController
         }
 
         // Obtener todas las fichas para el select
-        $fichas = Ficha::obtenerTodas();
+        $fichas = Ficha::obtenerTodas(0);
 
         $router->render('administrador/maquinas/crear', [
             'fichas' => $fichas
@@ -174,7 +174,7 @@ class MaquinaController
         }
 
         // Obtener todas las fichas para el select
-        $fichas = Ficha::obtenerTodas();
+        $fichas = Ficha::obtenerTodas($maquina->rela_fichas);
 
         $router->render('administrador/maquinas/editar', [
             'maquina' => $maquina,

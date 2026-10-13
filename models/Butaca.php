@@ -110,23 +110,16 @@ class Butaca extends ActiveRecord {
         
         $db = self::getDB();
         
-        if ($this->id_butaca) {
-            // Editando - excluir la butaca actual
-            $query = "SELECT COUNT(*) as total FROM butacas 
-                     WHERE fila_butaca = '{$this->fila_butaca}' 
-                     AND numero_butaca = '{$this->numero_butaca}' 
-                     AND rela_salas = '{$this->rela_salas}'
-                     AND id_butaca != '{$this->id_butaca}'";
-        } else {
-            // Creando nueva
-            $query = "SELECT COUNT(*) as total FROM butacas 
-                     WHERE fila_butaca = '{$this->fila_butaca}' 
-                     AND numero_butaca = '{$this->numero_butaca}' 
-                     AND rela_salas = '{$this->rela_salas}'";
-        }
-        
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        // Al editar se excluye la butaca actual (al crear el id es 0 y no excluye nada)
+        $query = "SELECT COUNT(*) as total FROM butacas
+                 WHERE fila_butaca = ?
+                 AND numero_butaca = ?
+                 AND rela_salas = ?
+                 AND id_butaca != ?";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->fila_butaca, $this->numero_butaca, $this->rela_salas, (int)$this->id_butaca]);
+        $row = $stmt->get_result()->fetch_assoc();
         
         return $row['total'] > 0;
     }
@@ -140,8 +133,10 @@ class Butaca extends ActiveRecord {
         $db = self::getDB();
         
         // Obtener datos de la sala
-        $query = "SELECT filas_sala, columnas_sala FROM salas WHERE id_sala = '{$this->rela_salas}'";
-        $resultado = $db->query($query);
+        $query = "SELECT filas_sala, columnas_sala FROM salas WHERE id_sala = ?";
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->rela_salas]);
+        $resultado = $stmt->get_result();
         
         if ($resultado && $resultado->num_rows > 0) {
             $sala = $resultado->fetch_assoc();
@@ -214,9 +209,10 @@ class Butaca extends ActiveRecord {
 
     public function crearButaca() {
         $query = "INSERT INTO " . static::$tabla . " (fila_butaca, numero_butaca, rela_salas, rela_estado_butaca) 
-                  VALUES ('{$this->fila_butaca}', '{$this->numero_butaca}', '{$this->rela_salas}', '{$this->rela_estado_butaca}')";
+                  VALUES (?, ?, ?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->fila_butaca, $this->numero_butaca, $this->rela_salas, $this->rela_estado_butaca]);
 
         return [
             'resultado' => $resultado,
@@ -263,7 +259,7 @@ class Butaca extends ActiveRecord {
     }
 
     public function eliminar() {
-        $query = "DELETE FROM butacas WHERE id_butaca = " . self::$db->real_escape_string($this->id_butaca);
+        $query = "DELETE FROM butacas WHERE id_butaca = " . (int)$this->id_butaca;
         $resultado = self::$db->query($query);
         return $resultado;
     }

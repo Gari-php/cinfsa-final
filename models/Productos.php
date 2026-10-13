@@ -89,17 +89,13 @@ class Productos extends ActiveRecord
     {
         $db = self::getDB();
 
-        if ($this->id_producto_cantina) {
-            $query = "SELECT COUNT(*) as total FROM productos_cantina 
-                    WHERE LOWER(nombre_producto_cantina) = LOWER('{$this->nombre_producto_cantina}') 
-                    AND id_producto_cantina != '{$this->id_producto_cantina}'";
-        } else {
-            $query = "SELECT COUNT(*) as total FROM productos_cantina 
-                    WHERE LOWER(nombre_producto_cantina) = LOWER('{$this->nombre_producto_cantina}')";
-        }
+        $query = "SELECT COUNT(*) as total FROM productos_cantina
+                WHERE LOWER(nombre_producto_cantina) = LOWER(?)
+                AND id_producto_cantina != ?";
 
-        $resultado = $db->query($query);
-        $row = $resultado->fetch_assoc();
+        $stmt = $db->prepare($query);
+        $stmt->execute([$this->nombre_producto_cantina, (int)$this->id_producto_cantina]);
+        $row = $stmt->get_result()->fetch_assoc();
 
         return $row['total'] > 0;
     }
@@ -251,9 +247,10 @@ class Productos extends ActiveRecord
     public function crearProducto()
     {
         $query = "INSERT INTO " . static::$tabla . " (nombre_producto_cantina, rela_estado_producto, precio_producto, imagen_producto)
-                 VALUES ('{$this->nombre_producto_cantina}', '{$this->rela_estado_producto}', '{$this->precio_producto}', '{$this->imagen_producto}')";
+                 VALUES (?, ?, ?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->nombre_producto_cantina, $this->rela_estado_producto, $this->precio_producto, $this->imagen_producto]);
 
         return [
             'resultado' => $resultado,
@@ -289,7 +286,7 @@ class Productos extends ActiveRecord
 
     public function darDeBaja()
     {
-        $query = "UPDATE productos_cantina SET rela_estado_producto = 3 WHERE id_producto_cantina = " . self::$db->real_escape_string($this->id_producto_cantina);
+        $query = "UPDATE productos_cantina SET rela_estado_producto = 3 WHERE id_producto_cantina = " . (int)$this->id_producto_cantina;
         $resultado = self::$db->query($query);
         return $resultado;
     }

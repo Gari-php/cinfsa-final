@@ -541,6 +541,7 @@ CREATE TABLE `fichas` (
   `precio_ficha` float DEFAULT NULL,
   `cantidad_ficha` int(11) DEFAULT NULL,
   `nombre_ficha` varchar(50) DEFAULT NULL,
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_fichas`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -136,9 +136,10 @@ class Sala extends ActiveRecord {
     }
     public function crearSala() {
         $query = "INSERT INTO " . static::$tabla . " (capacidad_sala, filas_sala, columnas_sala, estado) 
-                VALUES ('{$this->capacidad_sala}', '{$this->filas_sala}', '{$this->columnas_sala}', '{$this->estado}')";
+                VALUES (?, ?, ?, ?)";
 
-        $resultado = self::$db->query($query);
+        $stmt = self::$db->prepare($query);
+        $resultado = $stmt->execute([$this->capacidad_sala, $this->filas_sala, $this->columnas_sala, $this->estado]);
 
         return [
             'resultado' => $resultado,
@@ -173,7 +174,7 @@ class Sala extends ActiveRecord {
     }
 
     public function darDeBaja(){
-        $query = "UPDATE salas SET estado = 0 WHERE id_sala = " . self::$db->real_escape_string($this->id_sala);
+        $query = "UPDATE salas SET estado = 0 WHERE id_sala = " . (int)$this->id_sala;
         $resultado = self::$db->query($query);
         return $resultado;
     }
