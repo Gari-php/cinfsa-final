@@ -39,6 +39,12 @@
                     <span class="valor">Sala <?php echo $entrada['id_sala']; ?></span>
                 </div>
                 <div class="dato">
+                    <span class="label">Butaca</span>
+                    <span class="valor"><?php echo $entrada['fila_butaca'] !== null
+                        ? 'Fila ' . s($entrada['fila_butaca']) . ' · Asiento ' . s($entrada['numero_butaca'])
+                        : 'Sin butaca asignada'; ?></span>
+                </div>
+                <div class="dato">
                     <span class="label">Fecha/Hora Función</span>
                     <span class="valor"><?php echo date('d/m/Y H:i', strtotime($entrada['fecha_hora'])); ?></span>
                 </div>

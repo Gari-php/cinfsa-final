@@ -33,6 +33,8 @@ class Entrada extends ActiveRecord
     public $numero_ticket;
     public $tipo_comprobante;
     public $numero_orden; //
+    public $fila_butaca;   // butaca de la entrada (listados del admin)
+    public $numero_butaca;
     // CONSTANTES para estados
     const ESTADO_ACTIVA = 1;
     const ESTADO_USADA = 2;

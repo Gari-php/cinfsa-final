@@ -176,7 +176,14 @@
                         <td style="color: #fff;"><?php echo $entrada->tipo_entrada_desc; ?></td>
                         <td style="color: #fff;">Función #<?php echo $entrada->rela_funcion; ?></td>
                         <td style="color: #fff;"><?php echo $entrada->titulo_pelicula; ?></td>
-                        <td style="color: #fff;">Sala <?php echo $entrada->id_sala; ?></td>
+                        <?php
+                        // Butaca de la entrada (las devueltas desde boletería ya no tienen butaca asociada)
+                        $ubicacion = 'Sala ' . $entrada->id_sala
+                            . ($entrada->fila_butaca !== null ? ' · Fila ' . $entrada->fila_butaca . ' · Asiento ' . $entrada->numero_butaca : '');
+                        // Para los avisos de usar / cancelar / restaurar: qué entrada exactamente
+                        $descripcionEntrada = 'entrada #' . $entrada->id_entrada . ' — ' . $entrada->titulo_pelicula . ', ' . $ubicacion;
+                        ?>
+                        <td style="color: #fff;"><?php echo s($ubicacion); ?></td>
                         <td style="color: #fff;"><?php echo date('d/m/Y H:i', strtotime($entrada->fecha_hora)); ?></td>
                         <td style="color: #fff;">$<?php echo number_format($entrada->precio_entrada, 0, ',', '.'); ?></td>
 
@@ -192,13 +199,15 @@
                                     <button class="boton usar"
                                         data-id="<?php echo $entrada->id_entrada; ?>"
                                         data-accion="usar"
+                                        data-descripcion="<?php echo s($descripcionEntrada); ?>"
                                         title="Marcar como usada">
                                         <i class="fa-solid fa-check"></i> Usar
                                     </button>
                                     <button class="boton eliminar-entrada"
                                         data-id="<?php echo $entrada->id_entrada; ?>"
                                         data-nombre="Entrada #<?php echo $entrada->id_entrada; ?>"
-                                        data-accion="cancelar">
+                                        data-accion="cancelar"
+                                        data-descripcion="<?php echo s($descripcionEntrada); ?>">
                                         <i class="fa-solid fa-ban"></i> Cancelar
                                     </button>
                                 <?php elseif ($estado == 2): // Usada 
@@ -216,6 +225,7 @@
                                     <button class="boton restaurar"
                                         data-id="<?php echo $entrada->id_entrada; ?>"
                                         data-accion="restaurar"
+                                        data-descripcion="<?php echo s($descripcionEntrada); ?>"
                                         title="Restaurar entrada"
                                         style="background: #16a34a;">
                                         <i class="fa-solid fa-undo"></i> Restaurar
@@ -422,18 +432,21 @@
 
                 let confirmMessage = '';
                 let endpoint = '';
+                // "entrada #12 — Película, Sala 1 · Fila 3 · Asiento 5": para confirmar la butaca correcta
+                const cual = button.dataset.descripcion || 'esta entrada';
 
                 switch (accion) {
                     case 'usar':
-                        confirmMessage = '¿Marcar esta entrada como usada?';
+                        confirmMessage = `¿Marcar como usada la ${cual}?`;
                         endpoint = '/administrador/entradas/usar';
                         break;
                     case 'cancelar':
-                        confirmMessage = '¿Cancelar esta entrada? No podrá ser usada.';
+                        confirmMessage = `¿Cancelar la ${cual}? No podrá ser usada y la butaca queda libre. ` +
+                            'Esto NO devuelve el dinero: para reintegrarlo, hacé la devolución desde boletería.';
                         endpoint = '/administrador/entradas/eliminar';
                         break;
                     case 'restaurar':
-                        confirmMessage = '¿Restaurar esta entrada? Volverá a estar activa.';
+                        confirmMessage = `¿Restaurar la ${cual}? Volverá a estar activa.`;
                         endpoint = '/administrador/entradas/restaurar';
                         break;
                 }

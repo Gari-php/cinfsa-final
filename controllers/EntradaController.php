@@ -111,7 +111,9 @@ class EntradaController
         cf.pago_fecha_hora,
         u.nombre_usuario as vendedor,
         c.numero_caja,
-        o.numero_orden
+        o.numero_orden,
+        b.fila_butaca,
+        b.numero_butaca
       FROM entradas e
       INNER JOIN tipo_entradas te ON e.rela_tipo_entrada = te.id_tipo_entrada
       INNER JOIN funciones f ON e.rela_funcion = f.id_funcion
@@ -125,6 +127,7 @@ class EntradaController
       LEFT JOIN usuarios u ON ac.rela_usuario = u.id_usuario
       LEFT JOIN butacas_vendidas bv ON bv.id_entrada = e.id_entrada
       LEFT JOIN ordenes o ON o.id_orden = bv.id_orden
+      LEFT JOIN butacas b ON b.id_butaca = bv.id_butaca
       {$whereFull}
       ORDER BY e.id_entrada DESC
       {$paginador->limit()}";
@@ -206,7 +209,9 @@ class EntradaController
         u.nombre_usuario as vendedor,
         c.numero_caja,
         o.numero_orden,
-        bv.fecha_venta
+        bv.fecha_venta,
+        b.fila_butaca,
+        b.numero_butaca
       FROM entradas e
       INNER JOIN tipo_entradas te ON e.rela_tipo_entrada = te.id_tipo_entrada
       INNER JOIN funciones f ON e.rela_funcion = f.id_funcion
@@ -220,6 +225,7 @@ class EntradaController
       LEFT JOIN usuarios u ON ac.rela_usuario = u.id_usuario
       LEFT JOIN butacas_vendidas bv ON bv.id_entrada = e.id_entrada
       LEFT JOIN ordenes o ON o.id_orden = bv.id_orden
+      LEFT JOIN butacas b ON b.id_butaca = bv.id_butaca
       WHERE e.id_entrada = ?";
 
         $stmt = $db->prepare($query);
