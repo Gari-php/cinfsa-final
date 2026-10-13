@@ -118,7 +118,7 @@ document.querySelectorAll('.btn-quitar-item').forEach((boton) => {
             if (!data.ok) throw new Error(data.mensaje || 'No se pudo quitar');
             window.location.reload();
         } catch (error) {
-            alert('No se pudo quitar el producto: ' + error.message);
+            window.mostrarAlerta('No se pudo quitar el producto: ' + window.escaparHtml(error.message), 'error');
             boton.disabled = false;
         }
     });
@@ -154,16 +154,16 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         } else if (data.no_disponibles) {
             // Algo se vendió o se reservó mientras el cliente estaba en esta pantalla:
             // se avisa y se recarga para mostrar qué quitar
-            alert(data.mensaje);
-            window.location.reload();
+            window.mostrarAlerta(window.escaparHtml(data.mensaje), 'error');
+            setTimeout(() => window.location.reload(), 3000);
         } else {
-            alert(data.mensaje || 'Error desconocido al procesar el pago');
+            window.mostrarAlerta(window.escaparHtml(data.mensaje || 'Error desconocido al procesar el pago'), 'error');
             btnPagar.disabled = false;
             btnPagar.innerHTML = textoOriginal;
         }
     } catch (error) {
         console.error('Error completo:', error);
-        alert('Error al procesar el pago: ' + error.message);
+        window.mostrarAlerta('Error al procesar el pago: ' + window.escaparHtml(error.message), 'error');
         btnPagar.disabled = false;
         btnPagar.innerHTML = textoOriginal;
     }

@@ -165,7 +165,7 @@
                     }
                 } catch (error) {
                     console.error('Error al buscar stock:', error);
-                    alert('Error al buscar stock');
+                    window.mostrarAlerta('Error al buscar stock', 'error');
                 }
             }
 

@@ -610,11 +610,11 @@
             if (data.ok) {
                 mostrarResultados(data.arqueos, data.resumen);
             } else {
-                alert('Error: ' + data.mensaje);
+                window.mostrarAlerta(window.escaparHtml(data.mensaje || 'No se pudo buscar'), 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error de conexión');
+            window.mostrarAlerta('Error de conexión', 'error');
         }
     });
 
@@ -636,8 +636,8 @@
             arqueos.forEach(arqueo => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                <td>${arqueo.nombre_caja}</td>
-                <td>${arqueo.vendedor}</td>
+                <td>${window.escaparHtml(arqueo.nombre_caja)}</td>
+                <td>${window.escaparHtml(arqueo.vendedor)}</td>
                 <td>${arqueo.fecha}</td>
                 <td>${arqueo.hora_apertura}</td>
                 <td>${arqueo.hora_cierre}</td>
@@ -662,11 +662,11 @@
 
     // Forzar cierre
     async function forzarCierre(idArqueo) {
-        if (!confirm('¿Estás seguro de forzar el cierre de esta caja?\n\nEsta acción cerrará la caja del vendedor.')) {
-            return;
-        }
-
-        const observaciones = prompt('Observaciones del cierre forzado:', 'Cierre forzado por administrador');
+        const observaciones = await window.pedirTextoModal(
+            '¿Estás seguro de forzar el cierre de esta caja?<br>Esta acción cerrará la caja del vendedor.<br><br>Observaciones del cierre forzado:',
+            'Cierre forzado por administrador',
+            'danger'
+        );
 
         if (observaciones === null) return;
 
@@ -685,14 +685,14 @@
             const data = await response.json();
 
             if (data.ok) {
-                alert('✅ ' + data.mensaje);
-                location.reload();
+                window.mostrarAlerta(window.escaparHtml(data.mensaje), 'exito');
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert('❌ ' + data.mensaje);
+                window.mostrarAlerta(window.escaparHtml(data.mensaje || 'No se pudo cerrar la caja'), 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('❌ Error de conexión');
+            window.mostrarAlerta('Error de conexión', 'error');
         }
     }
 </script>

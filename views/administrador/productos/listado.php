@@ -172,7 +172,7 @@
                     }
                 } catch (error) {
                     console.error('Error al buscar productos:', error);
-                    alert('Error al buscar productos');
+                    window.mostrarAlerta('Error al buscar productos', 'error');
                 }
             }
 

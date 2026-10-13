@@ -1037,8 +1037,8 @@
         totalGeneral.textContent = total.toFixed(2);
     }
 
-    window.eliminarItem = function(index) {
-        if (confirm('¿Eliminar este item?')) {
+    window.eliminarItem = async function(index) {
+        if (await window.mostrarConfirmacionModal('¿Eliminar este item?', 'danger')) {
             items.splice(index, 1);
             renderTabla();
             mostrarAlerta('Item eliminado', 'info');

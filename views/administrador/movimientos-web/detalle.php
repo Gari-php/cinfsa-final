@@ -340,7 +340,7 @@
 
         function copiarTexto(texto) {
             navigator.clipboard.writeText(texto).then(() => {
-                alert('Texto copiado al portapapeles');
+                window.mostrarAlerta('Texto copiado al portapapeles', 'exito');
             });
         }
     </script>

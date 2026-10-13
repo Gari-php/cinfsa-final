@@ -1,4 +1,9 @@
 
+// Texto plano → HTML seguro, para mostrar en los modales mensajes del servidor o lo que escribió alguien
+export function escaparHtml(texto) {
+    return String(texto ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function crearContenedorModal() {
     let contenedor = document.getElementById('modal-alertas-container');
     if (!contenedor) {
@@ -643,6 +648,44 @@ export async function mostrarConfirmacionModal(mensaje, tipo = 'warning') {
     });
 }
 
+// Confirmación con un campo de texto (reemplaza a prompt): devuelve el texto escrito o null si cancela
+export async function pedirTextoModal(mensaje, valorInicial = '', tipo = 'warning') {
+    return new Promise((resolve) => {
+        const modalContainer = crearContenedorModal();
+        const modal = document.createElement('div');
+        modal.className = `alerta-modal confirmacion ${tipo}`;
+        modal.innerHTML = `
+            <div class="alerta-modal-content confirmacion-content">
+                <div class="alerta-modal-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                <div class="alerta-modal-message">
+                    ${mensaje}
+                    <textarea class="modal-campo-texto" rows="3" maxlength="500"></textarea>
+                </div>
+                <div class="confirmacion-botones">
+                    <button class="boton-modal cancelar"><i class="fa-solid fa-times"></i> Cancelar</button>
+                    <button class="boton-modal confirmar"><i class="fa-solid fa-check"></i> Aceptar</button>
+                </div>
+            </div>`;
+        const campo = modal.querySelector('.modal-campo-texto');
+        campo.value = valorInicial;
+        campo.style.cssText = 'display:block;width:100%;margin-top:0.75rem;padding:0.5rem;border-radius:6px;border:1px solid #ccc;font:inherit;box-sizing:border-box;';
+
+        modalContainer.appendChild(modal);
+        modalContainer.style.display = 'flex';
+        campo.focus();
+
+        const terminar = (valor) => {
+            document.removeEventListener('keydown', alTeclear);
+            cerrarAlertaModal(modal);
+            resolve(valor);
+        };
+        const alTeclear = (e) => { if (e.key === 'Escape') terminar(null); };
+        document.addEventListener('keydown', alTeclear);
+        modal.querySelector('.cancelar').addEventListener('click', () => terminar(null));
+        modal.querySelector('.confirmar').addEventListener('click', () => terminar(campo.value));
+    });
+}
+
 // ======================
 // Validar formulario (mantener validaciones básicas del frontend)
 // ======================
@@ -1075,3 +1118,5 @@ document.body.addEventListener('click', function (e) {
 });
 window.mostrarAlerta = mostrarAlerta;
 window.mostrarConfirmacionModal = mostrarConfirmacionModal;
+window.escaparHtml = escaparHtml;
+window.pedirTextoModal = pedirTextoModal;

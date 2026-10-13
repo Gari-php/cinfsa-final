@@ -161,7 +161,7 @@
                     }
                 } catch (error) {
                     console.error('Error al buscar máquinas:', error);
-                    alert('Error al buscar máquinas');
+                    window.mostrarAlerta('Error al buscar máquinas', 'error');
                 }
             }
 

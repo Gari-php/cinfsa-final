@@ -147,72 +147,59 @@
                 .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        // Manejar anulación de gastos
+        // Anular un gasto (botón del listado o de los resultados de búsqueda): confirmación y aviso en el modal del sistema
+        async function anularGasto(boton, alTerminar) {
+            const idGasto = boton.dataset.id;
+            const conceptoGasto = boton.dataset.concepto;
+
+            const confirmacion = await window.mostrarConfirmacionModal(
+                '¿Estás seguro de que deseas <strong>ANULAR</strong> este gasto?<br><br>' +
+                `Concepto: ${escaparHtml(conceptoGasto)}<br>` +
+                `ID: ${escaparHtml(idGasto)}<br><br>` +
+                'Esta acción cambiará el estado a "Anulado" y no se podrá revertir.',
+                'danger'
+            );
+            if (!confirmacion) return;
+
+            boton.disabled = true;
+            boton.textContent = 'Anulando...';
+
+            try {
+                const response = await fetch('/administrador/gastos/eliminar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_egreso: idGasto
+                    })
+                });
+                const data = await response.json();
+
+                if (data.ok) {
+                    window.mostrarAlerta(escaparHtml(data.mensaje || 'Gasto anulado'), 'exito');
+                    alTerminar();
+                    return;
+                }
+                window.mostrarAlerta(escaparHtml(data.mensaje || 'No se pudo anular el gasto'), 'error');
+            } catch (error) {
+                console.error('Error al anular gasto:', error);
+                window.mostrarAlerta('Error de conexión. Intenta nuevamente.', 'error');
+            }
+            boton.disabled = false;
+            boton.textContent = 'Anular';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
 
-            const botonesAnular = document.querySelectorAll('.eliminar-gasto');
-
-            botonesAnular.forEach(boton => {
-                boton.addEventListener('click', async function(e) {
-                    e.preventDefault();
-
-                    const idGasto = this.dataset.id;
-                    const conceptoGasto = this.dataset.concepto;
-
-                    // Confirmar anulación
-                    const confirmacion = confirm(
-                        `¿Estás seguro de que deseas ANULAR este gasto?\n\n` +
-                        `Concepto: ${conceptoGasto}\n` +
-                        `ID: ${idGasto}\n\n` +
-                        `Esta acción cambiará el estado a "Anulado" y no se podrá revertir.`
-                    );
-
-                    if (!confirmacion) return;
-
-                    // Deshabilitar el botón mientras se procesa
-                    this.disabled = true;
-                    this.textContent = 'Anulando...';
-
-                    try {
-                        // Hacer petición al servidor
-                        const response = await fetch('/administrador/gastos/eliminar', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                id_egreso: idGasto
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (data.ok) {
-                            // Mostrar mensaje de éxito
-                            mostrarAlerta('✅ ' + data.mensaje, 'exito');
-
-                            // Recargar la página después de 1.5 segundos
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
-                        } else {
-                            // Mostrar mensaje de error
-                            mostrarAlerta('❌ ' + data.mensaje, 'error');
-
-                            // Rehabilitar el botón
-                            this.disabled = false;
-                            this.textContent = 'Anular';
-                        }
-
-                    } catch (error) {
-                        console.error('Error al anular gasto:', error);
-                        mostrarAlerta('❌ Error de conexión. Intenta nuevamente.', 'error');
-
-                        // Rehabilitar el botón
-                        this.disabled = false;
-                        this.textContent = 'Anular';
-                    }
-                });
+            // Un solo manejador para todos los botones, también los que agrega la búsqueda
+            document.addEventListener('click', (e) => {
+                const boton = e.target.closest('.eliminar-gasto');
+                if (!boton) return;
+                e.preventDefault();
+                const termino = document.getElementById('busqueda-gasto')?.value.trim();
+                // Con una búsqueda activa se rehace la búsqueda; si no, se recarga el listado
+                anularGasto(boton, () => termino ? buscarGastos() : setTimeout(() => window.location.reload(), 1500));
             });
 
             // Buscador de gastos
@@ -282,43 +269,6 @@
                 `;
                         }).join('');
 
-                        // Re-bindear los botones de anular
-                        document.querySelectorAll('.eliminar-gasto').forEach(boton => {
-                            boton.addEventListener('click', async function() {
-                                const idGasto = this.dataset.id;
-                                const conceptoGasto = this.dataset.concepto;
-                                const confirmacion = confirm(`¿Anular el gasto: ${conceptoGasto}?`);
-                                if (!confirmacion) return;
-
-                                this.disabled = true;
-                                this.textContent = 'Anulando...';
-
-                                try {
-                                    const res = await fetch('/administrador/gastos/eliminar', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            id_egreso: idGasto
-                                        })
-                                    });
-                                    const data = await res.json();
-                                    if (data.ok) {
-                                        buscarGastos();
-                                    } else {
-                                        alert('Error: ' + data.mensaje);
-                                        this.disabled = false;
-                                        this.textContent = 'Anular';
-                                    }
-                                } catch (err) {
-                                    alert('Error de conexión');
-                                    this.disabled = false;
-                                    this.textContent = 'Anular';
-                                }
-                            });
-                        });
-
                     } else {
                         tbody.innerHTML = `
                 <tr>
@@ -330,38 +280,7 @@
                     }
                 } catch (err) {
                     console.error('Error al buscar gastos:', err);
-                    alert('Error de conexión');
-                }
-            }
-
-            // Función para mostrar alertas
-            function mostrarAlerta(mensaje, tipo) {
-                const contenedorAlerta = document.getElementById('alerta-accion');
-
-                if (!contenedorAlerta) {
-                    alert(mensaje);
-                    return;
-                }
-
-                const claseAlerta = tipo === 'exito' ? 'alerta exito' : 'alerta error';
-
-                contenedorAlerta.innerHTML = `
-                    <div class="${claseAlerta}" style="margin: 20px auto; max-width: 600px; padding: 15px; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 14px;">${mensaje}</p>
-                    </div>
-                `;
-
-                // Hacer scroll hacia la alerta
-                contenedorAlerta.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-
-                // Limpiar después de 5 segundos si es error
-                if (tipo === 'error') {
-                    setTimeout(() => {
-                        contenedorAlerta.innerHTML = '';
-                    }, 5000);
+                    window.mostrarAlerta('Error de conexión', 'error');
                 }
             }
         });

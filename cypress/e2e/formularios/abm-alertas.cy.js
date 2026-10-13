@@ -16,6 +16,7 @@ const BAJAS = {
   productos: 'eliminar-producto', stock: 'eliminar-stock', fichas: 'eliminar-ficha', maquinas: 'eliminar-maquina',
   generos: 'eliminar-genero', cantina: 'eliminar-cantina', estados_peliculas: 'eliminar-estado-pelicula',
   perfiles: 'eliminar-perfil', proveedores: 'eliminar-proveedor', servicios: 'eliminar-servicio',
+  gastos: 'eliminar-gasto',
 };
 
 const consultar = (sql) => cy.task('consultarBase', sql);

@@ -184,7 +184,7 @@
                     }
                 } catch (error) {
                     console.error('Error al buscar proveedores:', error);
-                    alert('Error al buscar proveedores');
+                    window.mostrarAlerta('Error al buscar proveedores', 'error');
                 }
             }
 

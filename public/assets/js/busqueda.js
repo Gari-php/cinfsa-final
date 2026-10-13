@@ -209,7 +209,7 @@ async function buscar(config) {
     const termino = input.value.trim();
     
     if (!termino) {
-        alert('Ingresa un término de búsqueda');
+        window.mostrarAlerta('Ingresá un término de búsqueda', 'error');
         return;
     }
 
@@ -227,10 +227,10 @@ async function buscar(config) {
             const resultado = data[config.responseKey];
             tbody.innerHTML = config.renderFila(escaparDatos(resultado));
         } else {
-            alert(data.mensaje);
+            window.mostrarAlerta(window.escaparHtml(data.mensaje || 'No se encontraron resultados'), 'error');
         }
     } catch (error) {
         console.error('Error en búsqueda:', error);
-        alert('Error al buscar');
+        window.mostrarAlerta('Error al buscar', 'error');
     }
 }

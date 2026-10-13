@@ -45,11 +45,11 @@ class SistemaGraficosWeb {
                 this.renderizarGrafico(data.datos);
                 this.mostrarResumen(data.datos);
             } else {
-                alert(data.mensaje || 'Error al cargar datos');
+                window.mostrarAlerta(window.escaparHtml(data.mensaje || 'Error al cargar datos'), 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al cargar el gráfico');
+            window.mostrarAlerta('Error al cargar el gráfico', 'error');
         }
     }
     

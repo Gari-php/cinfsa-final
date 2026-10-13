@@ -1338,7 +1338,7 @@
                 const maxSize = 5 * 1024 * 1024;
 
                 if (file.size > maxSize) {
-                    alert('La imagen no puede superar los 5MB');
+                    window.mostrarAlerta('La imagen no puede superar los 5MB', 'error');
                     this.value = '';
                     return;
                 }
@@ -1367,13 +1367,13 @@
                             img.src = data.foto;
                         });
                     } else {
-                        alert('Error: ' + data.mensaje);
-                        location.reload();
+                        window.mostrarAlerta(window.escaparHtml(data.mensaje || 'No se pudo subir la foto'), 'error');
+                        setTimeout(() => location.reload(), 2500);
                     }
                 } catch (error) {
                     console.error('Error al subir foto:', error);
-                    alert('Error de conexión al subir la foto');
-                    location.reload();
+                    window.mostrarAlerta('Error de conexión al subir la foto', 'error');
+                    setTimeout(() => location.reload(), 2500);
                 }
 
                 this.value = '';
